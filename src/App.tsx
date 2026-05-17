@@ -2126,17 +2126,17 @@ function Dashboard({ t, unit, navigateTo, onSelectRoutine, routines, currentWeig
                   onClick={() => setSelectedDayIndex(idx)}
                   className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-1.5 md:py-3 rounded-xl relative ${
                     isSelected 
-                      ? 'bg-neutral-900 border-2 border-primary text-primary shadow-[0_4px_12px_rgba(195,244,0,0.3)] scale-110 z-10' 
+                      ? 'bg-[#121212] border-2 border-[#c3f400] text-[#c3f400] shadow-[0_4px_12px_rgba(195,244,0,0.4)] scale-110 z-10' 
                       : (isToday ? 'bg-primary/5 border border-primary/20' : 'hover:bg-surface-variant/30')
                   } ${!isSelected && !isToday && !hasWorkout ? 'opacity-40' : ''}`}
                 >
-                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-tighter ${isSelected ? 'text-primary' : (isToday ? 'text-primary' : 'text-on-surface-variant')}`}>
+                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-tighter ${isSelected ? 'text-[#c3f400]' : (isToday ? 'text-primary' : 'text-on-surface-variant')}`}>
                     {day.label}
                   </span>
                   
                   <div className={`relative w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-500 ${
                     hasWorkout 
-                      ? (isSelected ? 'bg-primary shadow-[0_0_8px_rgba(195,244,0,0.6)]' : 'bg-primary shadow-[0_0_10px_rgba(195,244,0,0.5)]') 
+                      ? (isSelected ? 'bg-[#c3f400] shadow-[0_0_8px_rgba(195,244,0,0.6)]' : 'bg-primary shadow-[0_0_10px_rgba(195,244,0,0.5)]') 
                       : 'bg-surface-variant/20'
                   }`}>
                     {hasWorkout && !isSelected && (
@@ -2145,12 +2145,12 @@ function Dashboard({ t, unit, navigateTo, onSelectRoutine, routines, currentWeig
                   </div>
 
                   {isToday && (
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-primary' : 'bg-primary'}`} />
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-[#c3f400]' : 'bg-primary'}`} />
                   )}
 
                   {isToday && (
                     <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-tighter whitespace-nowrap shadow-sm ${
-                      isSelected ? 'bg-neutral-900 text-primary border border-primary' : 'bg-primary text-[#000000]'
+                      isSelected ? 'bg-[#121212] text-[#c3f400] border border-[#c3f400]' : 'bg-primary text-[#000000]'
                     }`}>
                       {t("today")}
                     </div>
