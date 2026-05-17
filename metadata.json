@@ -1,0 +1,6 @@
+{
+  "name": "LIFTLAB",
+  "description": "A powerful workout tracker and routine manager with real-time sync and personal record tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
