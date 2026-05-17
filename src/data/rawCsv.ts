@@ -615,8 +615,55 @@ Donna,Allungamento in Preghiera 1,Uomo
 Uomo,Recupero,Principiante
 `
 
+function guessMuscleAndCategory(title: string): { category: string, muscleFocus: string[], type: string } {
+    const t = title.toLowerCase();
+    
+    // DELTS / SHOULDERS
+    if (t.includes("deltoid") || t.includes("spalle") || t.includes("alzate") || t.includes("delt") || t.includes("shoulder") || t.includes("military")) {
+        return { category: "Shoulders", muscleFocus: ["Shoulders"], type: "Isolation" };
+    }
+    // BACK
+    if (t.includes("rematore") || t.includes("remata") || t.includes("row") || t.includes("trazion") || t.includes("pulldown") || t.includes("pull-in") || t.includes("pull around") || t.includes("lat")) {
+        return { category: "Back", muscleFocus: ["Back", "Biceps"], type: "Compound" };
+    }
+    // BICEPS / ARMS
+    if (t.includes("curl") || t.includes("bicipit")) {
+        return { category: "Arms", muscleFocus: ["Biceps"], type: "Isolation" };
+    }
+    // TRICEPS
+    if (t.includes("tricipit") || t.includes("tricep") || t.includes("french press") || t.includes("pushdown")) {
+        return { category: "Arms", muscleFocus: ["Triceps"], type: "Isolation" };
+    }
+    // CHEST
+    if (t.includes("panca") || t.includes("bench") || t.includes("press") || t.includes("chest") || t.includes("pectoral") || t.includes("croci")) {
+        return { category: "Chest", muscleFocus: ["Chest", "Triceps", "Shoulders"], type: "Compound" };
+    }
+    // LEGS
+    if (t.includes("squat") || t.includes("affond") || t.includes("leg") || t.includes("calf") || t.includes("lunge")) {
+        return { category: "Legs", muscleFocus: ["Quads", "Glutes", "Hamstrings"], type: "Compound" };
+    }
+    if (t.includes("stacco") || t.includes("deadlift")) {
+        return { category: "Legs", muscleFocus: ["Hamstrings", "Glutes", "Lower Back"], type: "Compound" };
+    }
+    // STRETCHING
+    if (t.includes("allungamento") || t.includes("stretch") || t.includes("yoga") || t.includes("savasana") || t.includes("posizione")) {
+        return { category: "Stretching", muscleFocus: ["Full Body"], type: "Isolation" };
+    }
+    // CARDIO
+    if (t.includes("cardio") || t.includes("vogata") || t.includes("vogatore") || t.includes("run") || t.includes("corsa")) {
+        return { category: "Cardio", muscleFocus: ["Full Body"], type: "Cardio" };
+    }
+    // CORE
+    if (t.includes("addomin") || t.includes("crunch") || t.includes("plank") || t.includes("core")) {
+        return { category: "Core", muscleFocus: ["Abs"], type: "Isolation" };
+    }
+    
+    return { category: "Full Body", muscleFocus: ["Full Body"], type: "Compound" };
+}
+
 const lines = rawCsvData.split('\n');
 const exercises = [];
+
 for (let i = 0; i < lines.length; i++) {
   const line = lines[i].trim();
   if (line === '') continue;
@@ -654,12 +701,14 @@ for (let i = 0; i < lines.length; i++) {
     else if (eqStr.includes("Piatto") || eqStr.includes("Piastra")) trueEq = "Weight";
     else if (eqStr.includes("Kettlebell")) trueEq = "Kettlebell";
 
+    const { category, muscleFocus, type } = guessMuscleAndCategory(catName);
+
     exercises.push({
        id: "e_csv_" + Math.floor(Math.random()*10000000),
        title: catName,
-       category: "Full Body", // fallback
-       type: "Compound",
-       muscleFocus: [],
+       category: category,
+       type: type,
+       muscleFocus: muscleFocus,
        image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=200&h=200",
        equipment: trueEq,
        notes: "",

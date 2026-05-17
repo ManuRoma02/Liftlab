@@ -15,6 +15,9 @@ import {
   ChevronUp,
   ClipboardList,
   Clock,
+  Menu,
+  Medal,
+  CheckCircle,
   Copy,
   Database,
   Dumbbell,
@@ -71,6 +74,7 @@ import {
   addDoc
 } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType, signOutUser } from "./lib/firebase";
+import { ACHIEVEMENTS } from "./lib/achievements";
 
 export type SetData = { 
   id: string; 
@@ -237,7 +241,7 @@ function ExerciseDetails({ ex, unit, onBack, t, exercises = [], onSelectVariatio
   ).slice(0, 4);
 
   return (
-    <div className="bg-background text-on-background min-h-[100dvh] pb-24 flex flex-col font-[var(--font-body-md)]">
+    <div className="bg-background text-on-background min-h-[100dvh] pb-20 flex flex-col font-[var(--font-body-md)]">
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant flex items-center justify-between px-margin-mobile h-16">
         <div className="flex items-center gap-stack-md">
@@ -564,6 +568,7 @@ const translations: Record<string, Record<string, string>> = {
     total_volume: "Total Volume",
     this_week: "This Week",
     activity_summary: "Activity Summary",
+    today: "Today",
     next_workout: "Next Workout",
     progress_analysis: "Progress Analysis",
     strength_progression: "Strength Progression",
@@ -637,7 +642,15 @@ const translations: Record<string, Record<string, string>> = {
     "Dumbbell Bench Press": "Dumbbell Bench Press",
     "Dumbbell Incline Bench Press": "Dumbbell Incline Bench Press",
     "Hammer Strength Incline Press": "Hammer Strength Incline Press",
-    "Hammer Strength Decline Press": "Hammer Strength Decline Press"
+    "Hammer Strength Decline Press": "Hammer Strength Decline Press",
+    "Curl con bilanciere": "Barbell Curl",
+    "Curl con manubri": "Dumbbell Curl",
+    "Curl a martello": "Hammer Curl",
+    "Rematore con bilanciere": "Barbell Row",
+    "Rematore con manubri": "Dumbbell Row",
+    "Panca Piana": "Bench Press",
+    "Trazioni": "Pull Ups",
+    "Stacco da terra": "Deadlift"
   },
   it: {
     dashboard: "Riepilogo",
@@ -672,6 +685,7 @@ const translations: Record<string, Record<string, string>> = {
     total_volume: "Volume Totale",
     this_week: "Questa Settimana",
     activity_summary: "Riepilogo Attività",
+    today: "Oggi",
     next_workout: "Prossimo Allenamento",
     progress_analysis: "Analisi Progresso",
     strength_progression: "Aumento della Forza",
@@ -776,7 +790,32 @@ const translations: Record<string, Record<string, string>> = {
     "Plank": "Plank",
     "Leg Raise": "Sollevamento Gambe",
     "Russian Twist": "Russian Twist",
-    "Cable Crunch": "Crunch ai Cavi"
+    "Cable Crunch": "Crunch ai Cavi",
+    "Dumbbell Drag Curl": "Curl con Manubri (Drag)",
+    "Dumbbell Single Arm Incline Twisting Curl": "Curl inclinato con manubrio a un braccio",
+    "Dumbbell Single Arm Incline Reverse Curl": "Curl inverso inclinato con manubrio",
+    "Dumbbell Single Arm Incline Hammer Curl": "Curl a martello inclinato con manubrio",
+    "Dumbbell Standing Single Arm Reverse Curl": "Curl inverso in piedi con manubrio",
+    "Dumbbell Standing Single Arm Hammer Curl": "Curl a martello in piedi con manubrio",
+    "Dumbbell Standing Single Arm Curl": "Curl con manubrio a un braccio",
+    "Dumbbell Seated Reverse Curl": "Curl inverso seduto con manubri",
+    "Dumbbell Seated Single Arm Hammer Curl": "Curl martello seduto a un braccio",
+    "Dumbbell Seated Hammer Curl": "Curl martello seduto con manubri",
+    "Dumbbell Single Arm Rear Delt Row": "Rematore deltoidi posteriori monobraccio",
+    "Ez Bar Drag Curl": "Curl barra EZ (Drag)",
+    "Ez Bar Reverse Curl": "Curl inverso barra EZ",
+    "Ez Bar Close Grip Curl": "Curl barra EZ presa stretta",
+    "Kettlebell Drag Curl": "Curl con Kettlebell (Drag)",
+    "Trap Bar Deficit Deadlift": "Stacco Trap Bar con Deficit",
+    "Trap Bar Pause Deadlift": "Stacco Trap Bar con Pausa",
+    "Ez Bar Romanian Deadlift": "Stacco Rumeno con barra EZ",
+    "Dumbbell Single Arm Clean And Press": "Clean & Press con manubrio monobraccio",
+    "Dumbbell Single Arm Hang Clean And Press": "Hang Clean & Press con manubrio monobraccio",
+    "Kettlebell Single Arm Clean And Jerk": "Clean & Jerk con kettlebell monobraccio",
+    "Kettlebell Single Arm Hang Clean And Jerk": "Hang Clean & Jerk con kettlebell monobraccio",
+    "Band Bent Over Row": "Rematore con elastico",
+    "Mini Band Kneeling Row": "Rematore in ginocchio con elastico",
+    "Band Single Arm Bent Over Row": "Rematore monobraccio con elastico"
   },
   es: {
     dashboard: "Panel",
@@ -811,6 +850,7 @@ const translations: Record<string, Record<string, string>> = {
     total_volume: "Volumen Total",
     this_week: "Esta Semana",
     activity_summary: "Resumen de Actividad",
+    today: "Hoy",
     next_workout: "Próximo Entrenamiento",
     progress_analysis: "Análisis de Progreso",
     strength_progression: "Progresión de Fuerza",
@@ -909,13 +949,16 @@ const translations: Record<string, Record<string, string>> = {
     "Barbell Curl": "Curl con Barra",
     "Hammer Curl": "Curl Martillo",
     "Tricep Pushdown": "Extensión Tricípes Polea",
-   "Overhead Tricep Extension": "Extensión Tricípes Copa",
+    "Overhead Tricep Extension": "Extensión Tricípes Copa",
     "Skullcrusher": "Press Francés",
     "Crunch": "Encogimientos",
     "Plank": "Plancha",
     "Leg Raise": "Elevación de Piernas",
     "Russian Twist": "Giro Ruso",
-    "Cable Crunch": "Encogimientos en Polea"
+    "Cable Crunch": "Encogimientos en Polea",
+    "Dumbbell Drag Curl": "Curl con mancuernas (Drag)",
+    "Ez Bar Drag Curl": "Curl barra EZ (Drag)",
+    "Dumbbell Single Arm Incline Hammer Curl": "Curl martillo inclinado a un brazo"
   }
 };
 
@@ -1074,7 +1117,7 @@ function RoutineEditor({ t, unit, exercises, routineId, initialRoutine, onBack, 
   };
 
   return (
-    <div className="bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full pb-24">
+    <div className="bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full pb-20">
       {/* TopAppBar */}
       <header className="bg-surface border-b border-surface-variant flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 sticky top-0 z-50">
         <div className="flex items-center gap-stack-md">
@@ -1553,7 +1596,7 @@ function AddExercise({ t, unit, onBack, onSave }: { t: any, unit: string, onBack
   };
 
   return (
-    <div className="bg-surface-container-lowest text-on-surface font-body-md min-h-[100dvh] pb-24 selection:bg-primary-container selection:text-on-primary-container">
+    <div className="bg-surface-container-lowest text-on-surface font-body-md min-h-[100dvh] pb-20 selection:bg-primary-container selection:text-on-primary-container">
       {/* TopAppBar */}
       <header className="w-full top-0 sticky z-50 bg-surface border-b border-surface-variant flex items-center justify-between px-margin-mobile h-16">
         <div className="flex items-center gap-stack-md">
@@ -1686,7 +1729,7 @@ function Settings({
   onManageProfile: () => void
 }) {
   return (
-    <div className="bg-background text-on-background font-[var(--font-body-md)] text-[16px] min-h-[100dvh] antialiased flex flex-col w-full pb-24">
+    <div className="bg-background text-on-background font-[var(--font-body-md)] text-[16px] min-h-[100dvh] antialiased flex flex-col w-full pb-20">
       {/* TopAppBar */}
       <header className="bg-surface border-b border-surface-variant flex justify-center items-center w-full px-margin-mobile h-16 sticky top-0 z-50">
         <div className="font-[var(--font-display-lg-mobile)] text-[36px] font-extrabold text-primary tracking-tighter uppercase text-center">
@@ -2081,19 +2124,36 @@ function Dashboard({ t, unit, navigateTo, onSelectRoutine, routines, currentWeig
                 <button 
                   key={idx}
                   onClick={() => setSelectedDayIndex(idx)}
-                  className={`flex flex-col items-center gap-1 transition-all flex-1 py-1 md:py-2 rounded-lg relative ${
-                    isSelected ? 'bg-surface-variant border border-outline shadow-sm' : 'hover:bg-surface-variant/30'
-                  } ${!isSelected && !isToday ? 'opacity-50' : ''}`}
+                  className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-1.5 md:py-3 rounded-xl relative ${
+                    isSelected 
+                      ? 'bg-neutral-900 border-2 border-primary text-primary shadow-[0_4px_12px_rgba(195,244,0,0.3)] scale-110 z-10' 
+                      : (isToday ? 'bg-primary/5 border border-primary/20' : 'hover:bg-surface-variant/30')
+                  } ${!isSelected && !isToday && !hasWorkout ? 'opacity-40' : ''}`}
                 >
-                  <span className={`text-[10px] md:text-label-bold font-bold uppercase ${isSelected ? 'text-primary' : 'text-on-surface'}`}>{day.label}</span>
-                  <div className={`w-1.5 h-1.5 rounded-full ${
-                    hasWorkout ? 'bg-primary-container' : 'bg-transparent'
-                  }`}></div>
-                  {isToday && !isSelected && (
-                    <div className="w-1 h-1 rounded-full bg-primary-container absolute top-1 right-1 shadow-[0_0_8px_rgba(195,244,0,0.6)]"></div>
+                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-tighter ${isSelected ? 'text-primary' : (isToday ? 'text-primary' : 'text-on-surface-variant')}`}>
+                    {day.label}
+                  </span>
+                  
+                  <div className={`relative w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-500 ${
+                    hasWorkout 
+                      ? (isSelected ? 'bg-primary shadow-[0_0_8px_rgba(195,244,0,0.6)]' : 'bg-primary shadow-[0_0_10px_rgba(195,244,0,0.5)]') 
+                      : 'bg-surface-variant/20'
+                  }`}>
+                    {hasWorkout && !isSelected && (
+                       <span className="absolute inset-0 rounded-full animate-ping bg-primary opacity-30"></span>
+                    )}
+                  </div>
+
+                  {isToday && (
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-primary' : 'bg-primary'}`} />
                   )}
-                  {isToday && isSelected && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(195,244,0,0.6)]"></div>
+
+                  {isToday && (
+                    <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-tighter whitespace-nowrap shadow-sm ${
+                      isSelected ? 'bg-neutral-900 text-primary border border-primary' : 'bg-primary text-[#000000]'
+                    }`}>
+                      {t("today")}
+                    </div>
                   )}
                 </button>
               );
@@ -2988,6 +3048,59 @@ function Progress({ t, unit, exercises, workoutLogs }: { t: any, unit: string, e
           </div>
         </div>
       </div>
+      
+      {/* Achievements Bento */}
+      <div className="bg-surface-container border border-surface-variant rounded-lg p-stack-lg">
+        <div className="flex items-center gap-2 mb-stack-md">
+          <Medal className="w-6 h-6 outline-none text-primary" />
+          <h2 className="text-headline-md text-primary tracking-tight">Legacy Achievements</h2>
+        </div>
+        <p className="text-body-md text-on-surface-variant mb-stack-lg">Push your limits to forge your legacy.</p>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-stack-md">
+          {ACHIEVEMENTS.map(ach => {
+            const progress = ach.progress(workoutLogs, unit);
+            const isUnlocked = progress >= 1;
+            
+            const levelColors = {
+              "bronze": "text-orange-500 bg-orange-500/10 border-orange-500/20",
+              "silver": "text-slate-300 bg-slate-300/10 border-slate-300/20",
+              "gold": "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+              "platinum": "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
+            };
+            const col = ach.level ? levelColors[ach.level] : levelColors["bronze"];
+            
+            return (
+              <div 
+                key={ach.id} 
+                className={`relative flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all ${
+                  isUnlocked 
+                    ? `border-primary/40 bg-surface ${col}` 
+                    : 'border-surface-variant bg-surface opacity-60 grayscale'
+                }`}
+              >
+                {!isUnlocked && (
+                  <div className="absolute top-2 right-2 text-xs font-mono text-on-surface-variant">
+                    {Math.floor(progress * 100)}%
+                  </div>
+                )}
+                {isUnlocked && (
+                  <div className="absolute top-2 right-2">
+                    <CheckCircle className="w-4 h-4 text-primary" />
+                  </div>
+                )}
+                <ach.icon className={`w-8 h-8 mb-3 ${isUnlocked ? 'drop-shadow-[0_0_10px_currentColor]' : ''}`} />
+                <h3 className={`text-sm font-bold leading-tight mb-1 ${isUnlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+                  {ach.title}
+                </h3>
+                <p className="text-[10px] text-on-surface-variant leading-tight">
+                  {ach.description}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </main>
   );
 }
@@ -3569,7 +3682,7 @@ export default function App() {
   }
 
   return (
-    <div className="bg-background text-on-background min-h-[100dvh] pb-24 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+    <div className="bg-background text-on-background min-h-[100dvh] pb-20 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
       {/* TopAppBar */}
       <header className="flex justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-50 bg-surface border-b border-surface-variant">
         {/* Headline */}
