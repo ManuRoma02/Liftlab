@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, deleteUser } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -19,6 +19,12 @@ export async function signInWithGoogle() {
 }
 
 export const signOutUser = () => signOut(auth);
+export const deleteUserAccount = () => {
+    if (auth.currentUser) {
+        return deleteUser(auth.currentUser);
+    }
+    return Promise.reject("No user logged in");
+}
 
 export enum OperationType {
   CREATE = 'create',

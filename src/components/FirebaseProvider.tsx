@@ -69,7 +69,19 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const saveUserData = async (data: any) => {
-    if (!user) return;
+    if (!user) {
+      // For guests, we can still provide a basic experience by saving some things to localStorage
+      // We merge with existing "UserData" if it exists in local storage
+      const existing = localStorage.getItem("liftlab_guest_data");
+      let merged = {};
+      if (existing) {
+        try { merged = JSON.parse(existing); } catch(e) {}
+      }
+      const updated = { ...merged, ...data, updatedAt: new Date().toISOString() };
+      localStorage.setItem("liftlab_guest_data", JSON.stringify(updated));
+      setUserData(updated);
+      return;
+    }
     const userRef = doc(db, 'users', user.uid);
     try {
       await setDoc(userRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -77,6 +89,16 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
     }
   };
+
+  useEffect(() => {
+    if (!user && !loading) {
+       // Check if we have guest data
+       const existing = localStorage.getItem("liftlab_guest_data");
+       if (existing) {
+         try { setUserData(JSON.parse(existing)); } catch(e) {}
+       }
+    }
+  }, [user, loading]);
 
   return (
     <FirebaseContext.Provider value={{ user, loading, userData, saveUserData }}>
