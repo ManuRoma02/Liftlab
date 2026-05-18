@@ -49,7 +49,7 @@ import {
   Youtube,
   Zap,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Model, { IExerciseData } from "react-body-highlighter";
 import {
   AreaChart,
@@ -63,6 +63,8 @@ import {
   Bar,
 } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
+import logoImg from "./assets/images/logo.png";
+import logoInAppImg from "./assets/images/logo_in_app.png";
 import welcomeImg from "./assets/images/liftlab_welcome_1779009844351.png";
 import workoutImg from "./assets/images/liftlab_workout_1779009862346.png";
 import statsImg from "./assets/images/liftlab_stats_1779009880448.png";
@@ -828,6 +830,7 @@ const translations: Record<string, Record<string, string>> = {
     all_exercises: "All Exercises",
     featured_exercises: "Featured Exercises",
     save_routine: "Save Routine",
+    start_first_workout: "Start First Workout",
     save_changes: "Save Changes",
     routine_name: "Routine Name",
     discard: "Discard",
@@ -1078,6 +1081,7 @@ const translations: Record<string, Record<string, string>> = {
       "Stai visualizzando solo alcuni esercizi. Usa la ricerca per trovarli tutti!",
     all_exercises: "Tutti gli Esercizi",
     featured_exercises: "Esercizi Consigliati",
+    start_first_workout: "Inizia Primo Allenamento",
   },
   es: {
     dashboard: "Panel",
@@ -1147,6 +1151,7 @@ const translations: Record<string, Record<string, string>> = {
       "Solo se muestran ejercicios destacados. ¡Usa la búsqueda para encontrar más!",
     all_exercises: "Todos los Ejercicios",
     featured_exercises: "Ejercicios Destacados",
+    start_first_workout: "Empezar Primer Entrenamiento",
     save_routine: "Guardar Rutina",
     save_changes: "Guardar Cambios",
     routine_name: "Nombre de Rutina",
@@ -1476,9 +1481,9 @@ function RoutineEditor({
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-[var(--font-headline-md)] font-bold text-[24px] text-primary tracking-tight">
-            LIFTLAB
-          </h1>
+          <div className="h-10 flex items-center justify-center overflow-hidden">
+            <img src={logoInAppImg} alt="LIFTLAB" className="h-full w-auto object-contain" />
+          </div>
         </div>
         <div className="flex items-center gap-stack-md">
           {mode === "live" && onDiscard && (
@@ -1862,16 +1867,16 @@ function RoutineEditor({
                                         set.completed,
                                       )
                                     }
-                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${set.completed ? "bg-primary-container text-on-primary-container" : "bg-surface-variant text-on-surface-variant hover:bg-surface"}`}
+                                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all active:scale-90 ${set.completed ? "bg-primary-container text-on-primary-container" : "bg-surface-variant text-on-surface-variant hover:bg-surface"}`}
                                   >
-                                    <Check className="w-4 h-4" />
+                                    <Check className="w-5 h-5" />
                                   </button>
                                   <button
                                     onClick={() => deleteSet(ex.id, set.id)}
-                                    className="w-8 h-8 rounded flex items-center justify-center bg-surface-variant text-error hover:bg-error/10 transition-colors"
+                                    className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface-variant text-error hover:bg-error/10 active:scale-90 transition-all"
                                     title="Delete Set"
                                   >
-                                    <X className="w-4 h-4" />
+                                    <X className="w-5 h-5" />
                                   </button>
                                 </div>
                               </div>
@@ -2236,8 +2241,8 @@ function AddExercise({
             {t("add_exercise_upper")}
           </h1>
         </div>
-        <div className="font-black tracking-tighter text-3xl text-primary-fixed opacity-20 hidden sm:block">
-          LIFTLAB
+        <div className="h-12 overflow-hidden opacity-20 hidden sm:block">
+          <img src={logoInAppImg} alt="LIFTLAB" className="h-full w-auto object-contain" />
         </div>
       </header>
 
@@ -2385,8 +2390,8 @@ function Settings({
     <div className="bg-background text-on-background font-[var(--font-body-md)] text-[16px] min-h-[100dvh] antialiased flex flex-col w-full pb-20">
       {/* TopAppBar */}
       <header className="bg-surface border-b border-surface-variant flex justify-center items-center w-full px-margin-mobile h-16 sticky top-0 z-50">
-        <div className="font-[var(--font-display-lg-mobile)] text-[36px] font-extrabold text-primary tracking-tighter uppercase text-center">
-          LIFTLAB
+        <div className="h-10 overflow-hidden">
+          <img src={logoInAppImg} alt="LIFTLAB" className="h-full w-auto object-contain" />
         </div>
       </header>
 
@@ -2706,18 +2711,28 @@ function PRListModal({
   onClose: () => void;
   t: any;
 }) {
-  const prExercises = exercises.filter((ex) => ex.prWeight || ex.oneRepMax);
+  const [search, setSearch] = useState("");
+  
+  const allDisplayExercises = exercises.filter((ex) => {
+    return ex.title?.toLowerCase().includes(search.toLowerCase());
+  }).sort((a, b) => {
+    // Show those with PRs first
+    const aHas = (a.prWeight || a.oneRepMax) ? 1 : 0;
+    const bHas = (b.prWeight || b.oneRepMax) ? 1 : 0;
+    if (aHas !== bHas) return bHas - aHas;
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[300] flex items-center justify-center p-4">
-      <div className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-variant/20">
+      <div className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
+        <div className="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-variant/20 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Trophy className="w-6 h-6" />
             </div>
             <h3 className="font-[var(--font-headline-sm)] text-[20px] font-bold text-primary tracking-tight uppercase">
-              Personal Records
+              {t("personal_records")}
             </h3>
           </div>
           <button
@@ -2728,14 +2743,27 @@ function PRListModal({
           </button>
         </div>
 
-        <div className="p-4 max-h-[60vh] overflow-y-auto flex flex-col gap-3">
-          {prExercises.length === 0 ? (
+        <div className="px-4 py-3 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+            <input
+              type="text"
+              placeholder={t("search_exercise") || "Search exercise..."}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface-container border border-surface-variant rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-on-surface-variant/50"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-3 min-h-0">
+          {allDisplayExercises.length === 0 ? (
             <div className="py-12 text-center text-on-surface-variant">
               <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p>No Personal Records tracked yet.</p>
+              <p>No exercises found.</p>
             </div>
           ) : (
-            prExercises.map((ex) => (
+            allDisplayExercises.map((ex) => (
               <div
                 key={ex.id}
                 className="bg-surface border border-surface-variant rounded-xl p-4 flex flex-col gap-3 hover:border-primary/30 transition-colors"
@@ -2813,7 +2841,13 @@ function PRListModal({
   );
 }
 
-function Dashboard({
+const getLogDate = (log: any) => {
+  if (!log || !log.date) return new Date();
+  if (typeof log.date.toDate === "function") return log.date.toDate();
+  return new Date(log.date);
+};
+
+const Dashboard = React.memo(({
   t,
   unit,
   navigateTo,
@@ -2841,8 +2875,14 @@ function Dashboard({
   exercises: ExerciseData[];
   workoutLogs: any[];
   weightLogs?: {date: string, weight: number}[];
-}) {
+}) => {
   const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
+
+  const latestWeightFromLogs =
+    weightLogs && weightLogs.length > 0
+      ? weightLogs[weightLogs.length - 1].weight
+      : 0;
+  const displayWeight = currentWeight || latestWeightFromLogs || 0;
 
   const nextRoutine =
     routines.find((r) => r.scheduledDay === todayIndex) ||
@@ -2876,27 +2916,91 @@ function Dashboard({
 
   const factor = unit === "KG" ? 1 / 2.20462 : 1;
 
+  const sortedLogs = useMemo(() => {
+    return [...workoutLogs]
+      .filter((log) => log.date)
+      .sort((a, b) => getLogDate(a).getTime() - getLogDate(b).getTime());
+  }, [workoutLogs]);
+
+  const getProgressData = () => {
+    return sortedLogs.map((log, i) => {
+      const date = getLogDate(log);
+      const dateStr = date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+      let squat = 0,
+        deadlift = 0,
+        bench = 0;
+      log.exercises?.forEach((ex: any) => {
+        const type = ex.title?.toLowerCase() || "";
+        const maxWeight = Math.max(
+          ...(ex.sets?.map((s: any) => s.weight || 0) || [0]),
+        );
+        if (type.includes("squat")) if (maxWeight > squat) squat = maxWeight;
+        if (type.includes("deadlift"))
+          if (maxWeight > deadlift) deadlift = maxWeight;
+        if (type.includes("bench")) if (maxWeight > bench) bench = maxWeight;
+      });
+      return { name: dateStr || `Workout ${i + 1}`, squat, deadlift, bench };
+    });
+  };
+
+  const getVolumeData = () => {
+    return sortedLogs.map((log, i) => {
+      const date = getLogDate(log);
+      const dateStr = date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+      let volume = 0;
+      log.exercises?.forEach((ex: any) => {
+        ex.sets?.forEach((s: any) => {
+          if (s.completed && s.weight && s.reps) volume += s.weight * s.reps;
+        });
+      });
+      return { name: dateStr || `Workout ${i + 1}`, volume };
+    });
+  };
+
+  const getWeightData = () => {
+    return [...weightLogs]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map((log) => ({
+        name: new Date(log.date).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+        weight: log.weight,
+      }));
+  };
+
+  const progressData = useMemo(() => getProgressData(), [sortedLogs]);
+  const volumeData = useMemo(() => getVolumeData(), [sortedLogs]);
+  const weightDataForChart = useMemo(() => getWeightData(), [weightLogs]);
+
   // Process real workout logs for this week
-  const activityData: Record<number, DetailedActivity> = {};
+  const activityData = useMemo(() => {
+    const data: Record<number, DetailedActivity> = {};
+    workoutLogs.forEach((log) => {
+      if (!log.date) return;
+      const date = getLogDate(log);
+      const now = new Date();
+      // Check if it's within the last 7 days
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  workoutLogs.forEach((log) => {
-    if (!log.date) return;
-    const date = log.date.toDate();
-    const now = new Date();
-    // Check if it's within the last 7 days (or just current week)
-    // For simplicity, let's map logs to day index of current week
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays <= 7) {
-      const dayIdx = (date.getDay() + 6) % 7;
-      activityData[dayIdx] = {
-        title: log.routineName || "Workout",
-        duration: log.duration || 0,
-        exercises: log.exercises || [],
-      };
-    }
-  });
+      if (diffDays <= 7) {
+        const dayIdx = (date.getDay() + 6) % 7;
+        data[dayIdx] = {
+          title: log.routineName || "Workout",
+          duration: log.duration || 0,
+          exercises: log.exercises || [],
+        };
+      }
+    });
+    return data;
+  }, [workoutLogs]);
 
   const handleUpdateWeight = () => {
     const num = parseFloat(weightInput);
@@ -2910,7 +3014,7 @@ function Dashboard({
 
   let workoutsThisWeek = 0;
   let durationThisWeek = 0;
-  Object.values(activityData).forEach((activity) => {
+  Object.values(activityData).forEach((activity: any) => {
     if (activity.duration > 0) {
       workoutsThisWeek++;
       durationThisWeek += activity.duration;
@@ -3212,7 +3316,7 @@ function Dashboard({
                   Body Weight
                 </p>
                 <p className="text-headline-md text-secondary-fixed">
-                  {currentWeight}{" "}
+                  {displayWeight}{" "}
                   <span className="text-body-md text-on-surface-variant font-normal">
                     {unit.toLowerCase()}
                   </span>
@@ -3337,8 +3441,8 @@ function Dashboard({
                 </p>
                 <ChevronRight className="w-4 h-4 group-hover:text-secondary-fixed transition-colors" />
               </div>
-              <div className="h-24 w-full text-[10px] relative z-10">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-24 w-full text-[10px] relative z-10 min-w-0 min-h-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart data={getWeightChartData()} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="dbWeightGrad" x1="0" y1="0" x2="0" y2="1">
@@ -3365,8 +3469,8 @@ function Dashboard({
                 </p>
                 <ChevronRight className="w-4 h-4 group-hover:text-primary-container transition-colors" />
               </div>
-              <div className="h-24 w-full text-[10px] relative z-10">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-24 w-full text-[10px] relative z-10 min-w-0 min-h-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={getVolumeChartData()} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                     <Bar dataKey="volume" fill="#c3f400" radius={[2, 2, 0, 0]} maxBarSize={30} isAnimationActive={false} />
                   </BarChart>
@@ -3585,7 +3689,7 @@ function Dashboard({
       </section>
     </main>
   );
-}
+});
 
 function Library({
   t,
@@ -3847,12 +3951,14 @@ function Progress({
   exercises,
   workoutLogs,
   weightLogs = [],
+  navigateTo,
 }: {
   t: any;
   unit: string;
   exercises: any[];
   workoutLogs: any[];
   weightLogs?: {date: string, weight: number}[];
+  navigateTo: (tab: string) => void;
 }) {
   const [timeframe, setTimeframe] = useState("Monthly");
   const [selectedLift, setSelectedLift] = useState<
@@ -3876,8 +3982,11 @@ function Progress({
           Start your first workout to begin tracking your gains, body weight,
           and strength improvements.
         </p>
-        <button className="mt-8 bg-primary-fixed text-[#000000] px-8 py-3 rounded-full font-bold uppercase tracking-wider text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg">
-          Start First Workout
+        <button
+          onClick={() => navigateTo("workout")}
+          className="mt-8 bg-primary-fixed text-[#000000] text-label-bold px-10 py-3.5 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-[0_8px_16px_rgba(195,244,0,0.15)] uppercase"
+        >
+          {t("start_first_workout")}
         </button>
       </main>
     );
@@ -3886,15 +3995,19 @@ function Progress({
   const bestLiftEx =
     safeExercises.find((ex) => ex.id === bestLiftExId) || safeExercises[0];
 
-  const sortedLogs = [...workoutLogs]
-    .filter((log) => log.date)
-    .sort((a, b) => a.date.toMillis() - b.date.toMillis());
+  const sortedLogs = useMemo(() => {
+    return [...workoutLogs]
+      .filter((log) => log.date)
+      .sort((a, b) => getLogDate(a).getTime() - getLogDate(b).getTime());
+  }, [workoutLogs]);
 
   const getProgressData = () => {
     return sortedLogs.map((log, i) => {
-      const dateStr = log.date
-        .toDate()
-        .toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      const date = getLogDate(log);
+      const dateStr = date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
       let squat = 0,
         deadlift = 0,
         bench = 0;
@@ -3914,9 +4027,11 @@ function Progress({
 
   const getVolumeData = () => {
     return sortedLogs.map((log, i) => {
-      const dateStr = log.date
-        .toDate()
-        .toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      const date = getLogDate(log);
+      const dateStr = date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
       let volume = 0;
       log.exercises?.forEach((ex: any) => {
         ex.sets?.forEach((s: any) => {
@@ -3938,6 +4053,10 @@ function Progress({
         weight: log.weight,
       }));
   };
+
+  const progressData = useMemo(() => getProgressData(), [sortedLogs]);
+  const volumeData = useMemo(() => getVolumeData(), [sortedLogs]);
+  const weightDataForChart = useMemo(() => getWeightData(), [weightLogs]);
 
   const getWorkoutsCount = () => {
     return workoutLogs.length.toString();
@@ -4165,10 +4284,10 @@ function Progress({
           </select>
         </div>
 
-        <div className="w-full h-64 md:h-80 relative font-[var(--font-body-md)] text-xs">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-64 md:h-80 relative font-[var(--font-body-md)] text-xs min-w-0 min-h-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <AreaChart
-              data={getProgressData()}
+              data={progressData}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             >
               <defs>
@@ -4228,10 +4347,10 @@ function Progress({
             Total {unit.toLowerCase()} moved per week
           </p>
 
-          <div className="flex-1 min-h-[160px] relative font-[var(--font-body-md)] text-[10px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-h-[160px] relative font-[var(--font-body-md)] text-[10px] min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart
-                data={getVolumeData()}
+                data={volumeData}
                 margin={{ top: 0, right: 15, left: 0, bottom: 0 }}
               >
                 <XAxis
@@ -4271,10 +4390,10 @@ function Progress({
             Moving average over 30 days
           </p>
 
-          <div className="flex-1 min-h-[160px] relative font-[var(--font-body-md)] text-[10px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-h-[160px] relative font-[var(--font-body-md)] text-[10px] min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart
-                data={getWeightData()}
+                data={weightDataForChart}
                 margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
               >
                 <defs>
@@ -5011,10 +5130,15 @@ function WorkoutSummaryView({
 
 export default function App() {
   const { user, loading: authLoading, userData, saveUserData } = useFirebase();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    const active = localStorage.getItem("liftlab_is_live_active") === "true";
+    return active ? "live_editor" : "dashboard";
+  });
   const [prevTab, setPrevTab] = useState("dashboard");
   const [lastWorkoutData, setLastWorkoutData] = useState<any>(null);
-  const [isLiveWorkoutActive, setIsLiveWorkoutActive] = useState(false);
+  const [isLiveWorkoutActive, setIsLiveWorkoutActive] = useState(() => {
+    return localStorage.getItem("liftlab_is_live_active") === "true";
+  });
   const [liveWorkoutKey, setLiveWorkoutKey] = useState(0);
   const [isConfirming, setIsConfirming] = useState(false);
   const [exercises, setExercises] = useState(() => {
@@ -5047,7 +5171,23 @@ export default function App() {
     return localStorage.getItem("liftlab_tutorial_completed") !== "true";
   });
   const [isGuest, setIsGuest] = useState(false);
-  const [currentWeight, setCurrentWeight] = useState<number>(0);
+  const [currentWeight, setCurrentWeight] = useState<number>(() => {
+    const saved = localStorage.getItem("liftlab_weight_logs");
+    if (saved) {
+      try {
+        const logs = JSON.parse(saved);
+        if (logs.length > 0) return logs[logs.length - 1].weight;
+      } catch (e) {}
+    }
+    const guestData = localStorage.getItem("liftlab_guest_data");
+    if (guestData) {
+      try {
+        const data = JSON.parse(guestData);
+        if (data.currentWeight) return data.currentWeight;
+      } catch (e) {}
+    }
+    return 0;
+  });
   const [weightLogs, setWeightLogs] = useState<{date: string, weight: number}[]>(() => {
     const saved = localStorage.getItem("liftlab_weight_logs");
     return saved ? JSON.parse(saved) : [];
@@ -5148,9 +5288,8 @@ export default function App() {
   const finishTutorial = () => {
     setShowTutorial(false);
     localStorage.setItem("liftlab_tutorial_completed", "true");
-    if (user) {
-      saveUserData({ hasCompletedTutorial: true });
-    }
+    saveUserData({ hasCompletedTutorial: true });
+    setActiveTab("workout");
   };
 
   // Persistence effects for guests
@@ -5185,7 +5324,16 @@ export default function App() {
       setLanguage(userData.language || "en");
       setUnit(userData.unit || "LBS");
       setRestTimer(userData.restTimer || 90);
-      setCurrentWeight(userData.currentWeight || 0);
+      const latestWeightInLogs =
+        userData.weightLogs && userData.weightLogs.length > 0
+          ? userData.weightLogs[userData.weightLogs.length - 1].weight
+          : 0;
+      
+      const newWeight = userData.currentWeight || latestWeightInLogs || 0;
+      if (newWeight !== 0) {
+        setCurrentWeight(newWeight);
+      }
+      
       if (userData.weightLogs) {
         setWeightLogs(userData.weightLogs);
       }
@@ -5194,14 +5342,14 @@ export default function App() {
       else setDashboardStats(stats);
       setUserName(userData.displayName || "User");
       setUserEmail(userData.email || "");
-      if (
-        userData.hasCompletedTutorial === false ||
-        userData.hasCompletedTutorial === undefined
-      ) {
-        setShowTutorial(true);
-      } else if (userData.hasCompletedTutorial === true) {
+      
+      const localTutorialCompleted = localStorage.getItem("liftlab_tutorial_completed") === "true";
+      const userTutorialCompleted = userData.hasCompletedTutorial === true;
+
+      if (!localTutorialCompleted && !userTutorialCompleted && showTutorial === false) {
+        // if both false and it was started as false, then we should consider it not started yet or being seen.
+      } else if (localTutorialCompleted || userTutorialCompleted) {
         setShowTutorial(false);
-        localStorage.setItem("liftlab_tutorial_completed", "true");
       }
     } else if (isGuest) {
       // For guests, ensure tutorial shows if not completed in localStorage
@@ -5209,6 +5357,8 @@ export default function App() {
         localStorage.getItem("liftlab_tutorial_completed") === "true";
       if (!hasCompleted) {
         setShowTutorial(true);
+      } else {
+        setShowTutorial(false);
       }
     }
   }, [userData, isGuest]);
@@ -5547,6 +5697,7 @@ export default function App() {
         handleFirestoreError(err, OperationType.WRITE, "workout_logs"),
       );
 
+      localStorage.setItem("liftlab_is_live_active", "false");
       setActiveRoutineId(null);
       setPendingWorkout(null);
       setIsEmptyPromptOpen(false);
@@ -5577,6 +5728,7 @@ export default function App() {
         return;
       }
     }
+    localStorage.setItem("liftlab_is_live_active", "true");
     setActiveRoutineId(id);
     setLiveWorkoutKey((prev) => prev + 1);
     setIsLiveWorkoutActive(true);
@@ -5825,12 +5977,9 @@ export default function App() {
         <header className="flex justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-50 bg-surface border-b border-surface-variant">
           {/* Headline */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center border border-surface-variant overflow-hidden shadow-[0_0_15px_rgba(195,244,0,0.2)]">
-              <Dumbbell className="w-6 h-6 text-[#d4ff00]" strokeWidth={3} />
+            <div className="h-10 flex items-center justify-center overflow-hidden">
+              <img src={logoInAppImg} alt="LIFTLAB" className="h-full w-auto object-contain" />
             </div>
-            <h1 className="text-[20px] font-black font-[var(--font-headline-lg)] text-primary tracking-tighter uppercase leading-none">
-              LIFTLAB
-            </h1>
           </div>
           {/* Trailing Icon */}
           <div className="flex gap-2">
@@ -5892,6 +6041,7 @@ export default function App() {
             exercises={exercises}
             workoutLogs={workoutLogs}
             weightLogs={weightLogs}
+            navigateTo={navigateTo}
           />
         )}
 

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Dumbbell, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { motion } from 'motion/react';
 import { signInWithGoogle } from '../lib/firebase';
+import logoImg from '../assets/images/logo.png';
 
 export function Login({ onGuest }: { onGuest: () => void }) {
   const [loading, setLoading] = React.useState(false);
@@ -35,9 +36,9 @@ export function Login({ onGuest }: { onGuest: () => void }) {
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-20 h-20 bg-black rounded-3xl flex items-center justify-center border border-surface-variant overflow-hidden shadow-[0_0_40px_rgba(195,244,0,0.2)] mb-6"
+            className="w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden mb-6"
           >
-            <Dumbbell className="w-10 h-10 text-primary" strokeWidth={3} />
+            <img src={logoImg} alt="LIFTLAB" className="w-full h-full object-cover" />
           </motion.div>
           
           <h1 className="text-[40px] font-black font-[var(--font-headline-lg)] text-primary tracking-tighter uppercase leading-none mb-2">
