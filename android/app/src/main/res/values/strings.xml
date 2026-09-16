@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LiftLab</string>
+    <string name="title_activity_main">LiftLab</string>
+    <string name="package_name">com.liftlab.app</string>
+    <string name="custom_url_scheme">com.liftlab.app</string>
+    <string name="shortcut_start_workout_short">Allenati</string>
+    <string name="shortcut_start_workout_long">Avvia Allenamento</string>
+    <string name="shortcut_routines_short">Schede</string>
+    <string name="shortcut_routines_long">Le Mie Schede</string>
+</resources>

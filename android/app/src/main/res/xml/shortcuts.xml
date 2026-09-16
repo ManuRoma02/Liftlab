@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="start_workout"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_start_workout_short"
+        android:shortcutLongLabel="@string/shortcut_start_workout_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.liftlab.app"
+            android:targetClass="com.liftlab.app.MainActivity"
+            android:data="liftlab://workout" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="my_routines"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_routines_short"
+        android:shortcutLongLabel="@string/shortcut_routines_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.liftlab.app"
+            android:targetClass="com.liftlab.app.MainActivity"
+            android:data="liftlab://routines" />
+    </shortcut>
+</shortcuts>

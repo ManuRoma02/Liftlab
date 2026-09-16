@@ -1,8 +1,7 @@
 
-import { ExerciseData } from '../App';
-import { parsedCsvExercises } from './rawCsv';
+import type { ExerciseData } from '../types/workout';
 
-const BASIC_EXERCISES: ExerciseData[] = [
+export const BASIC_EXERCISES: ExerciseData[] = [
   // Existing from App.tsx
   { id: "e_bp", title: "Barbell Bench Press", category: "Chest", type: "Compound", muscleFocus: ["Chest", "Triceps", "Shoulders"], image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=200&h=200", equipment: "Barbell", notes: "", sets: [] },
   { id: "e_ip", title: "Incline Dumbbell Press", category: "Chest", type: "Compound", muscleFocus: ["Chest", "Shoulders"], image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=200&h=200", equipment: "Dumbbell", notes: "", sets: [] },
@@ -11,13 +10,22 @@ const BASIC_EXERCISES: ExerciseData[] = [
   { id: "e_pd", title: "Pec Deck Fly", category: "Chest", type: "Isolation", muscleFocus: ["Chest"], image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=200&h=200", equipment: "Machine", notes: "", sets: [] },
 ];
 
-// Provide unique IDs and merge
-const allExs = [...BASIC_EXERCISES, ...(parsedCsvExercises as ExerciseData[])];
-const map = new Map<string, ExerciseData>();
-allExs.forEach(ex => {
-  if (!map.has(ex.title)) {
-    map.set(ex.title, ex);
-  }
-});
+export const mergeExerciseCatalog = (
+  catalog: ExerciseData[],
+  customExercises: ExerciseData[] = [],
+) => {
+  const map = new Map<string, ExerciseData>();
+  [...catalog, ...customExercises].forEach((exercise) => {
+    const key = exercise.id || exercise.title;
+    map.set(key, exercise);
+  });
+  return Array.from(map.values());
+};
 
-export const ALL_EXERCISES: ExerciseData[] = Array.from(map.values());
+export async function loadExerciseCatalog(): Promise<ExerciseData[]> {
+  const { precompiledExercises } = await import('./precompiledExercises');
+  return mergeExerciseCatalog(
+    BASIC_EXERCISES,
+    precompiledExercises as ExerciseData[],
+  );
+}

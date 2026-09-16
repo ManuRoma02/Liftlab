@@ -1,10 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, ui-monospace, monospace;
 }
 
 @layer base {
@@ -28,11 +26,11 @@
 }
 
 @theme {
-  --color-surface-container-lowest: #0e0e0e;
-  --color-surface-variant: #353534;
-  --color-on-tertiary-container: #ca0a0f;
-  --color-surface-container: #201f1f;
-  --color-secondary: #adc6ff;
+  --color-surface-container-lowest: #0c0a09;
+  --color-surface-variant: #37322d;
+  --color-on-tertiary-container: #86efac;
+  --color-surface-container: #1c1917;
+  --color-secondary: #4ade80;
   --color-on-tertiary-fixed: #410001;
   --color-error: #ffb4ab;
   --color-on-tertiary: #690003;
@@ -40,41 +38,41 @@
   --color-on-primary-fixed-variant: #3c4d00;
   --color-on-secondary-fixed-variant: #004493;
   --color-on-primary-fixed: #161e00;
-  --color-on-background: #e5e2e1;
+  --color-on-background: #f8fafc;
   --color-tertiary-fixed-dim: #ffb4aa;
   --color-tertiary: #ffffff;
-  --color-on-surface-variant: #c4c9ac;
-  --color-on-secondary: #002e69;
-  --color-secondary-fixed-dim: #adc6ff;
-  --color-outline: #8e9379;
-  --color-surface-tint: #abd600;
+  --color-on-surface-variant: #bdb5aa;
+  --color-on-secondary: #1f2937;
+  --color-secondary-fixed-dim: #fed7aa;
+  --color-outline: #4b5563;
+  --color-surface-tint: #22c55e;
   --color-tertiary-container: #ffdad5;
   --color-on-error: #690005;
   --color-on-tertiary-fixed-variant: #930005;
   --color-error-container: #93000a;
-  --color-on-primary: #283500;
-  --color-primary-fixed: #c3f400;
-  --color-surface-bright: #393939;
+  --color-on-primary: #07110a;
+  --color-primary-fixed: #22c55e;
+  --color-surface-bright: #262a2c;
   --color-inverse-on-surface: #313030;
-  --color-surface: #131313;
-  --color-surface-container-high: #2a2a2a;
-  --color-outline-variant: #444933;
+  --color-surface: #0d0f10;
+  --color-surface-container-high: #202324;
+  --color-outline-variant: #30363a;
   --color-on-secondary-fixed: #001a41;
-  --color-primary-container: #c3f400;
+  --color-primary-container: #22c55e;
   --color-inverse-surface: #e5e2e1;
-  --color-on-primary-container: #556d00;
-  --color-surface-dim: #131313;
+  --color-on-primary-container: #07110a;
+  --color-surface-dim: #0a0b0c;
   --color-on-secondary-container: #00285c;
-  --color-surface-container-low: #1c1b1b;
-  --color-inverse-primary: #506600;
-  --color-background: #131313;
-  --color-primary: #ffffff;
+  --color-surface-container-low: #121415;
+  --color-inverse-primary: #86efac;
+  --color-background: #0c0a09;
+  --color-primary: #f8fafc;
   --color-tertiary-fixed: #ffdad5;
-  --color-primary-fixed-dim: #abd600;
-  --color-surface-container-highest: #353534;
+  --color-primary-fixed-dim: #16a34a;
+  --color-surface-container-highest: #2a2e30;
   --color-on-error-container: #ffdad6;
   --color-secondary-fixed: #d8e2ff;
-  --color-on-surface: #e5e2e1;
+  --color-on-surface: #f1f5f9;
 
   --spacing-margin-desktop: 32px;
   --spacing-stack-lg: 24px;
@@ -84,14 +82,14 @@
   --spacing-stack-md: 12px;
   --spacing-gutter: 16px;
 
-  --font-headline-md: "Montserrat", sans-serif;
-  --font-label-bold: "Inter", sans-serif;
-  --font-display-lg: "Montserrat", sans-serif;
-  --font-display-lg-mobile: "Montserrat", sans-serif;
-  --font-headline-lg: "Montserrat", sans-serif;
-  --font-stats-xl: "Montserrat", sans-serif;
-  --font-body-lg: "Inter", sans-serif;
-  --font-body-md: "Inter", sans-serif;
+  --font-headline-md: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-label-bold: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display-lg: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display-lg-mobile: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-lg: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-stats-xl: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-body-lg: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-body-md: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 
 @utility text-headline-md {
@@ -146,16 +144,34 @@
   font-family: var(--font-display-lg-mobile);
 }
 
-html, body {
+html, body, #root {
   overflow-x: hidden;
   position: relative;
   width: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  background: #0c0a09;
+  scrollbar-color: var(--color-outline) transparent;
+  scrollbar-width: thin;
 }
 
 body {
   min-height: 100dvh;
-  background-color: var(--color-background);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background-color: #0c0a09;
+  background-image: radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.08), transparent 35rem);
   color: var(--color-on-background);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #0c0a09;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -169,4 +185,92 @@ body {
 .chart-grid {
   background-image: linear-gradient(to right, var(--color-surface-variant) 1px, transparent 1px), linear-gradient(to bottom, var(--color-surface-variant) 1px, transparent 1px);
   background-size: 20% 25%;
+}
+
+.app-shell {
+  background-color: var(--color-background);
+}
+
+.premium-panel {
+  background: #141618;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  transform: translateZ(0);
+}
+
+.premium-cta {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+  color: #050607;
+  box-shadow: 0 8px 20px rgba(34,197,94,0.25);
+}
+
+.console-topbar {
+  background: #090a0b;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.console-nav {
+  background: #0c0a09;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (min-width: 1024px) {
+  .console-nav {
+    border-top: 0;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+  }
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+button, [role="button"], a, input, textarea, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, [role="button"] {
+  touch-action: manipulation;
+}
+
+:where(button, [role="button"], a, input, textarea, select):focus-visible {
+  outline: 3px solid #4ade80;
+  outline-offset: 3px;
+}
+
+button:disabled { pointer-events: none; }
+
+::selection {
+  background: #22c55e;
+  color: #0c0a09;
+}
+
+.safe-topbar {
+  min-height: calc(4rem + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-floating-action {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+.routine-facts > span {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

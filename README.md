@@ -1,20 +1,49 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# LiftLab
 
-# Run and deploy your AI Studio app
+LiftLab is an offline-first workout tracker built with React, Vite, and Capacitor for Android.
 
-This contains everything you need to run your app locally.
+## Current Behavior
 
-View your app in AI Studio: https://ai.studio/apps/173d18d0-8951-4914-9350-95e413057111
+- No login screen is used.
+- No Firebase or cloud sync runtime is included.
+- Workout routines, logs, body weight, custom exercises, settings, and import/export data are stored in browser/device localStorage.
+- Android builds use Capacitor and package the Vite `dist` output.
+- Routine import supports LiftLab JSON files, including normal sets, supersets, cluster/drop-set style techniques, rest timers, custom exercise creation, and previous-weight autofill.
 
-## Run Locally
+## Development
 
-**Prerequisites:**  Node.js
+Prerequisite: Node.js and Android Studio/SDK for APK builds.
 
+```bash
+npm install
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Verification
+
+```bash
+npm run lint
+npm test
+npm run build
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug
+```
+
+Debug APK output:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Routine Import Sample
+
+Use this file to test routine import:
+
+```text
+examples/liftlab-routine-import-sample.json
+```
+
+## Local Data
+
+The app uses `localStorage` keys prefixed with `liftlab_`. Export/import is available in-app for backup and migration.
