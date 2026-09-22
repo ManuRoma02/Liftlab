@@ -335,6 +335,17 @@ export function convertWeight(
   return num;
 }
 
+export function roundToGymWeight(
+  val: number | string | "" | undefined | null,
+  decimals = 2,
+): number | "" {
+  if (val === "" || val === undefined || val === null) return "";
+  const num = Number(val);
+  if (!Number.isFinite(num)) return "";
+  const factor = Math.pow(10, decimals);
+  return Math.round((num + Number.EPSILON) * factor) / factor;
+}
+
 export const calculateOneRepMax = (
   weight: number | string,
   reps: number | string,

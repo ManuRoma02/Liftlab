@@ -19,6 +19,8 @@ export function Settings({
   t,
   unit,
   setUnit,
+  language,
+  setLanguage,
   onBack,
   restTimer,
   setRestTimer,
@@ -36,6 +38,8 @@ export function Settings({
   t: any;
   unit: string;
   setUnit: any;
+  language?: string;
+  setLanguage?: (lang: string) => void;
   onBack: () => void;
   restTimer: number;
   setRestTimer: (val: number) => void;
@@ -94,6 +98,40 @@ export function Settings({
                 {t("preferences")}
               </h3>
             </div>
+
+            {/* Preference Item: Language */}
+            {setLanguage && (
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2 border-b border-surface-variant/40 pb-4">
+                <div className="flex flex-col">
+                  <span className="text-[18px] text-on-background font-bold">
+                    {t("language") || "Language"}
+                  </span>
+                  <span className="text-[14px] text-on-surface-variant">
+                    {t("language_desc") || "Select your preferred application language"}
+                  </span>
+                </div>
+                <div className="w-full sm:w-auto flex bg-surface border border-surface-variant rounded-lg p-1">
+                  {[
+                    { code: "en", label: "EN" },
+                    { code: "it", label: "IT" },
+                    { code: "es", label: "ES" },
+                  ].map(({ code, label }) => (
+                    <button
+                      key={code}
+                      onClick={() => setLanguage(code)}
+                      aria-pressed={language === code}
+                      className={`min-h-11 flex-1 sm:flex-none px-4 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${
+                        language === code
+                          ? "bg-primary-fixed text-on-primary-fixed shadow-sm"
+                          : "text-on-surface-variant hover:text-on-background"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Preference Item: Weight Unit */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2">

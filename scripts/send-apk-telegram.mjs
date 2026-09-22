@@ -50,7 +50,7 @@ async function sendApk() {
   formData.append("chat_id", CHAT_ID);
   formData.append(
     "caption",
-    `🏋️ *LiftLab Android Build*\n📅 Data: ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })}\n📦 Dimensione: ${sizeMb} MB\n\n✨ *Ultime Novità:*\n• Notifica persistente con timer e pulsanti d'azione\n• Zero ricaricamento (ripresa istantanea a 0 ms)\n• Target Overload progressivo & Autofill a 1 tocco\n• Sostituzione rapida macchinario/esercizio\n• Correzione frecce e drop set`,
+    `🏋️ *LiftLab Android Build*\n📅 Data: ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })}\n📦 Dimensione: ${sizeMb} MB\n\n✨ *Ultime Novità:*\n• Nuovo catalogo di 1.324 esercizi completi\n• GIF animate dimostrative per ogni esercizio\n• Istruzioni passo-passo in italiano al 100%\n• Selettore Demo (GIF) / Anatomy (Muscoli 2D)\n• Zero duplicati e collisioni ID risolte\n• Categorie e attrezzature standardizzate`,
   );
   formData.append("parse_mode", "Markdown");
   formData.append("document", blob, "LiftLab.apk");

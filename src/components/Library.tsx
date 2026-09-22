@@ -3,7 +3,7 @@ import { Database, Plus, Search, ChevronDown, ChevronRight, X } from "lucide-rea
 import { motion, AnimatePresence } from "motion/react";
 import { TabHero } from "./common/TabHero";
 import { ExerciseMuscleVisual } from "./common/ExerciseMuscleVisual";
-import { fuzzyScore } from "../lib/searchUtils";
+import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { ExerciseData } from "../types/workout";
 
 export function Library({
@@ -46,17 +46,17 @@ export function Library({
 
   const featuredTitles = [
     "Barbell Bench Press",
-    "Barbell Squat",
+    "Barbell Full Squat",
     "Barbell Deadlift",
-    "Incline Dumbbell Press",
-    "Bent Over Barbell Row",
-    "Dumbbell Shoulder Press",
-    "Pullups",
-    "Romanian Deadlift",
-    "Barbell Walking Lunge",
+    "Dumbbell Incline Bench Press",
+    "Barbell Bent Over Row",
+    "Dumbbell Seated Shoulder Press",
+    "Pull-up",
+    "Barbell Romanian Deadlift",
+    "Dumbbell Lunge",
     "Barbell Curl",
-    "Triceps Pushdown",
-    "Plank",
+    "Cable Triceps Pushdown (v-bar)",
+    "Weighted Front Plank",
   ];
 
   const filteredExercises = useMemo(() => {
@@ -81,8 +81,7 @@ export function Library({
 
       let score = 0;
       if (hasQuery) {
-        const haystack = `${ex.title ?? ""} ${ex.category ?? ""} ${ex.type ?? ""} ${ex.equipment ?? ""}`;
-        score = fuzzyScore(query, haystack);
+        score = getExerciseSearchScore(query, ex, t);
         if (score <= 0) continue;
       }
 
@@ -98,7 +97,7 @@ export function Library({
     }
 
     return results.map(({ ex }) => ex);
-  }, [deferredSearch, filter, selectedMuscle, safeExercises]);
+  }, [deferredSearch, filter, selectedMuscle, safeExercises, t]);
 
   const featuredExercises = useMemo(() => {
     const exercisesByTitle = new Map(

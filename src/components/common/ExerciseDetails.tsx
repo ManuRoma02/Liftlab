@@ -1,5 +1,5 @@
-import React from "react";
-import { ArrowLeft, Youtube, Plus, Check, Zap, Trophy, ClipboardList, Dumbbell } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, Youtube, Plus, Check, Zap, Trophy, ClipboardList, Dumbbell, Play } from "lucide-react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
 import { AccordionItem } from "./AccordionItem";
 import { isTimedExercise } from "../../lib/workoutUtils";
@@ -10,6 +10,7 @@ export function ExerciseDetails({
   unit,
   onBack,
   t,
+  language = "it",
   exercises = [],
   onSelectVariation,
   onAddExercise,
@@ -18,10 +19,14 @@ export function ExerciseDetails({
   unit: string;
   onBack: () => void;
   t: (key: string) => string;
+  language?: string;
   exercises?: ExerciseData[];
   onSelectVariation?: (ex: ExerciseData) => void;
   onAddExercise?: (ex: ExerciseData) => void;
 }) {
+  const [visualMode, setVisualMode] = useState<"demo" | "anatomy">(
+    ex.gifUrl || ex.image ? "demo" : "anatomy"
+  );
   const variations = exercises
     .filter(
       (e) =>
@@ -99,9 +104,54 @@ export function ExerciseDetails({
 
         {/* Bento Layout for Details */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-stack-lg">
-          {/* Muscle Visual Card */}
-          <div className="md:col-span-1 bg-surface-container border border-surface-variant rounded-xl overflow-hidden min-h-[200px]">
-            <ExerciseMuscleVisual exercise={ex} className="w-full h-full" />
+          {/* Visual Card (Animated Demo / Muscle Anatomy Toggle) */}
+          <div className="md:col-span-1 bg-surface-container border border-surface-variant rounded-xl overflow-hidden flex flex-col min-h-[250px] relative">
+            <div className="flex items-center justify-between p-2.5 border-b border-surface-variant/40 bg-surface-container-low">
+              <div className="flex bg-surface rounded-lg p-0.5 border border-surface-variant text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setVisualMode("demo")}
+                  className={`px-3 py-1 rounded-md transition-all active:scale-95 ${
+                    visualMode === "demo"
+                      ? "bg-primary-fixed text-[#000000] shadow-sm font-black"
+                      : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                >
+                  Demo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisualMode("anatomy")}
+                  className={`px-3 py-1 rounded-md transition-all active:scale-95 ${
+                    visualMode === "anatomy"
+                      ? "bg-primary-fixed text-[#000000] shadow-sm font-black"
+                      : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                >
+                  Anatomy
+                </button>
+              </div>
+              {ex.equipment && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-2 py-0.5 bg-surface rounded border border-surface-variant/50">
+                  {ex.equipment}
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 flex items-center justify-center p-3 bg-black/15">
+              {visualMode === "demo" && (ex.gifUrl || ex.image) ? (
+                <div className="relative w-full h-full flex items-center justify-center min-h-[190px]">
+                  <img
+                    src={ex.gifUrl || ex.image}
+                    alt={ex.title}
+                    loading="lazy"
+                    className="max-h-[220px] w-auto max-w-full object-contain rounded-lg shadow-sm"
+                  />
+                </div>
+              ) : (
+                <ExerciseMuscleVisual exercise={ex} className="w-full h-full min-h-[190px]" />
+              )}
+            </div>
           </div>
 
           {/* Technical Cues Card */}
@@ -190,12 +240,16 @@ export function ExerciseDetails({
           >
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 mt-2">
               {(
-                ex.instructions || [
-                  "Setup the equipment to your height and comfort.",
-                  "Ensure proper starting position with neutral spine.",
-                  "Execute the concentric phase with explosive control.",
-                  "Lower the weight slowly during the eccentric phase.",
-                ]
+                (language === "en" && ex.instructionsByLang?.en?.length)
+                  ? ex.instructionsByLang.en
+                  : (ex.instructions && ex.instructions.length > 0)
+                  ? ex.instructions
+                  : [
+                      "Setup the equipment to your height and comfort.",
+                      "Ensure proper starting position with neutral spine.",
+                      "Execute the concentric phase with explosive control.",
+                      "Lower the weight slowly during the eccentric phase.",
+                    ]
               ).map((step, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="w-10 h-10 shrink-0 rounded-full bg-surface-container-highest border border-surface-variant flex items-center justify-center font-bold text-primary-fixed shadow-inner">

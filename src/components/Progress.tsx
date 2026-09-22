@@ -347,15 +347,15 @@ export function Progress({
   const getTotalVolume = () => {
     const vol = getTotalVolumeNum();
     if (vol >= 1000) return (vol / 1000).toFixed(1) + "k";
-    return vol.toString();
+    return (Math.round(vol * 10) / 10).toString();
   };
 
   const getVolumeLabel = () => {
-    return "Total Volume";
+    return t("total_volume") || "Total Volume";
   };
 
   const getWorkoutStatus = () => {
-    return "Workouts Logged";
+    return t("workouts_logged") || "Workouts Logged";
   };
 
   const totalLoggedSets = workoutLogs.reduce((sum, log) => {
@@ -477,19 +477,21 @@ export function Progress({
           <div className="flex items-center justify-between text-on-surface-variant mb-stack-md">
             <div className="flex items-center gap-stack-sm">
               <Scale className="w-[18px] h-[18px]" strokeWidth={2} />
-              <span className="text-label-bold">Current Weight</span>
+              <span className="text-label-bold">{t("current_weight") || "Current Weight"}</span>
             </div>
             <SettingsIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <div>
             <div className="text-[40px] leading-[48px] font-black font-[var(--font-stats-xl)] text-primary tracking-tight">
-              {userData?.currentWeight || 0}
+              {typeof userData?.currentWeight === "number"
+                ? Number(userData.currentWeight.toFixed(1))
+                : userData?.currentWeight || 0}
               <span className="text-body-md text-on-surface-variant ml-1 font-normal">
                 {unit.toLowerCase()}
               </span>
             </div>
             <div className="text-sm text-secondary mt-1 flex items-center gap-1 font-[var(--font-body-md)]">
-              <TrendingDown className="w-[14px] h-[14px]" /> Keep Tracking!
+              <TrendingDown className="w-[14px] h-[14px]" /> {t("keep_tracking") || "Keep Tracking!"}
             </div>
           </div>
         </div>

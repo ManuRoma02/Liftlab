@@ -15,12 +15,16 @@ export type ExerciseData = {
   sets: SetData[];
   notes: string;
   image?: string;
+  gifUrl?: string;
   technique?: string;
   supersetId?: string;
   equipment?: string;
   muscleFocus?: string[];
+  targetMuscle?: string;
+  secondaryMuscles?: string[];
   cues?: string[];
   instructions?: string[];
+  instructionsByLang?: Record<string, string[]>;
   prWeight?: number;
   prReps?: number;
   prRepsWeight?: number;

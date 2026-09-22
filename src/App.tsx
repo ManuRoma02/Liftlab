@@ -109,6 +109,7 @@ export default function App() {
     handleDeleteRoutine,
     handleDeleteWorkoutLog,
     handleDuplicateRoutine,
+    setAppLanguage,
     setAppRestTimer,
     handleSetShowRpe,
     oneRepMaxFormula,
@@ -135,6 +136,7 @@ export default function App() {
             unit={unit}
             onBack={() => setActiveTab(prevTab)}
             t={t}
+            language={language}
             exercises={exercises}
             onSelectVariation={setActiveExercise}
             onAddExercise={canAdd ? handleDetailsAddExercise : undefined}
@@ -178,6 +180,8 @@ export default function App() {
             t={t}
             unit={unit}
             setUnit={handleToggleUnit}
+            language={language}
+            setLanguage={setAppLanguage}
             onBack={() => setActiveTab(prevTab)}
             restTimer={restTimer}
             setRestTimer={setAppRestTimer}

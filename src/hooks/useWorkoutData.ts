@@ -23,6 +23,7 @@ import {
   isTimedExercise,
   calculateOneRepMax,
   convertWeight,
+  roundToGymWeight,
   type OneRepMaxFormula,
 } from "../lib/workoutUtils";
 import {
@@ -1015,6 +1016,11 @@ export function useWorkoutData() {
     const fromUnit = unit || "LBS";
     const toUnit = newUnit;
     if (fromUnit.trim().toUpperCase() !== toUnit.trim().toUpperCase()) {
+      const convertAndRound = (val: any) => {
+        const converted = convertWeight(val, fromUnit, toUnit);
+        return roundToGymWeight(converted, 2);
+      };
+
       // Convert workoutLogs
       const convertedLogs = workoutLogs.map((log) => ({
         ...log,
@@ -1022,7 +1028,7 @@ export function useWorkoutData() {
           ...ex,
           sets: (ex.sets || []).map((set: any) => ({
             ...set,
-            weight: convertWeight(set.weight, fromUnit, toUnit),
+            weight: convertAndRound(set.weight),
           })),
         })),
       }));
@@ -1034,7 +1040,7 @@ export function useWorkoutData() {
           ...ex,
           sets: (ex.sets || []).map((set) => ({
             ...set,
-            weight: convertWeight(set.weight, fromUnit, toUnit),
+            weight: convertAndRound(set.weight),
           })),
         })),
       }));
@@ -1042,23 +1048,23 @@ export function useWorkoutData() {
       // Convert weightLogs
       const convertedWeightLogs = weightLogs.map((wl) => ({
         ...wl,
-        weight: Number(convertWeight(wl.weight, fromUnit, toUnit)) || 0,
+        weight: Number(convertAndRound(wl.weight)) || 0,
       }));
 
       // Convert currentWeight
-      const convertedCurrentWeight = Number(convertWeight(currentWeight, fromUnit, toUnit)) || 0;
+      const convertedCurrentWeight = Number(convertAndRound(currentWeight)) || 0;
 
       // Convert custom exercises
       const convertedExercises = exercises.map((ex) => {
         if (!ex.id.startsWith("e_custom_")) return ex;
         return {
           ...ex,
-          prWeight: ex.prWeight ? Number(convertWeight(ex.prWeight, fromUnit, toUnit)) : undefined,
-          prRepsWeight: ex.prRepsWeight ? Number(convertWeight(ex.prRepsWeight, fromUnit, toUnit)) : undefined,
-          oneRepMax: ex.oneRepMax ? Number(convertWeight(ex.oneRepMax, fromUnit, toUnit)) : undefined,
+          prWeight: ex.prWeight ? Number(convertAndRound(ex.prWeight)) : undefined,
+          prRepsWeight: ex.prRepsWeight ? Number(convertAndRound(ex.prRepsWeight)) : undefined,
+          oneRepMax: ex.oneRepMax ? Number(convertAndRound(ex.oneRepMax)) : undefined,
           sets: (ex.sets || []).map((s) => ({
             ...s,
-            weight: convertWeight(s.weight, fromUnit, toUnit),
+            weight: convertAndRound(s.weight),
           })),
         };
       });
@@ -1071,7 +1077,7 @@ export function useWorkoutData() {
             ...ex,
             sets: (ex.sets || []).map((set) => ({
               ...set,
-              weight: convertWeight(set.weight, fromUnit, toUnit),
+              weight: convertAndRound(set.weight),
             })),
           })),
         };
@@ -1087,7 +1093,7 @@ export function useWorkoutData() {
             ...ex,
             sets: (ex.sets || []).map((set) => ({
               ...set,
-              weight: convertWeight(set.weight, fromUnit, toUnit),
+              weight: convertAndRound(set.weight),
             })),
           })),
         };

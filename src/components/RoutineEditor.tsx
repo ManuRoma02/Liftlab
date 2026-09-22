@@ -45,8 +45,9 @@ import {
   dissolveSuperset,
   finalizeLiveNumericInput,
   formatWeightUnit,
+  roundToGymWeight,
 } from "../lib/workoutUtils";
-import { fuzzyScore } from "../lib/searchUtils";
+import { getExerciseSearchScore } from "../lib/searchUtils";
 import { readJson, removeJsonAtomic, writeJsonAtomic } from "../lib/storage";
 import { showToast } from "../lib/toast";
 import {
@@ -749,6 +750,14 @@ export function RoutineEditor({
       setIsFinishConfirmOpen(true);
       return;
     }
+    if (!routine.name || !routine.name.trim()) {
+      showToast(t("routine_name_required") || "Routine name is required.", "error");
+      return;
+    }
+    if (!routine.exercises || routine.exercises.length === 0) {
+      showToast(t("add_at_least_one_exercise") || "Add at least one exercise to save the routine.", "error");
+      return;
+    }
     setIsSaving(true);
     removeJsonAtomic(LIVE_PROGRESS_KEY);
     localStorage.removeItem(LIVE_ELAPSED_KEY);
@@ -982,22 +991,24 @@ export function RoutineEditor({
     const queryStr = debouncedExerciseSearch.trim();
     return exercises
       .map((ex) => {
-        const haystack = `${ex.title ?? ""} ${ex.category ?? ""} ${ex.type ?? ""} ${ex.equipment ?? ""}`;
-        return { ex, score: fuzzyScore(queryStr, haystack) };
+        return { ex, score: getExerciseSearchScore(queryStr, ex, t) };
       })
       .filter(({ ex, score }) => {
         const matchesSearch = !queryStr || score > 0;
-        const matchesMuscle = filterMuscle === "All" || ex.category === filterMuscle;
+        const matchesMuscle =
+          filterMuscle === "All" ||
+          ex.category === filterMuscle ||
+          (ex.muscleFocus && ex.muscleFocus.includes(filterMuscle));
         const matchesEquipment = filterEquipment === "All" || ex.equipment === filterEquipment;
         return matchesSearch && matchesMuscle && matchesEquipment;
       })
       .sort((a, b) => b.score - a.score || String(a.ex.title).localeCompare(String(b.ex.title)))
       .slice(0, queryStr ? 80 : 32)
       .map(({ ex }) => ex);
-  }, [debouncedExerciseSearch, exercises, filterEquipment, filterMuscle]);
+  }, [debouncedExerciseSearch, exercises, filterEquipment, filterMuscle, t]);
 
   return (
-    <div className="app-shell bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full pb-24">
+    <div className={`app-shell bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full ${mode === "live" ? "pb-44" : "pb-24"}`}>
       {/* TopAppBar */}
       <header className="console-topbar safe-topbar flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop sticky top-0 z-50">
         <div className="flex items-center gap-stack-md">
@@ -1050,11 +1061,11 @@ export function RoutineEditor({
       {/* Main Canvas */}
       <main className="flex-grow p-margin-mobile md:p-margin-desktop max-w-[1280px] mx-auto w-full">
         {/* Routine Header */}
-        <div className="mb-stack-lg flex justify-between items-start premium-panel rounded-2xl p-4 md:p-6 overflow-hidden relative">
+        <div className="mb-stack-lg flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4 premium-panel rounded-2xl p-4 md:p-6 overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-fixed via-secondary to-primary-fixed opacity-80" />
-          <div>
+          <div className="flex-1 min-w-0">
             <input
-              className="w-full bg-transparent border-none font-[var(--font-headline-lg)] text-[34px] font-black text-primary focus:ring-0 p-0 mb-stack-sm outline-none placeholder:text-on-surface-variant/50 uppercase tracking-wide"
+              className="w-full bg-transparent border-none font-[var(--font-headline-lg)] text-[24px] sm:text-[32px] md:text-[34px] font-black text-primary focus:ring-0 p-0 mb-stack-sm outline-none placeholder:text-on-surface-variant/50 uppercase tracking-wide truncate"
               placeholder={t("routine_name")}
               type="text"
               value={routine.name}
@@ -1143,7 +1154,7 @@ export function RoutineEditor({
             )}
           </div>
           {mode === "live" && (
-            <div className="flex gap-x-stack-lg gap-y-2 items-end flex-wrap justify-end">
+            <div className="flex gap-x-stack-lg gap-y-2 items-center justify-between md:justify-end flex-wrap pt-2 md:pt-0 border-t border-white/5 md:border-t-0">
               <div className="flex flex-col items-end gap-1">
                 <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   {t("rest_duration")}
@@ -1408,14 +1419,14 @@ export function RoutineEditor({
                         <div className="col-span-2 text-center font-bold">
                           {t("set")}
                         </div>
-                        <div className={`col-span-${showRpe ? 2 : 3} text-center font-bold`}>
+                        <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center font-bold`}>
                           {t("previous")}
                         </div>
                         <div className="col-span-3 text-center font-bold">
                           {unit}
                         </div>
-                        <div className={`col-span-${showRpe ? 2 : 3} text-center font-bold`}>
-                          {isTimedExercise(ex) ? "Secs" : t("reps")}
+                        <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center font-bold`}>
+                          {isTimedExercise(ex) ? "Secs" : (t("reps_upper") || t("reps"))}
                         </div>
                         {showRpe && (
                           <div className="col-span-2 text-center font-bold">
@@ -1489,11 +1500,11 @@ export function RoutineEditor({
                                     </span>
                                   )}
                                 </div>
-                                <div className={`col-span-${showRpe ? 2 : 3} text-center flex flex-col items-center justify-center gap-0.5`}>
+                                <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center flex flex-col items-center justify-center gap-0.5`}>
                                   {(() => {
                                     const prev = prevSetsMap[ex.id]?.[sIdx];
                                     if (prev?.weight && prev?.reps) {
-                                      const prevW = Number(prev.weight) || 0;
+                                      const prevW = Number(roundToGymWeight(Number(prev.weight) || 0)) || 0;
                                       const prevR = Number(prev.reps) || 0;
                                       const targetR = prevR >= 12 ? 8 : prevR + 1;
                                       const targetW = prevR >= 12 ? prevW + (prevW >= 50 ? 2.5 : 1.25) : prevW;
@@ -1522,14 +1533,14 @@ export function RoutineEditor({
                                             type="button"
                                             onClick={() => {
                                               updateSet(ex.id, set.id, {
-                                                weight: set.weight !== "" ? set.weight : prev.weight,
+                                                weight: set.weight !== "" ? set.weight : prevW,
                                                 reps: set.reps !== "" ? set.reps : targetR,
                                               });
                                             }}
                                             className="group inline-flex items-center gap-0.5 bg-surface-variant/40 hover:bg-primary-fixed/20 text-on-surface px-1.5 py-0.5 rounded text-[11px] font-bold font-mono border border-white/5 hover:border-primary-fixed/40 transition-colors cursor-pointer active:scale-95 shadow-inner"
-                                            title={`Scorsa volta: ${prev.weight}×${prev.reps}. Tocca per compilare target (${targetW}×${targetR})`}
+                                            title={`Scorsa volta: ${prevW}×${prevR}. Tocca per compilare target (${targetW}×${targetR})`}
                                           >
-                                            <span>{prev.weight}<span className="text-primary-fixed/80 mx-0.5">×</span>{prev.reps}</span>
+                                            <span>{prevW}<span className="text-primary-fixed/80 mx-0.5">×</span>{prevR}</span>
                                           </button>
                                           {deltaBadge && (
                                             <span
@@ -1567,7 +1578,7 @@ export function RoutineEditor({
                                     }
                                   />
                                 </div>
-                                <div className={`col-span-${showRpe ? 2 : 3} relative`}>
+                                <div className={`${showRpe ? "col-span-2" : "col-span-3"} relative`}>
                                   <input
                                     className="w-full bg-black/40 border border-white/10 rounded-lg text-on-surface text-center py-2 px-1 text-sm font-bold font-mono focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner"
                                     placeholder={isTimedExercise(ex) ? "Secs" : "Reps"}
@@ -1723,19 +1734,6 @@ export function RoutineEditor({
                 {t("add_exercise")}
               </span>
             </button>
-            {mode !== "live" && routine.exercises?.length > 0 && (
-              <button
-                onClick={async () => {
-                  if (isSaving) return;
-                  setIsSaving(true);
-                  try { await onSave(routine); } finally { setIsSaving(false); }
-                }}
-                disabled={isSaving}
-                className={`w-full mt-4 py-3 premium-cta font-black rounded-2xl uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all text-sm ${isSaving ? "opacity-50" : "cursor-pointer"}`}
-              >
-                {isSaving ? (t("saving") || "Saving...") : t("save_routine")}
-              </button>
-            )}
           </div>
         </div>
       </main>
@@ -1789,7 +1787,7 @@ export function RoutineEditor({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50" />
                 <input
                   type="text"
-                  placeholder={t("search") + "..."}
+                  placeholder={t("search") || "Search exercises..."}
                   value={exerciseSearch}
                   onChange={(e) => {
                     const val = e.target.value;

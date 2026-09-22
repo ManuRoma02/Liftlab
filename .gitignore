@@ -25,3 +25,4 @@ android/build/
 dev-dist/
 *.apk
 .gitconfig
+brag-output/

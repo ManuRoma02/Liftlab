@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
+import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { RoutineData } from "../types/workout";
 import { motion } from "motion/react";
 
@@ -114,9 +115,13 @@ export function Workout({
     const query = routineSearch.toLowerCase();
     return sortedRoutines.filter((r) =>
       r.name?.toLowerCase().includes(query) ||
-      r.exercises.some((ex) => ex.title?.toLowerCase().includes(query))
+      r.exercises.some((ex) =>
+        ex.title?.toLowerCase().includes(query) ||
+        (t && t(ex.title)?.toLowerCase().includes(query)) ||
+        getExerciseSearchScore(query, ex, t) > 0
+      )
     );
-  }, [sortedRoutines, routineSearch]);
+  }, [sortedRoutines, routineSearch, t]);
 
   return (
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg w-full">
@@ -277,7 +282,11 @@ export function Workout({
                     <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium">
                       <span>{routine.duration} min</span>
                       <span className="text-on-surface-variant/40">•</span>
-                      <span>{routine.exercises?.length || 0} exercises</span>
+                      <span>
+                        {Number(routine.exercises?.length ?? 0) === 1
+                          ? (t("one_exercise") || "1 exercise")
+                          : `${routine.exercises?.length || 0} ${t("exercises") || "exercises"}`}
+                      </span>
                     </div>
                   </div>
 

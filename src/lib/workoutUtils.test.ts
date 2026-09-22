@@ -22,6 +22,7 @@ import {
   isTimedExercise,
   shouldRestoreLiveProgress,
   convertWeight,
+  roundToGymWeight,
   KG_TO_LBS,
 } from "./workoutUtils";
 
@@ -459,6 +460,15 @@ assert.ok(Math.abs(Number(convertWeight(100, "KG", "LBS")) - 100 * KG_TO_LBS) < 
 assert.equal(convertWeight(100, "KG", "KG"), 100);
 assert.equal(convertWeight("", "KG", "LBS"), "");
 assert.equal(convertWeight(0, "KG", "LBS"), 0);
+
+// roundToGymWeight tests
+assert.equal(roundToGymWeight(9.071847400000001, 2), 9.07);
+assert.equal(roundToGymWeight(11.33980925, 2), 11.34);
+assert.equal(roundToGymWeight(272.15542200000004, 1), 272.2);
+assert.equal(roundToGymWeight("", 2), "");
+assert.equal(roundToGymWeight(null, 2), "");
+assert.equal(roundToGymWeight(undefined, 2), "");
+assert.equal(roundToGymWeight("15.555", 2), 15.56);
 
 console.log("workoutUtils tests passed");
 

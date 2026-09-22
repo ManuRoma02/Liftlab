@@ -102,7 +102,11 @@ export const Dashboard = React.memo(
       weightLogs && weightLogs.length > 0
         ? weightLogs[weightLogs.length - 1].weight
         : 0;
-    const displayWeight = currentWeight || latestWeightFromLogs || 0;
+    const rawWeight = currentWeight || latestWeightFromLogs || 0;
+    const displayWeight =
+      typeof rawWeight === "number"
+        ? (rawWeight % 1 === 0 ? rawWeight : Number(rawWeight.toFixed(1)))
+        : rawWeight;
 
     const nextRoutine = useMemo(
       () => getNextScheduledRoutine(routines),
@@ -233,14 +237,14 @@ export const Dashboard = React.memo(
       log.exercises?.forEach((ex: any) => {
         ex.sets?.forEach((s: any) => {
           if (s.completed && s.weight && s.reps)
-            totalVolume += s.weight * s.reps;
+            totalVolume += Number(s.weight) * Number(s.reps);
         });
       });
     });
     const totalVolumeStr =
       totalVolume >= 1000
         ? (totalVolume / 1000).toFixed(1) + "k"
-        : totalVolume.toString();
+        : (Math.round(totalVolume * 10) / 10).toString();
 
     // PR calculation
     const totalPRs = exercises.filter(
@@ -822,7 +826,11 @@ export const Dashboard = React.memo(
                     <div className="flex gap-3 text-body-sm text-on-surface-variant">
                       <span>{getWorkoutLogDurationMinutes(activity.duration)} min</span>
                       <span>•</span>
-                      <span>{activity?.exercises?.length ?? 0} exercises</span>
+                      <span>
+                        {Number(activity?.exercises?.length ?? 0) === 1
+                          ? (t("one_exercise") || "1 exercise")
+                          : `${activity?.exercises?.length ?? 0} ${t("exercises") || "exercises"}`}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -943,7 +951,7 @@ export const Dashboard = React.memo(
               <div className="absolute inset-0 bg-primary-container/5 mix-blend-overlay" />
               <div className="relative z-10 flex flex-col gap-stack-sm">
                 <span className="w-fit border border-primary-container text-primary-container text-label-bold text-xs px-3 py-1 rounded bg-black/20">
-                  Next Workout
+                  {t("next_workout") || "Next Workout"}
                 </span>
                 <h3 className="text-headline-md text-primary tracking-tight">
                   {nextRoutine.name}
@@ -954,7 +962,9 @@ export const Dashboard = React.memo(
                   </p>
                   <p className="text-body-md flex items-center gap-1">
                     <ClipboardList className="w-4 h-4" />{" "}
-                    {nextRoutine?.exercises?.length ?? 0} Exercises
+                    {Number(nextRoutine?.exercises?.length ?? 0) === 1
+                      ? (t("one_exercise") || "1 Exercise")
+                      : `${nextRoutine?.exercises?.length ?? 0} ${t("exercises") || "Exercises"}`}
                   </p>
                 </div>
               </div>
@@ -975,12 +985,31 @@ export const Dashboard = React.memo(
           </button>
         </section>
         {dashboardStats.length > 0 ? (
+          (() => {
+            const activeSmallStatCards = [
+              "avg_duration",
+              "total_sets_week",
+              "best_volume",
+              "weight",
+              "volume",
+              "prs",
+              "workouts_week",
+              "time_week",
+            ].filter((id) => dashboardStats.includes(id));
+            const getCardSpanClass = (cardId: string) => {
+              const isOddCount = activeSmallStatCards.length % 2 !== 0;
+              const isLast =
+                activeSmallStatCards[activeSmallStatCards.length - 1] === cardId;
+              return isOddCount && isLast ? "col-span-2 md:col-span-1" : "";
+            };
+
+            return (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-stack-md">
             {/* Stat Card Avg Duration */}
             {dashboardStats.includes("avg_duration") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("avg_duration")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <Clock className="w-20 h-20" fill="currentColor" />
@@ -990,7 +1019,7 @@ export const Dashboard = React.memo(
                   <ChevronRight className="w-4 h-4" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">Avg Duration</p>
+                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("avg_duration") || "Avg Duration"}</p>
                   <p className="text-headline-md text-primary">
                     {avgDurationMin}{" "}
                     <span className="text-body-md text-on-surface-variant font-normal">min</span>
@@ -1002,7 +1031,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("total_sets_week") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("total_sets_week")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <Layers className="w-20 h-20" fill="currentColor" />
@@ -1012,10 +1041,10 @@ export const Dashboard = React.memo(
                   <ChevronRight className="w-4 h-4" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">Sets Done</p>
+                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("sets_done") || "Sets Done"}</p>
                   <p className="text-headline-md text-primary">
                     {totalSetsThisWeek}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">this week</span>
+                    <span className="text-body-md text-on-surface-variant font-normal">{t("this_week") || "this week"}</span>
                   </p>
                 </div>
               </div>
@@ -1024,7 +1053,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("best_volume") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("best_volume")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <TrendingUp className="w-20 h-20" fill="currentColor" />
@@ -1034,9 +1063,9 @@ export const Dashboard = React.memo(
                   <ChevronRight className="w-4 h-4" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">Best Session</p>
+                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("best_session") || "Best Session"}</p>
                   <p className="text-headline-md text-primary">
-                    {bestVolumeSession >= 1000 ? (bestVolumeSession / 1000).toFixed(1) + "k" : bestVolumeSession}{" "}
+                    {bestVolumeSession >= 1000 ? (bestVolumeSession / 1000).toFixed(1) + "k" : (Math.round(bestVolumeSession * 10) / 10)}{" "}
                     <span className="text-body-md text-on-surface-variant font-normal">{unit.toLowerCase()}</span>
                   </p>
                 </div>
@@ -1046,7 +1075,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("weight") && (
               <div
                 onClick={onUpdateWeight}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("weight")}`}
               >
                 <div className="absolute -right-4 -top-4 text-secondary-container opacity-[0.03]">
                   <LucideLineChart className="w-20 h-20" fill="currentColor" />
@@ -1057,7 +1086,7 @@ export const Dashboard = React.memo(
                 </div>
                 <div className="relative z-10">
                   <p className="text-label-bold text-on-surface-variant uppercase mb-1">
-                    Body Weight
+                    {t("body_weight") || "Body Weight"}
                   </p>
                   <p className="text-headline-md text-secondary-fixed">
                     {displayWeight}{" "}
@@ -1072,7 +1101,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("volume") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("volume")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <Dumbbell className="w-20 h-20" fill="currentColor" />
@@ -1083,7 +1112,7 @@ export const Dashboard = React.memo(
                 </div>
                 <div className="relative z-10">
                   <p className="text-label-bold text-on-surface-variant uppercase mb-1">
-                    Total Volume
+                    {t("total_volume") || "Total Volume"}
                   </p>
                   <p className="text-headline-md text-primary">
                     {totalVolumeStr}{" "}
@@ -1098,7 +1127,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("prs") && (
               <div
                 onClick={() => setIsPRModalOpen(true)}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("prs")}`}
               >
                 <div className="absolute -right-4 -top-4 text-primary-container opacity-[0.03]">
                   <Trophy className="w-20 h-20" fill="currentColor" />
@@ -1109,7 +1138,7 @@ export const Dashboard = React.memo(
                 </div>
                 <div className="relative z-10">
                   <p className="text-label-bold text-on-surface-variant uppercase mb-1">
-                    Personal Records
+                    {t("personal_records") || "Personal Records"}
                   </p>
                   <p className="text-headline-md text-primary">
                     {totalPRs}{" "}
@@ -1124,7 +1153,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("workouts_week") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("workouts_week")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <CheckCircle2 className="w-20 h-20" fill="currentColor" />
@@ -1135,12 +1164,12 @@ export const Dashboard = React.memo(
                 </div>
                 <div className="relative z-10">
                   <p className="text-label-bold text-on-surface-variant uppercase mb-1">
-                    Workouts
+                    {t("workouts") || "Workouts"}
                   </p>
                   <p className="text-headline-md text-primary">
                     {workoutsThisWeek}{" "}
                     <span className="text-body-md text-on-surface-variant font-normal">
-                      This Week
+                      {t("this_week") || "This Week"}
                     </span>
                   </p>
                 </div>
@@ -1150,7 +1179,7 @@ export const Dashboard = React.memo(
             {dashboardStats.includes("time_week") && (
               <div
                 onClick={() => navigateTo("progress")}
-                className="bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
+                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("time_week")}`}
               >
                 <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
                   <Clock className="w-20 h-20" fill="currentColor" />
@@ -1161,7 +1190,7 @@ export const Dashboard = React.memo(
                 </div>
                 <div className="relative z-10">
                   <p className="text-label-bold text-on-surface-variant uppercase mb-1">
-                    Total Time
+                    {t("duration") || "Total Time"}
                   </p>
                   <p className="text-headline-md text-primary">
                     {Math.floor(durationThisWeek / 60)}{" "}
@@ -1266,6 +1295,8 @@ export const Dashboard = React.memo(
               </div>
             )}
           </div>
+            );
+          })()
         ) : (
           <div className="bg-surface-container border border-surface-variant border-dashed rounded-lg p-stack-md flex flex-col items-center justify-center gap-1">
             <p className="text-body-md text-on-surface-variant text-center">
