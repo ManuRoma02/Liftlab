@@ -115,6 +115,22 @@ const records = buildPersonalRecords([
 assert.equal(records[0].title, "Squat");
 assert.equal(records.find((record) => record.title === "Bench Press")?.bestWeight, 100);
 
+const bwRecords = buildPersonalRecords([
+  {
+    date: "2026-06-01T10:00:00.000Z",
+    exercises: [
+      {
+        title: "Pull Up",
+        sets: [
+          { weight: "", reps: 10, completed: true },
+          { weight: 0, reps: 12, completed: true },
+        ],
+      },
+    ],
+  },
+]);
+assert.equal(bwRecords.find((r) => r.title === "Pull Up")?.bestReps, 12);
+
 const recordSlots = buildPersonalRecordSlots(
   records,
   ["bench", "", "missing"],
@@ -383,6 +399,27 @@ const repPrMetrics = getWorkoutComparisonMetrics(
 );
 assert.equal(repPrMetrics.prsEarned, 1, "same weight with more reps is a PR");
 
+const bodyweightMetrics = getWorkoutComparisonMetrics(
+  {
+    id: "log-bw-2",
+    routineName: "Calisthenics",
+    date: "2026-06-08T10:00:00.000Z",
+    exercises: [{ title: "Pull Up", sets: [{ weight: "", reps: 12, completed: true }] }],
+  },
+  [
+    {
+      id: "log-bw-1",
+      routineName: "Calisthenics",
+      date: "2026-06-01T10:00:00.000Z",
+      exercises: [{ title: "Pull Up", sets: [{ weight: "", reps: 10, completed: true }] }],
+    },
+  ],
+  "kg",
+);
+assert.equal(bodyweightMetrics.previousLogFound, true);
+assert.equal(bodyweightMetrics.setsDiff, 0, "both sessions completed 1 set");
+assert.equal(bodyweightMetrics.prsEarned, 1, "bodyweight reps 12 > 10 should count as PR");
+
 // calculatePlatesPerSide tests
 const plateRes1 = calculatePlatesPerSide(20, 20, "KG");
 assert.deepEqual(plateRes1, { plates: [], remainderPerSide: 0, targetWeight: 20, barWeight: 20 });
@@ -506,6 +543,33 @@ const testLog2 = {
 const comparison = getWorkoutComparisonMetrics(testLog2, [testLog1], "kg");
 assert.equal(comparison.previousLogFound, true);
 assert.equal(comparison.prsEarned, 1, "Higher weight with same reps must earn 1 PR");
+
+// calculateStreaks tests
+import { calculateStreaks } from "./workoutUtils";
+assert.deepEqual(calculateStreaks([]), { currentStreak: 0, bestStreak: 0 });
+
+// Multiple workouts on the same day must not count as multiple streak days
+const sameDayLogs = [
+  { date: "2026-06-01T08:00:00Z", exercises: [] },
+  { date: "2026-06-01T18:00:00Z", exercises: [] },
+];
+assert.equal(calculateStreaks(sameDayLogs, new Date("2026-06-01T20:00:00Z")).currentStreak, 1);
+assert.equal(calculateStreaks(sameDayLogs, new Date("2026-06-01T20:00:00Z")).bestStreak, 1);
+
+// Consecutive calendar days 36h apart (Mon 08:00 to Tue 20:00) must be a 2-day streak
+const consecutiveDaysLogs = [
+  { date: "2026-06-01T08:00:00Z", exercises: [] },
+  { date: "2026-06-02T20:00:00Z", exercises: [] },
+];
+assert.equal(calculateStreaks(consecutiveDaysLogs, new Date("2026-06-02T22:00:00Z")).currentStreak, 2);
+
+// Non-consecutive calendar days skipping a day (Mon to Wed, Tuesday skipped) must reset streak
+const skippedDayLogs = [
+  { date: "2026-06-01T12:00:00Z", exercises: [] },
+  { date: "2026-06-03T12:00:00Z", exercises: [] },
+];
+assert.equal(calculateStreaks(skippedDayLogs, new Date("2026-06-03T14:00:00Z")).currentStreak, 1);
+assert.equal(calculateStreaks(skippedDayLogs, new Date("2026-06-03T14:00:00Z")).bestStreak, 1);
 
 console.log("workoutUtils tests passed");
 

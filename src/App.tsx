@@ -292,6 +292,7 @@ export default function App() {
                 activeRoutineId={activeRoutineId}
                 onShareRoutine={setSharingRoutine}
                 onOpenImportCode={() => setIsImportCodeOpen(true)}
+                onLoadStarterRoutines={loadStarterRoutines}
               />
             )}
             {activeTab === "progress" && (

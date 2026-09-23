@@ -433,10 +433,11 @@ export function buildPersonalRecords(workoutLogs: WorkoutLogLike[], formula: One
       if (!title) continue;
       const key = normalizeTitle(title);
       for (const set of exercise.sets || []) {
-        if (!set?.completed || set.weight === "" || set.reps === "") continue;
-        const weight = Number(set.weight);
-        const reps = Number(set.reps);
-        if (!Number.isFinite(weight) || !Number.isFinite(reps) || weight <= 0 || reps <= 0) continue;
+        if (!set?.completed) continue;
+        const reps = parseGymNumber(set.reps);
+        if (reps === null || reps <= 0) continue;
+        const weight = parseGymNumber(set.weight) ?? 0;
+        if (weight < 0) continue;
         const volume = weight * reps;
         const estimatedOneRepMax = calculateOneRepMax(weight, reps, formula);
         const current = records.get(key);
@@ -463,20 +464,24 @@ export function buildPersonalRecords(workoutLogs: WorkoutLogLike[], formula: One
           bestReps = Math.max(current.bestReps, reps);
         }
 
+        const isNewBest =
+          estimatedOneRepMax > current.estimatedOneRepMax ||
+          (estimatedOneRepMax === current.estimatedOneRepMax && (weight > current.bestWeight || reps >= current.bestReps));
+
         records.set(key, {
           title: current.title,
           bestWeight,
           bestReps,
           bestVolume: Math.max(current.bestVolume, volume),
           estimatedOneRepMax: Math.max(current.estimatedOneRepMax, estimatedOneRepMax),
-          date: estimatedOneRepMax >= current.estimatedOneRepMax ? formatLogDate(log.date) : current.date,
+          date: isNewBest ? formatLogDate(log.date) : current.date,
         });
       }
     }
   }
 
   return [...records.values()].sort(
-    (a, b) => b.estimatedOneRepMax - a.estimatedOneRepMax || b.bestWeight - a.bestWeight,
+    (a, b) => b.estimatedOneRepMax - a.estimatedOneRepMax || b.bestWeight - a.bestWeight || b.bestReps - a.bestReps,
   );
 }
 
@@ -579,10 +584,11 @@ export function getWorkoutComparisonMetrics(
   (currentLog.exercises || []).forEach((ex: any) => {
     const titleKey = (ex.title || "").trim().toLowerCase();
     (ex.sets || []).forEach((s: any) => {
-      if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-        const w = parseGymNumber(s.weight) || 0;
-        const r = parseGymNumber(s.reps) || 0;
-        if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
+      if (s.completed) {
+        const r = parseGymNumber(s.reps);
+        if (r === null || r <= 0) return;
+        const w = parseGymNumber(s.weight) ?? 0;
+        if (w < 0) return;
         currentVolume += w * r;
         currentCompletedSets++;
         const e1rm = calculateOneRepMax(w, r);
@@ -620,10 +626,11 @@ export function getWorkoutComparisonMetrics(
     (log.exercises || []).forEach((ex: any) => {
       const titleKey = (ex.title || "").trim().toLowerCase();
       (ex.sets || []).forEach((s: any) => {
-        if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-          const w = parseGymNumber(s.weight) || 0;
-          const r = parseGymNumber(s.reps) || 0;
-          if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
+        if (s.completed) {
+          const r = parseGymNumber(s.reps);
+          if (r === null || r <= 0) return;
+          const w = parseGymNumber(s.weight) ?? 0;
+          if (w < 0) return;
           const e1rm = calculateOneRepMax(w, r);
           const current = priorExercisesMax[titleKey];
           if (titleKey) {
@@ -667,10 +674,11 @@ export function getWorkoutComparisonMetrics(
   let prevCompletedSets = 0;
   (prevLog.exercises || []).forEach((ex: any) => {
     (ex.sets || []).forEach((s: any) => {
-      if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-        const w = parseGymNumber(s.weight) || 0;
-        const r = parseGymNumber(s.reps) || 0;
-        if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
+      if (s.completed) {
+        const r = parseGymNumber(s.reps);
+        if (r === null || r <= 0) return;
+        const w = parseGymNumber(s.weight) ?? 0;
+        if (w < 0) return;
         prevVolume += w * r;
         prevCompletedSets++;
       }
@@ -751,6 +759,62 @@ export function generateWarmupSets(
     { weight: roundToStep(workingWeight * 0.7), reps: 3, percent: 70 },
     { weight: roundToStep(workingWeight * 0.85), reps: 1, percent: 85 },
   ];
+}
+
+export function calculateStreaks(workoutLogs: WorkoutLogLike[], referenceDate: Date = new Date()): {
+  currentStreak: number;
+  bestStreak: number;
+} {
+  if (!workoutLogs || workoutLogs.length === 0) {
+    return { currentStreak: 0, bestStreak: 0 };
+  }
+
+  const uniqueDays = Array.from(
+    new Set(
+      workoutLogs
+        .filter((l) => l && l.date)
+        .map((l) => {
+          const d = toDate(l.date!);
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        }),
+    ),
+  ).sort((a, b) => a - b);
+
+  if (uniqueDays.length === 0) {
+    return { currentStreak: 0, bestStreak: 0 };
+  }
+
+  let best = 1;
+  let cur = 1;
+  for (let i = 1; i < uniqueDays.length; i++) {
+    const diffDays = Math.round((uniqueDays[i] - uniqueDays[i - 1]) / 86400000);
+    if (diffDays === 1) {
+      cur++;
+      if (cur > best) best = cur;
+    } else if (diffDays > 1) {
+      cur = 1;
+    }
+  }
+
+  const refMidnight = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate()).getTime();
+  const daySet = new Set(uniqueDays);
+
+  let currentStreak = 0;
+  let checkTime = refMidnight;
+
+  if (!daySet.has(checkTime)) {
+    checkTime -= 86400000;
+  }
+
+  while (daySet.has(checkTime)) {
+    currentStreak++;
+    checkTime -= 86400000;
+  }
+
+  return {
+    currentStreak,
+    bestStreak: Math.max(best, currentStreak),
+  };
 }
 
 

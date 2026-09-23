@@ -38,6 +38,7 @@ import {
   getNextScheduledRoutine,
   isTimedExercise,
   getWorkoutLogDurationMinutes,
+  calculateStreaks,
 } from "../lib/workoutUtils";
 import type { RoutineData, ExerciseData } from "../types/workout";
 
@@ -288,26 +289,8 @@ export const Dashboard = React.memo(
     };
 
     // ── Streak & Goals ───────────────────────────────────────────────────
-    const currentStreak = useMemo(() => {
-      if (!workoutLogs || workoutLogs.length === 0) return 0;
-      const logDates = new Set(
-        workoutLogs.map((log) => {
-          const d = getLogDate(log);
-          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        }),
-      );
-      const today = new Date();
-      const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-      let check = new Date(today);
-      if (!logDates.has(todayKey)) check.setDate(check.getDate() - 1);
-      let streak = 0;
-      while (true) {
-        const key = `${check.getFullYear()}-${check.getMonth()}-${check.getDate()}`;
-        if (!logDates.has(key)) break;
-        streak++;
-        check.setDate(check.getDate() - 1);
-      }
-      return streak;
+    const { currentStreak, bestStreak } = useMemo(() => {
+      return calculateStreaks(workoutLogs);
     }, [workoutLogs]);
 
     const goalProgress = Math.min(workoutsThisWeek / weeklyGoal, 1);
@@ -395,23 +378,6 @@ export const Dashboard = React.memo(
         set.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
       });
       return set;
-    }, [workoutLogs]);
-
-    // Best streak (all-time)
-    const bestStreak = useMemo(() => {
-      if (workoutLogs.length === 0) return 0;
-      const sorted = [...workoutLogs]
-        .filter((l) => l.date)
-        .sort((a, b) => getLogDate(a).getTime() - getLogDate(b).getTime());
-      let best = 1; let cur = 1;
-      for (let i = 1; i < sorted.length; i++) {
-        const prev = getLogDate(sorted[i - 1]);
-        const curr = getLogDate(sorted[i]);
-        const diff = (curr.getTime() - prev.getTime()) / 86400000;
-        if (diff <= 1.5) { cur++; if (cur > best) best = cur; }
-        else cur = 1;
-      }
-      return best;
     }, [workoutLogs]);
 
     const streakMessage =

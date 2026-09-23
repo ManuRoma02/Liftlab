@@ -257,7 +257,7 @@ export function Progress({
     const volumes: Record<string, number> = {};
     sortedLogs.forEach((log) => {
       log.exercises?.forEach((ex: any) => {
-        const cat = ex.category || exercises.find((e: any) => e.title?.trim().toLowerCase() === ex.title?.trim().toLowerCase())?.category || "Strength";
+        const cat = ex.category || safeExercises.find((e: any) => e.title?.trim().toLowerCase() === ex.title?.trim().toLowerCase())?.category || "Strength";
         if (cat === "Cardio") return;
         let vol = 0;
         ex.sets?.forEach((s: any) => {
