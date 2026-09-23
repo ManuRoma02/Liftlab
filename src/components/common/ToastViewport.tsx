@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { TOAST_EVENT, type ToastDetail } from "../../lib/toast";
+import { triggerHaptic } from "../../lib/haptics";
 
 type ToastItem = ToastDetail & { id: number };
 
@@ -12,6 +13,7 @@ export function ToastViewport() {
     const handleToast = (event: Event) => {
       const { message, tone } = (event as CustomEvent<ToastDetail>).detail;
       const id = nextId.current++;
+      triggerHaptic(tone === "error" ? "warning" : tone === "success" ? "success" : "light");
       setToasts((current) => [...current.slice(-2), { id, message, tone }]);
       window.setTimeout(() => {
         setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -36,20 +38,34 @@ export function ToastViewport() {
           <div
             key={toast.id}
             role={toast.tone === "error" ? "alert" : "status"}
-            className={`pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+            className={`pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full border px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.6)] backdrop-blur-2xl bg-[#1C1C1E]/95 animate-in fade-in slide-in-from-top-2 duration-200 ${
               toast.tone === "error"
-                ? "border-error/35 bg-error-container/95 text-on-error-container"
+                ? "border-[#FF453A]/30 text-white"
                 : toast.tone === "success"
-                  ? "border-emerald-400/30 bg-emerald-950/95 text-emerald-50"
-                  : "border-primary-fixed/30 bg-surface-container-high/95 text-on-surface"
+                ? "border-[#30D158]/30 text-white"
+                : "border-white/10 text-white"
             }`}
           >
-            <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-            <p className="min-w-0 flex-1 text-sm font-semibold leading-snug">{toast.message}</p>
+            <div className="shrink-0">
+              <Icon
+                className={`h-5 w-5 ${
+                  toast.tone === "error"
+                    ? "text-[#FF453A]"
+                    : toast.tone === "success"
+                    ? "text-[#30D158]"
+                    : "text-[#0A84FF]"
+                }`}
+                aria-hidden="true"
+              />
+            </div>
+            <p className="min-w-0 flex-1 text-sm font-semibold text-white leading-snug">{toast.message}</p>
             <button
               type="button"
-              onClick={() => setToasts((current) => current.filter((item) => item.id !== toast.id))}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-current/75 transition-colors hover:bg-white/10 hover:text-current"
+              onClick={() => {
+                triggerHaptic("light");
+                setToasts((current) => current.filter((item) => item.id !== toast.id));
+              }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" aria-hidden="true" />

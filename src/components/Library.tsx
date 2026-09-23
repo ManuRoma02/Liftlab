@@ -5,6 +5,7 @@ import { TabHero } from "./common/TabHero";
 import { ExerciseMuscleVisual } from "./common/ExerciseMuscleVisual";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { ExerciseData } from "../types/workout";
+import { triggerHaptic } from "../lib/haptics";
 
 export function Library({
   t,
@@ -132,16 +133,19 @@ export function Library({
         icon={<Database className="w-7 h-7" />}
         onOpenSettings={onOpenSettings}
         metric={
-          <span className="hidden sm:inline-flex text-xs font-black uppercase tracking-widest text-primary-fixed bg-primary-fixed/10 border border-primary-fixed/20 rounded-full px-3 py-2">
+          <span className="hidden sm:inline-flex text-xs font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/12 border border-[#30D158]/25 rounded-full px-3 py-1.5">
             {isSearching ? `${filteredExercises.length} found` : "Featured"}
           </span>
         }
         action={
           <button
-            onClick={onAddExercise}
-            className="w-full bg-primary-container text-[#000000] text-label-bold px-4 py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
+            onClick={() => {
+              triggerHaptic("light");
+              onAddExercise();
+            }}
+            className="w-full bg-[#30D158] text-black font-bold px-4 py-3 rounded-full flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(48,209,88,0.3)] hover:opacity-90 transition-opacity active:scale-95 text-xs tracking-tight"
           >
-            <Plus className="w-5 h-5" strokeWidth={3} />
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
             {t("add_exercise")}
           </button>
         }
@@ -149,9 +153,9 @@ export function Library({
 
       {/* Search Bar */}
       <div className="relative w-full group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-primary-container transition-colors" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
         <input
-          className="w-full bg-surface-container-lowest border border-surface-variant rounded-lg pl-12 pr-10 py-3 text-body-md text-on-background focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none transition-all placeholder:text-on-surface-variant"
+          className="w-full bg-[#1C1C1E] border border-white/8 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
           placeholder="Search exercises..."
           aria-label="Search exercises"
           type="text"
@@ -170,11 +174,12 @@ export function Library({
           <button
             type="button"
             onClick={() => {
+              triggerHaptic("light");
               setSearch("");
               setFilter("All");
               setSelectedMuscle("All");
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-on-surface-variant hover:text-primary hover:bg-white/10 transition-colors cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />
@@ -183,27 +188,30 @@ export function Library({
       </div>
 
       {!isSearching && (
-        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+        <div className="bg-[#30D158]/10 border border-[#30D158]/20 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="w-8 h-8 rounded-full bg-[#30D158]/20 flex items-center justify-center text-[#30D158] flex-shrink-0">
             <Search className="w-4 h-4" />
           </div>
-          <p className="text-sm font-medium text-primary">{t("search_tip")}</p>
+          <p className="text-xs font-semibold text-[#30D158]">{t("search_tip")}</p>
         </div>
       )}
 
       {/* Category List */}
       <div className="w-full flex flex-col gap-2 relative z-20">
         <div className="flex items-center justify-between">
-          <h3 className="text-label-bold text-on-surface-variant uppercase tracking-widest px-1">
+          <h3 className="text-[12px] font-bold text-[#8E8E93] uppercase tracking-[0.06em] px-1">
             {isSearching ? t("all_exercises") : t("featured_exercises")}
           </h3>
           <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container border border-surface-variant rounded-full text-sm font-bold text-primary active:scale-95 transition-all"
+            onClick={() => {
+              triggerHaptic("light");
+              setIsFilterOpen(!isFilterOpen);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1C1C1E] border border-white/10 rounded-full text-xs font-bold text-white active:scale-95 transition-all shadow-sm"
           >
             {filter === "All" ? t("all") : t(filter.toLowerCase())}
             <ChevronDown
-              className={`w-4 h-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
+              className={`w-3.5 h-3.5 text-[#8E8E93] transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
             />
           </button>
         </div>
@@ -215,15 +223,16 @@ export function Library({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-12 left-0 right-0 bg-surface-container-high rounded-xl border border-surface-variant overflow-hidden shadow-2xl z-30 flex flex-col"
+              className="absolute top-12 left-0 right-0 bg-[#1C1C1E] rounded-2xl border border-white/12 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-30 flex flex-col py-1"
             >
               <button
                 onClick={() => {
+                  triggerHaptic("light");
                   setFilter("All");
                   setIsFilterOpen(false);
                 }}
-                className={`w-full text-left px-5 py-3 font-bold text-sm transition-all hover:bg-surface-variant ${
-                  filter === "All" ? "text-primary" : "text-on-surface"
+                className={`w-full text-left px-5 py-2.5 font-semibold text-xs transition-all hover:bg-white/8 ${
+                  filter === "All" ? "text-[#30D158] font-bold" : "text-white"
                 }`}
               >
                 {t("all")}
@@ -241,11 +250,12 @@ export function Library({
                 <button
                   key={cat}
                   onClick={() => {
+                    triggerHaptic("light");
                     setFilter(cat);
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full text-left px-5 py-3 border-t border-surface-variant/50 font-bold text-sm transition-all hover:bg-surface-variant ${
-                    filter === cat ? "text-primary" : "text-on-surface"
+                  className={`w-full text-left px-5 py-2.5 border-t border-white/5 font-semibold text-xs transition-all hover:bg-white/8 ${
+                    filter === cat ? "text-[#30D158] font-bold" : "text-white"
                   }`}
                 >
                   {t(cat.toLowerCase())}
@@ -258,36 +268,39 @@ export function Library({
 
       {/* Exercise Grid */}
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
         aria-busy={search !== deferredSearch || isCatalogLoading}
       >
         {displayedExercises.map((ex) => (
           <button
             type="button"
             key={ex.id}
-            onClick={() => onOpenDetail(ex)}
-            className="w-full text-left bg-surface border border-surface-variant rounded-xl overflow-hidden flex hover:border-primary-fixed focus-visible:border-primary-fixed transition-colors group cursor-pointer"
+            onClick={() => {
+              triggerHaptic("light");
+              onOpenDetail(ex);
+            }}
+            className="w-full text-left bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden flex hover:border-white/18 active:scale-[0.98] transition-all group cursor-pointer shadow-sm"
           >
             <div className="flex-shrink-0">
               <ExerciseMuscleVisual exercise={ex} className="w-24 h-24" />
             </div>
-            <div className="p-stack-md flex flex-col justify-center flex-grow truncate">
-              <h3 className="text-label-bold text-primary truncate">
+            <div className="p-3 sm:p-4 flex flex-col justify-center flex-grow truncate min-w-0">
+              <h3 className="text-sm font-bold text-white truncate tracking-tight">
                 {t(ex.title)}
               </h3>
-              <p className="text-body-md text-on-surface-variant text-sm mt-1 truncate">
+              <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
                 {ex.category} • {ex.type}
               </p>
               {ex.equipment && (
-                <div className="flex items-center gap-stack-sm mt-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold border border-surface-variant text-on-surface-variant tracking-widest uppercase truncate">
+                <div className="flex items-center gap-1 mt-2">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border border-white/10 text-[#8E8E93] tracking-wider uppercase truncate">
                     {ex.equipment}
                   </span>
                 </div>
               )}
             </div>
-            <div className="p-stack-md flex items-center justify-center border-l border-surface-variant group-hover:border-primary-container transition-colors">
-              <ChevronRight className="w-5 h-5 text-on-surface-variant group-hover:text-primary-container transition-colors" />
+            <div className="p-3 flex items-center justify-center border-l border-white/5 group-hover:border-white/10 transition-colors">
+              <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
             </div>
           </button>
         ))}

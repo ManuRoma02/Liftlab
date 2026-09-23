@@ -1,19 +1,53 @@
 import React, { useRef } from "react";
 import {
-  ArrowLeft,
-  SlidersHorizontal,
+  ChevronLeft,
+  Languages,
+  Scale,
+  Timer,
+  Activity,
+  TrendingUp,
   Minus,
   Plus,
-  Shield,
   Lock,
-  ChevronRight,
   FileText,
   Database,
   Upload,
   RotateCcw,
   Trash2,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import logoInAppImg from "../assets/images/logo_in_app.png";
+import { triggerHaptic } from "../lib/haptics";
+
+function AppleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => {
+        triggerHaptic("light");
+        onChange(!checked);
+      }}
+      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer relative shrink-0 focus:outline-none ${
+        checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
+      }`}
+    >
+      <div
+        className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+          checked ? "translate-x-5" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+}
 
 export function Settings({
   t,
@@ -34,6 +68,7 @@ export function Settings({
   oneRepMaxFormula = "epley",
   setOneRepMaxFormula,
   onDeleteAccount,
+  onReplayTutorial,
 }: {
   t: any;
   unit: string;
@@ -53,64 +88,74 @@ export function Settings({
   oneRepMaxFormula?: "epley" | "brzycki";
   setOneRepMaxFormula?: (val: "epley" | "brzycki") => void;
   onDeleteAccount?: () => void;
+  onReplayTutorial?: () => void;
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
+
   return (
-    <div className="app-shell bg-background text-on-background font-[var(--font-body-md)] text-[16px] min-h-[100dvh] antialiased flex flex-col w-full pb-20">
-      {/* TopAppBar */}
-      <header className="console-topbar flex justify-center items-center w-full px-margin-mobile h-16 sticky top-0 z-50">
-        <div className="h-10 overflow-hidden">
+    <div className="bg-black text-white min-h-[100dvh] antialiased flex flex-col w-full pb-24">
+      {/* iOS Top Navigation Bar */}
+      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 h-14 px-4 flex items-center justify-between">
+        <button
+          onClick={() => {
+            triggerHaptic("light");
+            onBack();
+          }}
+          className="flex items-center gap-1 text-[#30D158] font-medium text-base hover:opacity-80 active:opacity-60 transition-opacity cursor-pointer"
+          aria-label={t("go_back") || "Go back"}
+        >
+          <ChevronLeft className="w-5 h-5 -ml-1.5" />
+          <span>{t("go_back") || "Back"}</span>
+        </button>
+
+        <div className="h-7 overflow-hidden flex items-center">
           <img
             src={logoInAppImg}
             alt="LIFTLAB"
             className="h-full w-auto object-contain"
           />
         </div>
+
+        <div className="w-14" />
       </header>
 
-      {/* Main Content Canvas */}
-      <main className="flex-1 w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg">
-        <header className="premium-panel rounded-2xl p-4 flex items-center gap-stack-md mb-stack-sm">
-          <button
-            onClick={onBack}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-on-background cursor-pointer"
-            aria-label={t("cancel") || "Go back"}
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary-fixed">
-              {t("local_control") || "Local Control"}
-            </p>
-            <h1 className="font-[var(--font-headline-lg)] text-[36px] leading-none font-black text-primary uppercase tracking-wide">
-              {t("settings")}
-            </h1>
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-[768px] mx-auto px-4 py-6 flex flex-col gap-7">
+        {/* Large Title */}
+        <div className="px-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#30D158] mb-1">
+            {t("local_control") || "Local Control"}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            {t("settings")}
+          </h1>
+        </div>
+
+        {/* Section 1: PREFERENCES */}
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] ml-4 mb-2">
+            {t("preferences")}
           </div>
-        </header>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
-          {/* Preferences Section */}
-          <section className="col-span-1 md:col-span-12 premium-panel rounded-2xl p-stack-lg flex flex-col gap-stack-md">
-            <div className="flex items-center gap-2 border-b border-surface-variant pb-stack-md mb-stack-sm">
-              <SlidersHorizontal className="w-5 h-5 text-primary-fixed" />
-              <h3 className="text-[14px] font-bold text-primary uppercase tracking-widest">
-                {t("preferences")}
-              </h3>
-            </div>
-
+          <div className="bg-[#1C1C1E] border border-white/6 rounded-2xl divide-y divide-white/6 overflow-hidden shadow-sm">
             {/* Preference Item: Language */}
             {setLanguage && (
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2 border-b border-surface-variant/40 pb-4">
-                <div className="flex flex-col">
-                  <span className="text-[18px] text-on-background font-bold">
-                    {t("language") || "Language"}
-                  </span>
-                  <span className="text-[14px] text-on-surface-variant">
-                    {t("language_desc") || "Select your preferred application language"}
-                  </span>
+              <div className="flex items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#0A84FF] flex items-center justify-center text-white shrink-0">
+                    <Languages className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white">
+                      {t("language") || "Language"}
+                    </span>
+                    <span className="text-xs text-[#8E8E93] truncate">
+                      {t("language_desc") || "Select your preferred application language"}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full sm:w-auto flex bg-surface border border-surface-variant rounded-lg p-1">
+
+                <div className="flex p-0.5 bg-black/40 rounded-full border border-white/10 text-xs shrink-0">
                   {[
                     { code: "en", label: "EN" },
                     { code: "it", label: "IT" },
@@ -118,12 +163,14 @@ export function Settings({
                   ].map(({ code, label }) => (
                     <button
                       key={code}
-                      onClick={() => setLanguage(code)}
-                      aria-pressed={language === code}
-                      className={`min-h-11 flex-1 sm:flex-none px-4 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setLanguage(code);
+                      }}
+                      className={`px-3 py-1.5 rounded-full font-bold text-xs uppercase transition-all cursor-pointer ${
                         language === code
-                          ? "bg-primary-fixed text-on-primary-fixed shadow-sm"
-                          : "text-on-surface-variant hover:text-on-background"
+                          ? "bg-[#30D158] text-black shadow-sm"
+                          : "text-[#8E8E93] hover:text-white"
                       }`}
                     >
                       {label}
@@ -134,27 +181,45 @@ export function Settings({
             )}
 
             {/* Preference Item: Weight Unit */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-[18px] text-on-background font-bold">
-                  {t("weight_unit")}
-                </span>
-                <span className="text-[14px] text-on-surface-variant">
-                  {t("weight_unit_desc") || "Global measurement standard (auto-converts history)"}
-                </span>
+            <div className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#FF9F0A] flex items-center justify-center text-white shrink-0">
+                  <Scale className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white">
+                    {t("weight_unit")}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] truncate">
+                    {t("weight_unit_desc") || "Global measurement standard"}
+                  </span>
+                </div>
               </div>
-              <div className="w-full sm:w-auto flex bg-surface border border-surface-variant rounded-lg p-1">
+
+              <div className="flex p-0.5 bg-black/40 rounded-full border border-white/10 text-xs shrink-0">
                 <button
-                  onClick={() => setUnit("KG")}
-                  aria-pressed={unit.toUpperCase() === "KG"}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${unit.toUpperCase() === "KG" ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setUnit("KG");
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full font-bold text-xs transition-all uppercase cursor-pointer ${
+                    unit.toUpperCase() === "KG"
+                      ? "bg-[#30D158] text-black shadow-sm"
+                      : "text-[#8E8E93] hover:text-white"
+                  }`}
                 >
                   KG
                 </button>
                 <button
-                  onClick={() => setUnit("LBS")}
-                  aria-pressed={unit.toUpperCase() === "LBS"}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${unit.toUpperCase() === "LBS" ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setUnit("LBS");
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full font-bold text-xs transition-all uppercase cursor-pointer ${
+                    unit.toUpperCase() === "LBS"
+                      ? "bg-[#30D158] text-black shadow-sm"
+                      : "text-[#8E8E93] hover:text-white"
+                  }`}
                 >
                   LBS
                 </button>
@@ -162,185 +227,290 @@ export function Settings({
             </div>
 
             {/* Preference Item: Rest Timer */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-[18px] text-on-background font-bold">
-                  {t("default_rest_timer") || "Default Rest Timer"}
-                </span>
-                <span className="text-[14px] text-on-surface-variant">
-                  {t("auto_start_rest") || "Auto-start between sets"}
-                </span>
+            <div className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#30D158] flex items-center justify-center text-black shrink-0">
+                  <Timer className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white">
+                    {t("default_rest_timer") || "Default Rest Timer"}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] truncate">
+                    {t("auto_start_rest") || "Auto-start between sets"}
+                  </span>
+                </div>
               </div>
-              <div className="w-full sm:w-auto flex items-center justify-between gap-3 bg-surface border border-outline-variant rounded-lg p-1">
+
+              <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-2 py-1 shrink-0">
                 <button
-                  onClick={() => setRestTimer(Math.max(0, restTimer - 15))}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setRestTimer(Math.max(0, restTimer - 15));
+                  }}
                   aria-label="Decrease rest timer by 15 seconds"
-                  className="min-w-11 min-h-11 flex items-center justify-center text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-4 h-4" />
                 </button>
-                <span className="font-[var(--font-headline-md)] text-[24px] font-bold text-primary w-12 text-center">
+                <span className="text-sm font-bold text-white w-10 text-center tabular-nums">
                   {restTimer}s
                 </span>
                 <button
-                  onClick={() => setRestTimer(restTimer + 15)}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setRestTimer(restTimer + 15);
+                  }}
                   aria-label="Increase rest timer by 15 seconds"
-                  className="min-w-11 min-h-11 flex items-center justify-center text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* Preference Item: Show RPE */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-[18px] text-on-background font-bold">
-                  {t("show_rpe")}
-                </span>
-                <span className="text-[14px] text-on-surface-variant">
-                  {t("show_rpe_desc")}
-                </span>
+            <div className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#BF5AF2] flex items-center justify-center text-white shrink-0">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white">
+                    {t("show_rpe")}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] truncate">
+                    {t("show_rpe_desc")}
+                  </span>
+                </div>
               </div>
-              <div className="w-full sm:w-auto flex bg-surface border border-surface-variant rounded-lg p-1">
-                <button
-                  onClick={() => setShowRpe(true)}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${showRpe ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
-                >
-                  {t("yes")}
-                </button>
-                <button
-                  onClick={() => setShowRpe(false)}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${!showRpe ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
-                >
-                  {t("no")}
-                </button>
-              </div>
+
+              <AppleSwitch checked={showRpe} onChange={setShowRpe} />
             </div>
 
             {/* Preference Item: 1RM Formula */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-[18px] text-on-background font-bold">
-                  {t("formula_1rm") || "1RM Formula"}
-                </span>
-                <span className="text-[14px] text-on-surface-variant">
-                  {t("formula_1rm_desc") || "Epley (standard) or Brzycki"}
-                </span>
+            <div className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#64D2FF] flex items-center justify-center text-black shrink-0">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white">
+                    {t("formula_1rm") || "1RM Formula"}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] truncate">
+                    {t("formula_1rm_desc") || "Epley (standard) or Brzycki"}
+                  </span>
+                </div>
               </div>
-              <div className="w-full sm:w-auto flex bg-surface border border-surface-variant rounded-lg p-1">
+
+              <div className="flex p-0.5 bg-black/40 rounded-full border border-white/10 text-xs shrink-0">
                 <button
-                  onClick={() => setOneRepMaxFormula?.("epley")}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${oneRepMaxFormula === "epley" ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setOneRepMaxFormula?.("epley");
+                  }}
+                  className={`px-3 py-1.5 rounded-full font-bold text-xs transition-all cursor-pointer ${
+                    oneRepMaxFormula === "epley"
+                      ? "bg-[#30D158] text-black shadow-sm"
+                      : "text-[#8E8E93] hover:text-white"
+                  }`}
                 >
                   Epley
                 </button>
                 <button
-                  onClick={() => setOneRepMaxFormula?.("brzycki")}
-                  className={`min-h-11 flex-1 sm:flex-none px-5 py-2 rounded-md text-[14px] font-bold transition-all uppercase cursor-pointer ${oneRepMaxFormula === "brzycki" ? "bg-primary-fixed text-on-primary-fixed shadow-sm" : "text-on-surface-variant hover:text-on-background"}`}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setOneRepMaxFormula?.("brzycki");
+                  }}
+                  className={`px-3 py-1.5 rounded-full font-bold text-xs transition-all cursor-pointer ${
+                    oneRepMaxFormula === "brzycki"
+                      ? "bg-[#30D158] text-black shadow-sm"
+                      : "text-[#8E8E93] hover:text-white"
+                  }`}
                 >
                   Brzycki
                 </button>
               </div>
             </div>
-          </section>
 
-          {/* Account & Security Section */}
-          <section className="col-span-1 md:col-span-12 premium-panel rounded-2xl p-stack-lg flex flex-col gap-stack-md">
-            <div className="flex items-center gap-2 border-b border-surface-variant pb-stack-md mb-stack-sm">
-              <Shield className="w-5 h-5 text-primary-fixed" />
-              <h3 className="text-[14px] font-bold text-primary uppercase tracking-widest">
-                {t("privacyData")}
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-stack-lg gap-y-2">
+            {/* Preference Item: Replay Setup Guide */}
+            {onReplayTutorial && (
               <button
-                onClick={onOpenPrivacy}
-                className="flex justify-between items-center py-4 border-b border-surface-variant/50 hover:bg-surface transition-colors px-2 rounded-lg -mx-2 text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-3 text-on-background">
-                  <Lock className="w-6 h-6 text-on-surface-variant" />
-                  <span className="text-[18px]">{t("privacyPolicy")}</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-              </button>
-
-              <button
-                onClick={onOpenTOS}
-                className="flex justify-between items-center py-4 border-b border-surface-variant/50 hover:bg-surface transition-colors px-2 rounded-lg -mx-2 text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-3 text-on-background">
-                  <FileText className="w-6 h-6 text-on-surface-variant" />
-                  <span className="text-[18px]">{t("termsOfService")}</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-              </button>
-
-              <button
-                onClick={onExportData}
-                className="flex justify-between items-center py-4 border-b border-surface-variant/50 md:border-b-0 hover:bg-surface transition-colors px-2 rounded-lg -mx-2 text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-3 text-on-background">
-                  <Database className="w-6 h-6 text-on-surface-variant" />
-                  <span className="text-[18px]">{t("exportData")}</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-              </button>
-
-              <button
-                onClick={() => importInputRef.current?.click()}
-                className="flex justify-between items-center py-4 border-b border-surface-variant/50 md:border-b-0 hover:bg-surface transition-colors px-2 rounded-lg -mx-2 text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-3 text-on-background">
-                  <Upload className="w-6 h-6 text-on-surface-variant" />
-                  <span className="text-[18px]">{t("import_local_data") || "Import Local Data"}</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-              </button>
-              <input
-                ref={importInputRef}
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) onImportData(file);
-                  event.currentTarget.value = "";
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  onReplayTutorial();
                 }}
-              />
-
-              {Boolean(localStorage.getItem("liftlab_backup_pre_import")) && onRestoreBackup && (
-                <button
-                  onClick={onRestoreBackup}
-                  className="flex justify-between items-center py-4 border-b border-surface-variant/50 md:border-b-0 hover:bg-surface transition-colors px-2 rounded-lg -mx-2 text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 text-on-background">
-                    <RotateCcw className="w-6 h-6 text-primary" />
-                    <span className="text-[18px] text-primary font-medium">{t("restore_pre_import") || "Undo Last Import (Restore Snapshot)"}</span>
+                className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#30D158] flex items-center justify-center text-black shrink-0">
+                    <Sparkles className="w-4 h-4 stroke-[2.5]" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-                </button>
-              )}
-
-              {onDeleteAccount && (
-                <button
-                  onClick={onDeleteAccount}
-                  className="col-span-1 md:col-span-2 flex justify-between items-center py-4 hover:bg-error/10 transition-colors px-2 rounded-lg -mx-2 text-left text-error cursor-pointer mt-2 border border-error/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <Trash2 className="w-6 h-6 text-error" />
-                    <div>
-                      <span className="text-[18px] font-bold">{t("deleteAccount") || "Delete All Local Data"}</span>
-                      <p className="text-xs text-error/80">{t("delete_account_hint") || "Permanently erase all workouts, routines, and records."}</p>
-                    </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white">
+                      {t("replay_tutorial") || "Replay Setup Guide"}
+                    </span>
+                    <span className="text-xs text-[#8E8E93] truncate">
+                      {t("unit") || "Units"}, {t("weekly_goal") || "Goal"}, {t("weight") || "Weight"}
+                    </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-error" />
-                </button>
-              )}
-            </div>
-          </section>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Section 2: DATA & PRIVACY */}
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] ml-4 mb-2">
+            {t("privacyData")}
+          </div>
+
+          <div className="bg-[#1C1C1E] border border-white/6 rounded-2xl divide-y divide-white/6 overflow-hidden shadow-sm">
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                onOpenPrivacy();
+              }}
+              className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-[#5E5CE6] flex items-center justify-center text-white shrink-0">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white">
+                  {t("privacyPolicy")}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                onOpenTOS();
+              }}
+              className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-[#8E8E93] flex items-center justify-center text-white shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white">
+                  {t("termsOfService")}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                onExportData();
+              }}
+              className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-[#30D158] flex items-center justify-center text-black shrink-0">
+                  <Database className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white">
+                  {t("exportData")}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                importInputRef.current?.click();
+              }}
+              className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-[#0A84FF] flex items-center justify-center text-white shrink-0">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white">
+                  {t("import_local_data") || "Import Local Data"}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  triggerHaptic("medium");
+                  onImportData(file);
+                }
+                event.currentTarget.value = "";
+              }}
+            />
+
+            {Boolean(localStorage.getItem("liftlab_backup_pre_import")) && onRestoreBackup && (
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  onRestoreBackup();
+                }}
+                className="w-full flex justify-between items-center p-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FF9F0A] flex items-center justify-center text-black shrink-0">
+                    <RotateCcw className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-[#FF9F0A]">
+                    {t("restore_pre_import") || "Undo Last Import (Restore Snapshot)"}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Section 3: DANGER ZONE */}
+        {onDeleteAccount && (
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#FF453A] ml-4 mb-2">
+              {t("danger_zone") || "Danger Zone"}
+            </div>
+
+            <div className="bg-[#1C1C1E] border border-[#FF453A]/25 rounded-2xl overflow-hidden shadow-sm">
+              <button
+                onClick={() => {
+                  triggerHaptic("warning");
+                  onDeleteAccount();
+                }}
+                className="w-full flex justify-between items-center p-4 hover:bg-[#FF453A]/10 active:bg-[#FF453A]/20 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FF453A]/20 flex items-center justify-center text-[#FF453A] shrink-0">
+                    <Trash2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#FF453A]">
+                      {t("deleteAccount") || "Delete All Local Data"}
+                    </span>
+                    <span className="text-xs text-[#FF453A]/70">
+                      {t("delete_account_hint") || "Permanently erase all workouts, routines, and records."}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#FF453A] group-hover:translate-x-0.5 transition-all" />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

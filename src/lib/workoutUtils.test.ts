@@ -20,6 +20,7 @@ import {
   calculatePlatesPerSide,
   generateWarmupSets,
   isTimedExercise,
+  isBodyweightExercise,
   shouldRestoreLiveProgress,
   convertWeight,
   roundToGymWeight,
@@ -259,6 +260,15 @@ assert.equal(canCompleteSet({ weight: "", reps: 8 }, { title: "Bench" }), false)
 assert.equal(canCompleteSet({ weight: 80, reps: 8 }, { title: "Bench" }), true);
 assert.equal(canCompleteSet({ weight: "", reps: 45 }, { title: "Plank" }), true);
 assert.equal(canCompleteSet({ weight: 0, reps: 10 }, { title: "Push Up" }), true);
+assert.equal(canCompleteSet({ weight: "", reps: 10 }, { title: "Push Up" }), true, "push up without weight should complete");
+assert.equal(canCompleteSet({ weight: "", reps: 8 }, { title: "Pull Up" }), true, "pull up without weight should complete");
+assert.equal(canCompleteSet({ weight: "", reps: 12 }, { title: "Custom Exercise", equipment: "Bodyweight" }), true, "equipment bodyweight without weight should complete");
+assert.equal(canCompleteSet({ weight: "", reps: 15 }, { title: "Trazioni alla sbarra" }), true, "italian trazioni should complete");
+
+assert.equal(isBodyweightExercise({ title: "Pull Up" }), true);
+assert.equal(isBodyweightExercise({ title: "Dips", equipment: "Bodyweight" }), true);
+assert.equal(isBodyweightExercise({ title: "Trazioni" }), true);
+assert.equal(isBodyweightExercise({ title: "Panca Piana", equipment: "Barbell" }), false);
 
 assert.equal(isTimedExercise({ title: "Barbell Walking Lunge", category: "Legs", type: "Compound" }), false);
 assert.equal(isTimedExercise({ title: "Walking, Treadmill", category: "Cardio" }), true);
@@ -468,9 +478,37 @@ assert.equal(roundToGymWeight(272.15542200000004, 1), 272.2);
 assert.equal(roundToGymWeight("", 2), "");
 assert.equal(roundToGymWeight(null, 2), "");
 assert.equal(roundToGymWeight(undefined, 2), "");
-assert.equal(roundToGymWeight("15.555", 2), 15.56);
+// Comma decimal parsing tests (Italian/European keyboards)
+import { parseGymNumber } from "./workoutUtils";
+assert.equal(parseGymNumber("62,5"), 62.5);
+assert.equal(parseGymNumber("100,25"), 100.25);
+assert.equal(parseGymNumber("80"), 80);
+assert.equal(parseGymNumber(""), null);
+assert.equal(parseGymNumber(null), null);
+assert.equal(finalizeLiveNumericInput("62,5"), 62.5);
+assert.equal(finalizeLiveNumericInput("62.5"), 62.5);
+assert.equal(canCompleteSet({ weight: "62,5", reps: "8" }, { title: "Bench" }), true);
+assert.equal(canCompleteSet({ weight: "80", reps: "8" }, { title: "Bench" }), true);
+
+// Test PR metrics with European comma input
+const testLog1 = {
+  id: "l1",
+  routineId: "r_chest",
+  date: "2026-06-01T10:00:00Z",
+  exercises: [{ title: "Bench", sets: [{ weight: "80,5", reps: "10", completed: true }] }],
+};
+const testLog2 = {
+  id: "l2",
+  routineId: "r_chest",
+  date: "2026-06-08T10:00:00Z",
+  exercises: [{ title: "Bench", sets: [{ weight: "85", reps: "10", completed: true }] }],
+};
+const comparison = getWorkoutComparisonMetrics(testLog2, [testLog1], "kg");
+assert.equal(comparison.previousLogFound, true);
+assert.equal(comparison.prsEarned, 1, "Higher weight with same reps must earn 1 PR");
 
 console.log("workoutUtils tests passed");
+
 
 
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function ImportRoutineModal({
   onImport,
@@ -37,8 +38,10 @@ export function ImportRoutineModal({
     setIsImporting(true);
     try {
       await onImport(trimmed);
+      triggerHaptic("success");
       onClose();
     } catch (importError) {
+      triggerHaptic("warning");
       setError(importError instanceof Error ? importError.message : "The routine code is not valid.");
     } finally {
       setIsImporting(false);
@@ -46,15 +49,29 @@ export function ImportRoutineModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[500] flex items-center justify-center p-4" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="import-routine-title" className="bg-[#141618] border border-white/15 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.9)] flex flex-col p-6 gap-4 animate-in fade-in zoom-in duration-200" onClick={(event) => event.stopPropagation()}>
-        <div className="flex justify-between items-center border-b border-surface-variant/30 pb-3">
-          <h3 id="import-routine-title" className="font-bold text-lg text-primary uppercase tracking-wide">Import Routine</h3>
-          <button type="button" aria-label="Close import dialog" onClick={onClose} className="min-w-11 min-h-11 p-1 text-on-surface-variant hover:text-primary">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[500] flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-routine-title"
+        className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col p-6 gap-4"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex justify-between items-center border-b border-white/8 pb-3">
+          <h3 id="import-routine-title" className="font-bold text-base text-white tracking-tight">Import Routine</h3>
+          <button
+            type="button"
+            aria-label="Close import dialog"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-on-surface-variant">
+        <p className="text-xs text-[#8E8E93]">
           Paste the shared routine code or JSON below:
         </p>
         <textarea
@@ -63,14 +80,17 @@ export function ImportRoutineModal({
           placeholder='{"schema": "liftlab.routine.v1", ...}'
           aria-label="Routine code or JSON"
           aria-describedby={error ? "import-routine-error" : undefined}
-          className="w-full h-32 p-3 bg-surface border border-surface-variant rounded-lg text-xs font-mono text-on-background focus:border-primary-fixed outline-none resize-none transition-all"
+          className="w-full h-32 p-3.5 bg-black/40 border border-white/10 rounded-2xl text-xs font-mono text-white focus:border-[#30D158] outline-none resize-none transition-all placeholder:text-[#8E8E93]/60"
         />
-        {error && <p id="import-routine-error" role="alert" className="text-sm text-error">{error}</p>}
-        <div className="flex gap-2">
+        {error && <p id="import-routine-error" role="alert" className="text-xs text-[#FF453A] font-semibold">{error}</p>}
+        <div className="flex gap-2.5 pt-1">
           <button
             type="button"
-            onClick={onClose}
-            className="flex-1 py-3 border border-surface-variant text-on-surface-variant rounded-lg font-bold text-xs uppercase tracking-wide hover:bg-surface-variant transition-all"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="flex-1 py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-semibold text-xs transition-all cursor-pointer active:scale-95"
           >
             Cancel
           </button>
@@ -78,7 +98,7 @@ export function ImportRoutineModal({
             type="button"
             onClick={handleImport}
             disabled={!codeText.trim() || isImporting}
-            className="flex-1 py-3 bg-primary-fixed text-[#000000] rounded-lg font-bold text-xs uppercase tracking-wide hover:opacity-90 disabled:opacity-50 transition-all"
+            className="flex-1 py-3 bg-[#30D158] text-black rounded-full font-bold text-xs hover:brightness-105 disabled:opacity-40 transition-all cursor-pointer active:scale-95 shadow-sm"
           >
             {isImporting ? "Importing..." : "Import"}
           </button>

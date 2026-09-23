@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function AccordionItem({
   title,
@@ -17,27 +18,30 @@ export function AccordionItem({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
     <div
-      className={`bg-surface-container border border-surface-variant rounded-xl overflow-hidden ${className}`}
+      className={`bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)] ${className}`}
     >
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-stack-lg transition-colors hover:bg-surface-variant/30 text-left focus:outline-none"
+        onClick={() => {
+          triggerHaptic("light");
+          setIsOpen(!isOpen);
+        }}
+        className="w-full flex items-center justify-between p-5 transition-colors hover:bg-white/5 active:bg-white/10 text-left focus:outline-none cursor-pointer"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {icon}
-          <h3 className="font-bold text-[14px] text-primary-fixed uppercase tracking-widest">
+          <h3 className="font-bold text-xs text-white uppercase tracking-wider">
             {title}
           </h3>
         </div>
         <ChevronDown
-          className={`w-5 h-5 text-primary-fixed transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-[#8E8E93] transition-transform duration-200 ${isOpen ? "rotate-180 text-white" : ""}`}
         />
       </button>
       <div
         className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className="overflow-hidden">
-          <div className="p-stack-lg pt-0">{children}</div>
+          <div className="p-5 pt-0">{children}</div>
         </div>
       </div>
     </div>

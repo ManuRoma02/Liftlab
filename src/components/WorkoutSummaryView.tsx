@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
-import { Trophy, Clock, Dumbbell, TrendingUp } from "lucide-react";
+import { Trophy, Clock, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
-import { getVolumeComparison, getWorkoutComparisonMetrics, isTimedExercise } from "../lib/workoutUtils";
+import { getVolumeComparison, getWorkoutComparisonMetrics } from "../lib/workoutUtils";
+import { triggerHaptic } from "../lib/haptics";
 
 export function WorkoutSummaryView({
   logData,
@@ -21,15 +22,30 @@ export function WorkoutSummaryView({
   if (!logData) return null;
 
   let totalVolume = 0;
+  let totalReps = 0;
   logData.exercises?.forEach((ex: any) => {
     ex.sets?.forEach((s: any) => {
-      if (s.completed && s.weight && s.reps) {
-        let w = parseFloat(s.weight) || 0;
-        let r = parseInt(s.reps) || 0;
-        totalVolume += w * r;
+      if (s.completed && s.reps) {
+        const r = parseInt(s.reps) || 0;
+        totalReps += r;
+        if (s.weight) {
+          const w = parseFloat(s.weight) || 0;
+          totalVolume += w * r;
+        }
       }
     });
   });
+
+  const formatDuration = (seconds: number) => {
+    const s = Math.max(0, Math.floor(seconds || 0));
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    if (hrs > 0) {
+      return `${hrs}h ${mins}m`;
+    }
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // Ensure volume is converted to a base kg for comparison
   let volumeKg = totalVolume;
@@ -56,67 +72,73 @@ export function WorkoutSummaryView({
   );
 
   return (
-    <div className="app-shell bg-[#09090b] min-h-[100dvh] flex flex-col p-4 relative font-sans overflow-y-auto">
+    <div className="bg-black text-white min-h-[100dvh] flex flex-col p-4 relative font-sans antialiased overflow-y-auto">
       {/* Dynamic Background Effects */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary-fixed/15 via-background to-background pointer-events-none"
+        transition={{ duration: 1.2 }}
+        className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#30D158]/12 via-black to-black pointer-events-none"
       />
 
-      <div className="flex-grow flex flex-col items-center justify-center max-w-md mx-auto w-full z-10 text-center gap-4 py-6">
+      <div className="flex-grow flex flex-col items-center justify-center max-w-md mx-auto w-full z-10 text-center gap-5 py-8">
+        {/* Apple Fitness Award Badge */}
         <motion.div
-          initial={{ scale: 0, rotate: -45 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className="w-20 h-20 premium-cta rounded-[1.5rem] flex items-center justify-center shadow-[0_0_60px_rgba(34,197,94,0.18)] rotate-3"
+          initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 220, damping: 18 }}
+          className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#30D158] to-[#64D2FF] p-0.5 shadow-[0_0_50px_rgba(48,209,88,0.35)]"
         >
-          <Trophy className="w-10 h-10" />
+          <div className="w-full h-full bg-[#1C1C1E] rounded-[22px] flex items-center justify-center text-[#30D158]">
+            <Trophy className="w-12 h-12 text-[#30D158]" />
+          </div>
         </motion.div>
 
+        {/* Title */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h1 className="font-[var(--font-display-lg)] text-3xl font-black text-white tracking-wide mb-1 uppercase leading-[0.9]">
-            Workout
-            <br />
-            <span className="text-primary-fixed">Destroyed</span>
-          </h1>
-          <p className="text-sm text-zinc-400 font-semibold">
+          <div className="flex items-center justify-center gap-1.5 text-[#30D158] font-bold text-xs uppercase tracking-wider mb-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{t("workout_completed") || "Workout Completed!"}</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
             {logData.routineName || "Custom Workout"}
+          </h1>
+          <p className="text-xs text-[#8E8E93] mt-1">
+            {t("workout_completed_subtitle") || "Ottimo lavoro! Ecco il riepilogo della tua sessione."}
           </p>
         </motion.div>
 
+        {/* Apple Stat Grid (Duration & Sets) */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.35 }}
           className="grid grid-cols-2 gap-3 w-full"
         >
-          <div className="premium-panel rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 opacity-20">
-              <Clock className="w-6 h-6" />
+          <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+            <div className="absolute top-3.5 right-3.5 opacity-20 text-[#8E8E93]">
+              <Clock className="w-5 h-5" />
             </div>
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 z-10">
+            <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
               {t("duration") || "Time"}
             </span>
-            <p className="text-2xl font-bold text-white font-mono z-10">
-              {Math.floor(logData.duration / 60)}:
-              {(logData.duration % 60).toString().padStart(2, "0")}
+            <p className="text-3xl font-extrabold text-white tabular-nums tracking-tight">
+              {formatDuration(logData.duration)}
             </p>
           </div>
 
-          <div className="premium-panel rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 opacity-20">
-              <Dumbbell className="w-6 h-6" />
+          <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+            <div className="absolute top-3.5 right-3.5 opacity-20 text-[#8E8E93]">
+              <Dumbbell className="w-5 h-5" />
             </div>
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1 z-10">
+            <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
               {t("sets") || "Sets"}
             </span>
-            <p className="text-2xl font-bold text-white font-mono z-10">
+            <p className="text-3xl font-extrabold text-white tabular-nums tracking-tight">
               {totalSets}
             </p>
           </div>
@@ -124,52 +146,52 @@ export function WorkoutSummaryView({
 
         {/* Comparison Metrics vs Previous Session */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="premium-panel rounded-2xl p-4 w-full flex flex-col gap-3"
+          transition={{ delay: 0.45 }}
+          className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 w-full flex flex-col gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
         >
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
-            <span className="text-xs font-black uppercase tracking-wider text-primary-fixed flex items-center gap-1.5">
+          <div className="flex items-center justify-between border-b border-white/6 pb-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#30D158] flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4" />
               {t("vs_previous_session") || "Vs Previous Session"}
             </span>
-            <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold">
-              {comparisonMetrics.previousLogFound ? "Previous Session" : "First Session"}
+            <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-semibold">
+              {comparisonMetrics.previousLogFound ? (t("previous_session") || "Previous Session") : (t("first_session") || "First Session")}
             </span>
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-2.5 flex flex-col items-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-400 mb-0.5">
-                Volume Diff
+            <div className="bg-black/40 border border-white/6 rounded-2xl p-3 flex flex-col items-center">
+              <span className="text-[10px] uppercase font-bold text-[#8E8E93] mb-1">
+                {t("volume_diff") || "Volume Diff"}
               </span>
               <span
-                className={`text-sm font-black font-mono ${
-                  comparisonMetrics.volumeDiff >= 0 ? "text-primary-fixed" : "text-amber-400"
+                className={`text-sm font-black tabular-nums ${
+                  comparisonMetrics.volumeDiff >= 0 ? "text-[#30D158]" : "text-[#FF9F0A]"
                 }`}
               >
                 {comparisonMetrics.volumeDiffFormatted}
               </span>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-2.5 flex flex-col items-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-400 mb-0.5">
-                Total Sets
+            <div className="bg-black/40 border border-white/6 rounded-2xl p-3 flex flex-col items-center">
+              <span className="text-[10px] uppercase font-bold text-[#8E8E93] mb-1">
+                {t("total_sets") || "Total Sets"}
               </span>
-              <span className="text-sm font-black font-mono text-white">
+              <span className="text-sm font-black text-white tabular-nums">
                 {totalSets}
-                <span className="text-[10px] text-zinc-400 ml-1">
+                <span className="text-[10px] text-[#8E8E93] ml-1">
                   ({comparisonMetrics.setsDiffFormatted})
                 </span>
               </span>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-2.5 flex flex-col items-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-400 mb-0.5">
-                PRs Earned
+            <div className="bg-black/40 border border-white/6 rounded-2xl p-3 flex flex-col items-center">
+              <span className="text-[10px] uppercase font-bold text-[#8E8E93] mb-1">
+                {t("prs_earned") || "PRs Earned"}
               </span>
-              <span className="text-sm font-black font-mono text-yellow-400 flex items-center justify-center gap-1">
+              <span className="text-sm font-black text-[#FFD60A] flex items-center justify-center gap-1 tabular-nums">
                 <Trophy className="w-3.5 h-3.5" />
                 {comparisonMetrics.prsEarned}
               </span>
@@ -177,38 +199,37 @@ export function WorkoutSummaryView({
           </div>
         </motion.div>
 
+        {/* Total Volume Hero Card */}
         {totalVolume > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, type: "spring" }}
+            transition={{ delay: 0.55, type: "spring" }}
             className="w-full relative"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary-fixed/30 via-secondary/20 to-primary-fixed/0 rounded-[1.5rem] blur-xl opacity-50 relative z-0"></div>
-            <div className="premium-panel rounded-2xl p-5 flex flex-col items-center shadow-xl relative z-10 overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-fixed via-secondary to-primary-fixed"></div>
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1 relative">
-                Total Volume
+            <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
+              <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
+                {t("total_volume") || "Total Volume"}
               </span>
-              <div className="flex items-baseline gap-2 relative">
-                <p className="text-4xl font-black text-white tracking-tighter">
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-4xl sm:text-5xl font-black text-white tracking-tight tabular-nums">
                   {totalVolume.toLocaleString(undefined, {
                     maximumFractionDigits: 1,
                   })}
                 </p>
-                <span className="text-lg text-primary-fixed font-bold">{unit}</span>
+                <span className="text-base text-[#30D158] font-bold uppercase">{unit}</span>
               </div>
 
               {comparison && comparisonText && (
-                <div className="mt-3 pt-3 border-t border-zinc-800/80 w-full relative">
-                  <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                <div className="mt-4 pt-3.5 border-t border-white/6 w-full text-center">
+                  <p className="text-xs text-[#8E8E93] leading-relaxed">
                     {language === "it"
                       ? "Hai sollevato l'equivalente di "
                       : language === "es"
                         ? "Levantaste el equivalente a "
                         : "You lifted the equivalent of "}
                     <br />
-                    <span className="text-sm text-primary-fixed font-bold uppercase tracking-wide block mt-0.5">
+                    <span className="text-sm text-[#30D158] font-bold uppercase tracking-wider block mt-1">
                       {comparisonText}
                     </span>
                   </p>
@@ -217,17 +238,46 @@ export function WorkoutSummaryView({
             </div>
           </motion.div>
         )}
+
+        {/* Total Reps Hero Card (for bodyweight workouts) */}
+        {totalVolume === 0 && totalReps > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.55, type: "spring" }}
+            className="w-full relative"
+          >
+            <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
+              <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
+                {t("total_reps") || "Total Repetitions"}
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-4xl sm:text-5xl font-black text-white tracking-tight tabular-nums">
+                  {totalReps.toLocaleString()}
+                </p>
+                <span className="text-base text-[#30D158] font-bold uppercase">reps</span>
+              </div>
+              <p className="text-xs text-[#8E8E93] mt-2">
+                {t("bodyweight_focus") || "Ottima sessione a corpo libero!"}
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
 
+      {/* Sticky Bottom Finish Button */}
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
+        transition={{ delay: 0.7, type: "spring", stiffness: 120 }}
         className="pb-6 pt-2 px-4 w-full max-w-md mx-auto z-10 sticky bottom-0"
       >
         <button
-          onClick={onBack}
-          className="w-full premium-cta rounded-xl font-black text-base py-4 uppercase tracking-widest hover:brightness-110 transition-transform active:scale-95 cursor-pointer"
+          onClick={() => {
+            triggerHaptic("success");
+            onBack();
+          }}
+          className="w-full bg-[#30D158] text-black font-extrabold text-base py-4 rounded-full shadow-[0_8px_24px_rgba(48,209,88,0.3)] hover:brightness-105 active:scale-95 transition-all cursor-pointer uppercase tracking-wider"
         >
           {t("finish_workout") || "Finish"}
         </button>
@@ -235,4 +285,3 @@ export function WorkoutSummaryView({
     </div>
   );
 }
-

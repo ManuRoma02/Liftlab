@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Trophy, X, Search, CheckCircle } from "lucide-react";
-import { ACHIEVEMENTS, type Achievement } from "../../lib/achievements";
+import { ACHIEVEMENTS } from "../../lib/achievements";
+import { triggerHaptic } from "../../lib/haptics";
 
 export interface AchievementsModalProps {
   isOpen: boolean;
@@ -105,58 +106,64 @@ export function AchievementsModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[300] flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200">
-      <div className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-3 md:p-6">
+      <div className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-surface-variant flex justify-between items-center bg-surface-variant/20 shrink-0">
+        <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
-              <Trophy className="w-6 h-6" />
+            <div className="w-10 h-10 bg-[#FF9F0A]/15 border border-[#FF9F0A]/25 rounded-2xl flex items-center justify-center text-[#FF9F0A]">
+              <Trophy className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-[var(--font-headline-sm)] text-[18px] md:text-[22px] font-bold text-primary tracking-tight uppercase">
+              <h3 className="font-bold text-base md:text-lg text-white tracking-tight">
                 {tr("achievements", "Legacy Achievements")}
               </h3>
-              <p className="text-xs text-on-surface-variant font-medium">
+              <p className="text-xs text-[#8E8E93]">
                 {unlockedCount} / {ACHIEVEMENTS.length} {tr("unlocked", "Unlocked")}
               </p>
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-variant/50"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
             aria-label="Close"
           >
-            <X className="w-6 h-6" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Controls: Search & Filters */}
-        <div className="p-4 border-b border-surface-variant/50 bg-surface-container flex flex-col sm:flex-row gap-3 shrink-0">
+        <div className="p-4 border-b border-white/6 bg-black/20 flex flex-col sm:flex-row gap-3 shrink-0">
           {/* Search bar */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
             <input
               type="text"
               placeholder={tr("search_achievements", "Search achievements...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-surface border border-surface-variant rounded-xl py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-on-surface-variant/50"
+              className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
             />
           </div>
 
           {/* Filter tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0">
+          <div className="flex gap-1 bg-black/40 p-1 rounded-full border border-white/10 overflow-x-auto scrollbar-none shrink-0">
             {filterTabs.map((tab) => {
               const isActive = filter === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setFilter(tab.id);
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? "bg-primary text-on-primary shadow-sm"
-                      : "bg-surface border border-surface-variant/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+                      ? "bg-[#30D158] text-black shadow-sm font-bold"
+                      : "text-[#8E8E93] hover:text-white"
                   }`}
                 >
                   {tab.label}
@@ -167,16 +174,16 @@ export function AchievementsModal({
         </div>
 
         {/* Grid content */}
-        <div className="p-4 md:p-6 flex-1 overflow-y-auto min-h-0">
+        <div className="p-4 md:p-6 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
           {filteredAchievements.length === 0 ? (
-            <div className="py-16 text-center text-on-surface-variant">
-              <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
+            <div className="py-20 text-center text-[#8E8E93]">
+              <Trophy className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p className="text-sm font-medium">
                 {tr("no_achievements_found", "No achievements found matching your filter.")}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {filteredAchievements.map((ach) => {
                 const rawProg = ach.progress(workoutLogs, unit);
                 const progressPercent = Math.min(100, Math.floor(rawProg * 100));
@@ -188,10 +195,10 @@ export function AchievementsModal({
                 return (
                   <div
                     key={ach.id}
-                    className={`relative flex flex-col justify-between p-4 rounded-xl border transition-all ${
+                    className={`relative flex flex-col justify-between p-4 rounded-2xl border transition-all ${
                       isUnlocked
-                        ? `bg-surface border-primary/40 ${style.border}`
-                        : "bg-surface/40 border-surface-variant opacity-60 grayscale hover:opacity-80"
+                        ? `bg-black/50 border-[#30D158]/30 shadow-sm`
+                        : "bg-black/30 border-white/6 opacity-50 grayscale hover:opacity-75"
                     }`}
                   >
                     {/* Top Row: Icon & Status / Level Badge */}
@@ -200,11 +207,11 @@ export function AchievementsModal({
                         className={`p-2.5 rounded-xl border ${
                           isUnlocked
                             ? `${style.bg} ${style.border} ${style.text}`
-                            : "bg-surface-variant/40 border-surface-variant text-on-surface-variant"
+                            : "bg-white/5 border-white/10 text-[#8E8E93]"
                         }`}
                       >
                         <IconComponent
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             isUnlocked ? style.glow : ""
                           }`}
                         />
@@ -217,7 +224,7 @@ export function AchievementsModal({
                           {levelKey}
                         </span>
                         {isUnlocked && (
-                          <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-[#30D158] shrink-0" />
                         )}
                       </div>
                     </div>
@@ -226,34 +233,32 @@ export function AchievementsModal({
                     <div className="flex-1 mb-3">
                       <h4
                         className={`text-sm font-bold leading-tight mb-1 ${
-                          isUnlocked
-                            ? "text-on-surface"
-                            : "text-on-surface-variant"
+                          isUnlocked ? "text-white" : "text-[#8E8E93]"
                         }`}
                       >
                         {tr(ach.title, ach.title)}
                       </h4>
-                      <p className="text-[11px] text-on-surface-variant leading-snug">
+                      <p className="text-xs text-[#8E8E93] leading-relaxed">
                         {tr(ach.description, ach.description)}
                       </p>
                     </div>
 
                     {/* Bottom: Progress Bar (if locked) or Unlocked Label */}
-                    <div className="mt-auto pt-2 border-t border-surface-variant/40">
+                    <div className="mt-auto pt-2 border-t border-white/5">
                       {isUnlocked ? (
-                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-primary">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#30D158]">
                           <span>{tr("unlocked_caps", "UNLOCKED")}</span>
                           <span>100%</span>
                         </div>
                       ) : (
                         <div>
-                          <div className="flex justify-between items-center text-[10px] text-on-surface-variant mb-1 font-mono">
+                          <div className="flex justify-between items-center text-[10px] text-[#8E8E93] mb-1 font-mono">
                             <span>{tr("progress", "Progress")}</span>
                             <span>{progressPercent}%</span>
                           </div>
-                          <div className="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                             <div
-                              className="bg-primary h-full rounded-full transition-all duration-300"
+                              className="bg-[#30D158] h-full rounded-full transition-all duration-300"
                               style={{ width: `${progressPercent}%` }}
                             />
                           </div>
@@ -268,10 +273,13 @@ export function AchievementsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-surface-variant/10 border-t border-surface-variant/50 flex justify-end shrink-0">
+        <div className="p-4 border-t border-white/6 flex justify-end shrink-0">
           <button
-            onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-on-primary font-bold rounded-xl hover:opacity-90 transition-opacity uppercase tracking-wide text-xs"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-full sm:w-auto px-7 py-2.5 bg-[#30D158] text-black font-bold rounded-full hover:brightness-105 active:scale-95 transition-all text-xs cursor-pointer shadow-sm"
           >
             {tr("close", "Close")}
           </button>

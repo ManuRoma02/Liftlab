@@ -1,5 +1,6 @@
 import React from "react";
 import { Settings as SettingsIcon } from "lucide-react";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function TabHero({
   eyebrow,
@@ -19,23 +20,22 @@ export function TabHero({
   onOpenSettings?: () => void;
 }) {
   return (
-    <section className="bg-[#171412] border border-white/5 rounded-2xl overflow-visible relative shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(34,197,94,0.16),transparent_18rem),radial-gradient(circle_at_100%_15%,rgba(255,255,255,0.045),transparent_16rem)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:20px_20px] opacity-40" />
+    <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.12),transparent_16rem),radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.03),transparent_14rem)]" />
       </div>
-      <div className="p-5 flex items-center gap-4 relative z-10">
-        <div className="w-14 h-14 rounded-2xl border border-primary-fixed/25 bg-emerald-950/40 text-primary-fixed flex items-center justify-center shrink-0">
+      <div className="p-5 sm:p-6 flex items-center gap-4 relative z-10">
+        <div className="w-13 h-13 rounded-2xl border border-[#30D158]/25 bg-[#30D158]/12 text-[#30D158] flex items-center justify-center shrink-0 shadow-sm">
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary-fixed mb-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] mb-0.5">
             {eyebrow}
           </p>
-          <h1 className="font-[var(--font-headline-lg)] text-4xl font-extrabold text-white tracking-tight leading-none text-balance">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.025em] leading-none text-balance">
             {title}
           </h1>
-          <p className="text-xs text-on-surface-variant/80 truncate mt-1">
+          <p className="text-xs text-[#8E8E93] truncate mt-1">
             {subtitle}
           </p>
         </div>
@@ -43,17 +43,20 @@ export function TabHero({
           {metric}
           {onOpenSettings && (
             <button
-              onClick={onOpenSettings}
+              onClick={() => {
+                triggerHaptic("light");
+                onOpenSettings();
+              }}
               aria-label="Settings"
-              className="w-11 h-11 rounded-full bg-white/5 border border-white/10 text-on-surface-variant hover:text-primary hover:bg-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             >
-              <SettingsIcon className="w-5 h-5" />
+              <SettingsIcon className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
       {action && (
-        <div className="px-5 pb-5 relative z-10">
+        <div className="px-5 sm:px-6 pb-5 relative z-10">
           {action}
         </div>
       )}

@@ -26,3 +26,5 @@ dev-dist/
 *.apk
 .gitconfig
 brag-output/
+.agents/
+skills-lock.json

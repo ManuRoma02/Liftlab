@@ -58,11 +58,11 @@ export function writeJsonSafe<T>(key: string, value: T, storage: Storage = local
 }
 
 export function writeJsonAtomic<T>(key: string, value: T, storage: Storage = localStorage): boolean {
+  const tmpKey = `${key}_tmp`;
+  const bakKey = `${key}_bak`;
   try {
     const serialized = JSON.stringify(value);
     // Write to temporary slot and verify parseability
-    const tmpKey = `${key}_tmp`;
-    const bakKey = `${key}_bak`;
     storage.setItem(tmpKey, serialized);
     JSON.parse(storage.getItem(tmpKey) || "");
 
@@ -74,14 +74,22 @@ export function writeJsonAtomic<T>(key: string, value: T, storage: Storage = loc
 
     // Commit new data
     storage.setItem(key, serialized);
-    storage.removeItem(tmpKey);
     return true;
   } catch (error) {
     console.error(`Atomic write failed for "${key}":`, error);
+    // Crucial: remove tmpKey immediately so quota is freed before fallback
+    try {
+      storage.removeItem(tmpKey);
+    } catch {}
     // Fallback: try direct write if quota permits
     return writeJsonSafe(key, value, storage);
+  } finally {
+    try {
+      storage.removeItem(tmpKey);
+    } catch {}
   }
 }
+
 
 export function writeJson<T>(key: string, value: T, storage: Storage = localStorage) {
   writeJsonSafe(key, value, storage);

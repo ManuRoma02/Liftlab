@@ -197,16 +197,70 @@ export function shouldRestoreLiveProgress(
   return saved.id === targetId;
 }
 
+export function isBodyweightExercise(
+  exercise?: { title?: string; type?: string; category?: string; equipment?: string } | null,
+): boolean {
+  if (!exercise) return false;
+  const equipment = (exercise.equipment || "").toLowerCase();
+  const category = (exercise.category || "").toLowerCase();
+  const title = (exercise.title || "").toLowerCase();
+
+  if (equipment === "bodyweight" || category === "calisthenics" || category === "bodyweight") {
+    return true;
+  }
+
+  const bwKeywords = [
+    "pull up",
+    "pull-up",
+    "pullup",
+    "chin up",
+    "chin-up",
+    "chinup",
+    "push up",
+    "push-up",
+    "pushup",
+    "dip",
+    "dips",
+    "crunch",
+    "crunches",
+    "sit up",
+    "sit-up",
+    "situp",
+    "leg raise",
+    "muscle up",
+    "muscle-up",
+    "trazioni",
+    "piegamenti",
+    "flessioni",
+    "parallele",
+    "addominali",
+    "corpo libero",
+  ];
+
+  return bwKeywords.some((kw) => title.includes(kw));
+}
+
+export function parseGymNumber(value: number | string | "" | null | undefined): number | null {
+  if (value === "" || value === undefined || value === null) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const normalized = String(value).trim().replace(",", ".");
+  if (normalized === "") return null;
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function canCompleteSet(
   set: { weight?: number | string; reps?: number | string } | null | undefined,
-  exercise?: { title?: string; type?: string; category?: string },
+  exercise?: { title?: string; type?: string; category?: string; equipment?: string },
 ): boolean {
   if (!set) return false;
-  const reps = Number(set.reps);
-  const hasReps = Number.isFinite(reps) && reps > 0;
+  const reps = parseGymNumber(set.reps);
+  const hasReps = reps !== null && reps > 0;
   if (!hasReps) return false;
   if (exercise && isTimedExercise(exercise)) return true;
-  return set.weight !== "" && set.weight !== undefined && Number.isFinite(Number(set.weight));
+  if (exercise && isBodyweightExercise(exercise)) return true;
+  const weight = parseGymNumber(set.weight);
+  return weight !== null && weight >= 0;
 }
 
 export function dissolveSuperset<T extends { id: string; technique?: string; supersetId?: string }>(
@@ -215,16 +269,30 @@ export function dissolveSuperset<T extends { id: string; technique?: string; sup
 ): T[] {
   const target = exercises.find((exercise) => exercise.id === exId);
   const supersetId = target?.supersetId;
-  return exercises.map((exercise) => {
-    const matches = supersetId ? exercise.supersetId === supersetId : exercise.id === exId;
-    return matches ? { ...exercise, technique: "", supersetId: undefined } : exercise;
-  });
+  if (!supersetId) {
+    return exercises.map((exercise) =>
+      exercise.id === exId ? { ...exercise, technique: "", supersetId: undefined } : exercise,
+    );
+  }
+
+  // Unlink the target exercise from superset
+  const updated = exercises.map((exercise) =>
+    exercise.id === exId ? { ...exercise, technique: "", supersetId: undefined } : exercise,
+  );
+
+  // If 1 or 0 exercises remain in this superset, dissolve the rest as well
+  const remaining = updated.filter((exercise) => exercise.supersetId === supersetId);
+  if (remaining.length <= 1) {
+    return updated.map((exercise) =>
+      exercise.supersetId === supersetId ? { ...exercise, technique: "", supersetId: undefined } : exercise,
+    );
+  }
+  return updated;
 }
 
 export function finalizeLiveNumericInput(value: number | string | "" | null | undefined): number | "" {
-  if (value === "" || value === undefined || value === null) return "";
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : "";
+  const num = parseGymNumber(value);
+  return num !== null ? num : "";
 }
 
 export function formatWeightUnit(unit: string | undefined | null): "kg" | "lbs" {
@@ -299,8 +367,8 @@ export const calculateOneRepMaxEpley = (weight: number | string, reps: number | 
  * Returns exact weight for reps === 1, and 0 for invalid inputs.
  */
 export const calculateOneRepMaxBrzycki = (weight: number | string, reps: number | string): number => {
-  const w = typeof weight === "number" ? weight : Number(weight);
-  const r = typeof reps === "number" ? reps : Number(reps);
+  const w = typeof weight === "number" ? weight : parseGymNumber(weight) || 0;
+  const r = typeof reps === "number" ? reps : parseGymNumber(reps) || 0;
   if (!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return 0;
   if (r === 1) return Math.round(w);
   const cappedReps = Math.min(36, r);
@@ -512,15 +580,18 @@ export function getWorkoutComparisonMetrics(
     const titleKey = (ex.title || "").trim().toLowerCase();
     (ex.sets || []).forEach((s: any) => {
       if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-        const w = Number(s.weight) || 0;
-        const r = Number(s.reps) || 0;
+        const w = parseGymNumber(s.weight) || 0;
+        const r = parseGymNumber(s.reps) || 0;
         if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
         currentVolume += w * r;
         currentCompletedSets++;
         const e1rm = calculateOneRepMax(w, r);
         const current = currentExercisesMax[titleKey];
-        if (titleKey && (!current || w > current.weight || (w === current.weight && r > current.reps) || e1rm > current.e1rm)) {
-          currentExercisesMax[titleKey] = { weight: w, reps: r, e1rm };
+        if (titleKey) {
+          const maxWeight = Math.max(current?.weight ?? 0, w);
+          const maxReps = w > (current?.weight ?? 0) ? r : (w === (current?.weight ?? 0) ? Math.max(current?.reps ?? 0, r) : (current?.reps ?? 0));
+          const maxE1rm = Math.max(current?.e1rm ?? 0, e1rm);
+          currentExercisesMax[titleKey] = { weight: maxWeight, reps: maxReps, e1rm: maxE1rm };
         }
       }
     });
@@ -538,55 +609,28 @@ export function getWorkoutComparisonMetrics(
   const currentRoutineId = (currentLog as any).routineId;
   const currentRoutineName = ((currentLog as any).routineName || currentLog.name || "").trim().toLowerCase();
 
-  let prevLog = priorLogs.find((log) => {
-    if (currentRoutineId && (log as any).routineId === currentRoutineId) return true;
+  const prevLog = priorLogs.find((log) => {
+    if (currentRoutineId && currentRoutineId !== "empty" && (log as any).routineId === currentRoutineId) return true;
     const logName = ((log as any).routineName || log.name || "").trim().toLowerCase();
-    return Boolean(currentRoutineName && logName === currentRoutineName);
+    return Boolean(currentRoutineName && logName === currentRoutineName && logName !== "workout" && logName !== "allenamento");
   });
 
-  if (!prevLog && priorLogs.length > 0) {
-    prevLog = priorLogs[0];
-  }
-
-  if (!prevLog) {
-    return {
-      previousLogFound: false,
-      volumeDiff: currentVolume,
-      volumeDiffFormatted: `+${Math.round(currentVolume)} ${unit}`,
-      setsDiff: currentCompletedSets,
-      setsDiffFormatted: `+${currentCompletedSets}`,
-      prsEarned: 0,
-    };
-  }
-
-  let prevVolume = 0;
-  let prevCompletedSets = 0;
   const priorExercisesMax: Record<string, { weight: number; reps: number; e1rm: number }> = {};
-
-  (prevLog.exercises || []).forEach((ex: any) => {
-    (ex.sets || []).forEach((s: any) => {
-      if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-        const w = Number(s.weight) || 0;
-        const r = Number(s.reps) || 0;
-        if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
-        prevVolume += w * r;
-        prevCompletedSets++;
-      }
-    });
-  });
-
   priorLogs.forEach((log) => {
     (log.exercises || []).forEach((ex: any) => {
       const titleKey = (ex.title || "").trim().toLowerCase();
       (ex.sets || []).forEach((s: any) => {
         if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
-          const w = Number(s.weight) || 0;
-          const r = Number(s.reps) || 0;
+          const w = parseGymNumber(s.weight) || 0;
+          const r = parseGymNumber(s.reps) || 0;
           if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
           const e1rm = calculateOneRepMax(w, r);
           const current = priorExercisesMax[titleKey];
-          if (titleKey && (!current || w > current.weight || (w === current.weight && r > current.reps) || e1rm > current.e1rm)) {
-            priorExercisesMax[titleKey] = { weight: w, reps: r, e1rm };
+          if (titleKey) {
+            const maxWeight = Math.max(current?.weight ?? 0, w);
+            const maxReps = w > (current?.weight ?? 0) ? r : (w === (current?.weight ?? 0) ? Math.max(current?.reps ?? 0, r) : (current?.reps ?? 0));
+            const maxE1rm = Math.max(current?.e1rm ?? 0, e1rm);
+            priorExercisesMax[titleKey] = { weight: maxWeight, reps: maxReps, e1rm: maxE1rm };
           }
         }
       });
@@ -597,7 +641,6 @@ export function getWorkoutComparisonMetrics(
   Object.entries(currentExercisesMax).forEach(([titleKey, currentMax]) => {
     const prevMax = priorExercisesMax[titleKey];
     if (!prevMax) {
-      prsEarned++;
       return;
     }
     if (
@@ -607,6 +650,31 @@ export function getWorkoutComparisonMetrics(
     ) {
       prsEarned++;
     }
+  });
+
+  if (!prevLog) {
+    return {
+      previousLogFound: false,
+      volumeDiff: currentVolume,
+      volumeDiffFormatted: `+${Math.round(currentVolume)} ${unit}`,
+      setsDiff: currentCompletedSets,
+      setsDiffFormatted: `+${currentCompletedSets}`,
+      prsEarned,
+    };
+  }
+
+  let prevVolume = 0;
+  let prevCompletedSets = 0;
+  (prevLog.exercises || []).forEach((ex: any) => {
+    (ex.sets || []).forEach((s: any) => {
+      if (s.completed && s.weight !== "" && s.reps !== "" && s.weight !== undefined && s.reps !== undefined) {
+        const w = parseGymNumber(s.weight) || 0;
+        const r = parseGymNumber(s.reps) || 0;
+        if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return;
+        prevVolume += w * r;
+        prevCompletedSets++;
+      }
+    });
   });
 
   const volDiff = Math.round(currentVolume - prevVolume);

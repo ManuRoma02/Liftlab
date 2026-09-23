@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
@@ -6,6 +7,7 @@ import {
   loadExerciseCatalog,
   mergeExerciseCatalog,
 } from "../data/exercises";
+import { DEFAULT_STARTER_ROUTINES } from "../data/defaultRoutines";
 import { translations } from "../data/translations";
 import {
   buildPersonalRecords,
@@ -54,6 +56,26 @@ export const getLogDate = (log: any) => {
   return new Date(log.date);
 };
 
+export const getSystemDefaultLanguage = (): "it" | "en" | "es" => {
+  if (typeof navigator !== "undefined" && navigator.language) {
+    const lang = navigator.language.toLowerCase();
+    if (lang.startsWith("it")) return "it";
+    if (lang.startsWith("es")) return "es";
+  }
+  return "en";
+};
+
+export const getSystemDefaultUnit = (lang?: string): "KG" | "LBS" => {
+  if (typeof navigator !== "undefined" && navigator.language) {
+    const locale = navigator.language.toLowerCase();
+    if (locale === "en-us" || locale === "en_us" || locale.endsWith("-us") || locale.endsWith("_us")) {
+      return "LBS";
+    }
+  }
+  if (lang === "en") return "LBS";
+  return "KG";
+};
+
 export function useWorkoutData() {
   const [userData, setUserData] = useState<any | null>(() => {
     const existing = localStorage.getItem("liftlab_guest_data");
@@ -64,9 +86,11 @@ export function useWorkoutData() {
         // Fallback
       }
     }
+    const initialLang = getSystemDefaultLanguage();
+    const initialUnit = getSystemDefaultUnit(initialLang);
     const defaultData = {
       displayName: "Guest",
-      unit: "LBS",
+      unit: initialUnit,
       restTimer: 90,
       weeklyGoal: 3,
       dashboardStats: [
@@ -76,7 +100,7 @@ export function useWorkoutData() {
         "workouts_week",
         "time_week",
       ],
-      language: "en",
+      language: initialLang,
       hasCompletedTutorial: false,
       updatedAt: new Date().toISOString(),
     };
@@ -188,11 +212,26 @@ export function useWorkoutData() {
   }, [shouldLoadExerciseCatalog]);
 
   const [routines, setRoutines] = useState<RoutineData[]>(() => {
-    return readJsonArray<RoutineData>("liftlab_routines");
+    const raw = localStorage.getItem("liftlab_routines");
+    if (raw !== null) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+      return [];
+    }
+    writeJsonAtomic("liftlab_routines", DEFAULT_STARTER_ROUTINES);
+    return DEFAULT_STARTER_ROUTINES;
   });
 
   const [activeRoutineId, setActiveRoutineId] = useState<string | null>(() => {
-    return localStorage.getItem("liftlab_active_routine_id");
+    const saved = localStorage.getItem("liftlab_active_routine_id");
+    if (saved) return saved;
+    const raw = localStorage.getItem("liftlab_routines");
+    if (raw === null && DEFAULT_STARTER_ROUTINES.length > 0) {
+      return DEFAULT_STARTER_ROUTINES[0].id;
+    }
+    return null;
   });
 
   const [activeExercise, setActiveExercise] = useState<ExerciseData | null>(null);
@@ -246,7 +285,7 @@ export function useWorkoutData() {
         if (data.language) return data.language;
       } catch {}
     }
-    return "en";
+    return getSystemDefaultLanguage();
   });
 
   const [unit, setUnit] = useState(() => {
@@ -257,7 +296,7 @@ export function useWorkoutData() {
         if (data.unit) return data.unit;
       } catch {}
     }
-    return "LBS";
+    return getSystemDefaultUnit(getSystemDefaultLanguage());
   });
 
   const [isEmptyPromptOpen, setIsEmptyPromptOpen] = useState(false);
@@ -317,7 +356,9 @@ export function useWorkoutData() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTOS, setShowTOS] = useState(false);
   const [showCookieConsent, setShowCookieConsent] = useState(() => {
-    return localStorage.getItem("liftlab_cookie_consent") === null;
+    if (Capacitor.isNativePlatform()) return false;
+    // LiftLab is an offline-first app without third-party tracking cookies
+    return false;
   });
 
   const [pendingBackupData, setPendingBackupData] = useState<any | null>(null);
@@ -531,10 +572,28 @@ export function useWorkoutData() {
     window.location.reload();
   };
 
-  const finishTutorial = () => {
+  const finishTutorial = (setupData?: { unit?: "KG" | "LBS"; weight?: number; weeklyGoal?: number }) => {
     setShowTutorial(false);
     localStorage.setItem("liftlab_tutorial_completed", "true");
-    saveUserData({ hasCompletedTutorial: true });
+    const updates: any = { hasCompletedTutorial: true };
+    if (setupData?.unit) {
+      updates.unit = setupData.unit;
+      setUnit(setupData.unit);
+    }
+    if (setupData?.weeklyGoal) {
+      updates.weeklyGoal = setupData.weeklyGoal;
+      setWeeklyGoalState(setupData.weeklyGoal);
+      localStorage.setItem("liftlab_weekly_goal", String(setupData.weeklyGoal));
+    }
+    if (setupData?.weight && setupData.weight > 0) {
+      setAppWeight(setupData.weight);
+    }
+    saveUserData(updates);
+    setActiveTab("dashboard");
+  };
+
+  const restartTutorial = () => {
+    setShowTutorial(true);
     setActiveTab("dashboard");
   };
 
@@ -1486,5 +1545,11 @@ export function useWorkoutData() {
     handleCreateRoutine,
     handleOpenExerciseDetails,
     handleDetailsAddExercise,
+    restartTutorial,
+    loadStarterRoutines: () => {
+      setRoutines(DEFAULT_STARTER_ROUTINES);
+      writeJsonAtomic("liftlab_routines", DEFAULT_STARTER_ROUTINES);
+      showToast(t("restore_starter_routines") || "Starter routines loaded!", "success");
+    },
   };
 }

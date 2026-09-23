@@ -29,6 +29,7 @@ import {
 
 import consoleLogoImg from "../assets/images/liftlab_console_logo.png";
 import consoleIconImg from "../assets/images/liftlab_console_icon.png";
+import { triggerHaptic } from "../lib/haptics";
 
 import { PRListModal } from "./common/PRListModal";
 import { ConfirmModal } from "./common/ConfirmModal";
@@ -104,9 +105,9 @@ export const Dashboard = React.memo(
         : 0;
     const rawWeight = currentWeight || latestWeightFromLogs || 0;
     const displayWeight =
-      typeof rawWeight === "number"
+      rawWeight > 0
         ? (rawWeight % 1 === 0 ? rawWeight : Number(rawWeight.toFixed(1)))
-        : rawWeight;
+        : "-";
 
     const nextRoutine = useMemo(
       () => getNextScheduledRoutine(routines),
@@ -117,6 +118,13 @@ export const Dashboard = React.memo(
     // Week navigation state
     const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
 
+    const weekStartMonday = useMemo(() => {
+      const m = new Date();
+      m.setHours(0, 0, 0, 0);
+      m.setDate(m.getDate() - todayIndex);
+      return m;
+    }, [todayIndex]);
+
     const days = [
       { label: "Mo", full: "Monday" },
       { label: "Tu", full: "Tuesday" },
@@ -125,7 +133,11 @@ export const Dashboard = React.memo(
       { label: "Fr", full: "Friday" },
       { label: "Sa", full: "Saturday" },
       { label: "Su", full: "Sunday" },
-    ];
+    ].map((d, idx) => {
+      const dayDate = new Date(weekStartMonday);
+      dayDate.setDate(weekStartMonday.getDate() + idx);
+      return { ...d, dateNumber: dayDate.getDate() };
+    });
 
     const sortedLogs = useMemo(() => {
       return [...workoutLogs]
@@ -204,7 +216,9 @@ export const Dashboard = React.memo(
         const date = getLogDate(log);
 
         // Check if it's within the current week (from this Monday onwards to Sunday)
-        if (date >= monday) {
+        const nextMonday = new Date(monday);
+        nextMonday.setDate(monday.getDate() + 7);
+        if (date >= monday && date < nextMonday) {
           const dayIdx = (date.getDay() + 6) % 7;
           if (!data[dayIdx]) data[dayIdx] = [];
           data[dayIdx].push({
@@ -225,9 +239,9 @@ export const Dashboard = React.memo(
     let durationThisWeek = 0; // accumulated in seconds
     Object.values(activityData).forEach((activities: DetailedActivity[]) => {
       activities.forEach((activity) => {
-        if (activity.duration > 0) {
+        if (activity.duration > 0 || (activity.exercises && activity.exercises.length > 0)) {
           workoutsThisWeek++;
-          durationThisWeek += activity.duration; // seconds
+          durationThisWeek += (activity.duration || 0); // seconds
         }
       });
     });
@@ -413,14 +427,12 @@ export const Dashboard = React.memo(
 
     return (
       <main className="px-margin-mobile py-stack-lg flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
-        <section className="premium-panel rounded-2xl overflow-hidden relative">
-          <img
-            src={consoleLogoImg}
-            alt=""
-            className="hidden sm:block absolute right-3 top-3 w-32 h-20 object-cover rounded-xl opacity-20 pointer-events-none"
-          />
-          <div className="p-4 flex items-center gap-4 border-b border-white/10 relative z-10">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shrink-0">
+        <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.1),transparent_18rem)]" />
+          </div>
+          <div className="p-4 sm:p-5 flex items-center gap-4 border-b border-white/8 relative z-10">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shrink-0 shadow-sm">
               <img
                 src={consoleIconImg}
                 alt="LiftLab"
@@ -428,37 +440,40 @@ export const Dashboard = React.memo(
               />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary-fixed">
+              <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158]">
                 Dashboard
               </p>
-              <h1 className="font-[var(--font-headline-lg)] text-4xl font-black text-primary uppercase tracking-wide leading-none">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.025em] leading-none">
                 LiftLab
               </h1>
-              <p className="text-sm text-on-surface-variant">
+              <p className="text-xs text-[#8E8E93] mt-0.5">
                 {days[selectedDayIndex].full} training calendar
               </p>
             </div>
             <button
-              onClick={() => navigateTo("settings")}
+              onClick={() => {
+                triggerHaptic("light");
+                navigateTo("settings");
+              }}
               aria-label="Settings"
-              className="ml-auto w-11 h-11 rounded-full bg-white/5 border border-white/10 text-on-surface-variant hover:text-primary hover:bg-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="ml-auto w-10 h-10 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             >
-              <SettingsIcon className="w-5 h-5" />
+              <SettingsIcon className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="p-3 md:p-4">
+          <div className="p-3 sm:p-4 relative z-10">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="text-label-bold text-on-surface-variant uppercase tracking-widest">
+              <h2 className="text-[12px] font-bold text-[#8E8E93] uppercase tracking-[0.06em]">
                 {t("this_week")}
               </h2>
-              <span className="text-sm font-bold text-primary-fixed">
+              <span className="text-xs font-semibold text-[#30D158]">
                 {selectedActivities.length > 0
                   ? `${selectedActivities.length} logged`
                   : "No log"}
               </span>
             </div>
-            <div className="flex justify-between items-center w-full gap-1">
+            <div className="flex justify-between items-center w-full gap-1.5">
               {days.map((day, idx) => {
                 const dayActivities = activityData[idx] || [];
                 const hasWorkout =
@@ -470,36 +485,41 @@ export const Dashboard = React.memo(
                 return (
                   <button
                     key={idx}
-                    onClick={() => setSelectedDayIndex(idx)}
-                    className={`flex flex-col items-center gap-2 transition-all duration-300 flex-1 py-3 rounded-xl relative cursor-pointer ${
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setSelectedDayIndex(idx);
+                    }}
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-200 flex-1 py-2.5 rounded-2xl relative cursor-pointer active:scale-95 ${
                       isSelected
-                        ? "bg-black/60 border border-primary-fixed text-primary-fixed shadow-[0_8px_22px_rgba(34,197,94,0.18)] scale-105 z-10"
+                        ? "bg-[#30D158] text-black shadow-[0_4px_16px_rgba(48,209,88,0.35)] scale-105 z-10 font-bold"
                         : isToday
-                          ? "bg-primary-fixed/10 border border-primary-fixed/25"
-                          : "hover:bg-white/5 border border-transparent"
-                    } ${!isSelected && !isToday && !hasWorkout ? "opacity-45" : ""}`}
+                          ? "bg-[#30D158]/15 border border-[#30D158]/35 text-[#30D158]"
+                          : "hover:bg-white/5 border border-transparent text-[#8E8E93]"
+                    } ${!isSelected && !isToday && !hasWorkout ? "opacity-60" : ""}`}
                   >
                     <span
-                      className={`text-[11px] font-black uppercase tracking-wide ${
-                        isSelected ? "text-primary-fixed" : isToday ? "text-primary" : "text-on-surface-variant"
+                      className={`text-[11px] font-bold uppercase tracking-tight ${
+                        isSelected ? "text-black" : isToday ? "text-[#30D158]" : "text-[#8E8E93]"
                       }`}
                     >
                       {day.label}
                     </span>
                     <div
-                      className={`relative w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
+                      className={`relative w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
                         hasWorkout
                           ? isSelected
-                            ? "premium-cta"
-                            : "bg-primary-fixed/20 text-primary-fixed"
-                          : "bg-surface-variant/40 text-on-surface-variant"
+                            ? "bg-black text-[#30D158]"
+                            : "bg-[#30D158]/20 text-[#30D158]"
+                          : isSelected
+                            ? "bg-black/20 text-black"
+                            : "bg-white/5 text-[#8E8E93]"
                       }`}
                     >
-                      {hasWorkout ? <Check className="w-4 h-4" /> : idx + 1}
+                      {hasWorkout ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : day.dateNumber}
                     </div>
                     {isToday && (
                       <span className={`absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider whitespace-nowrap ${
-                        isSelected ? "bg-primary-fixed text-black" : "bg-white/10 text-primary"
+                        isSelected ? "bg-black text-[#30D158]" : "bg-white/10 text-white"
                       }`}>
                         {t("today")}
                       </span>
@@ -518,30 +538,33 @@ export const Dashboard = React.memo(
           {/* Streak card */}
           <button
             type="button"
-            onClick={() => setIsStreakModalOpen(true)}
+            onClick={() => {
+              triggerHaptic("light");
+              setIsStreakModalOpen(true);
+            }}
             data-testid="streak-card"
-            className="premium-panel rounded-2xl p-4 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-transform select-none text-left"
+            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-all select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#30D158]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
-              <div className="flex items-center gap-1.5 text-on-surface-variant">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-widest">History</span>
+              <div className="flex items-center gap-1.5 text-[#8E8E93]">
+                <Calendar className="w-4 h-4 text-[#30D158]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">History</span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-on-surface-variant opacity-50" />
+              <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
             </div>
-            <div className="flex items-end gap-1 z-10">
+            <div className="flex items-end gap-1.5 z-10 my-1">
               <span
                 data-testid="streak-count"
-                className={`text-[46px] font-black leading-none tabular-nums ${workoutLogs.length > 0 ? "text-primary drop-shadow-[0_0_12px_rgba(34,197,94,0.45)]" : "text-on-surface-variant"}`}
+                className={`text-[40px] sm:text-[46px] font-extrabold leading-none tabular-nums ${workoutLogs.length > 0 ? "text-white" : "text-[#8E8E93]"}`}
               >
                 {workoutLogs.length}
               </span>
-              <span className="text-[13px] text-on-surface-variant mb-1.5">
+              <span className="text-xs text-[#8E8E93] font-medium mb-1.5">
                 {workoutLogs.length === 1 ? "log" : "logs"}
               </span>
             </div>
-            <p className="text-[10px] text-on-surface-variant leading-tight z-10">
+            <p className="text-[11px] text-[#8E8E93] leading-tight z-10">
               Workout history saved locally
             </p>
           </button>
@@ -549,26 +572,30 @@ export const Dashboard = React.memo(
           {/* Weekly goal card */}
           <button
             type="button"
-            onClick={() => { setEditableGoal(weeklyGoal); setIsGoalModalOpen(true); }}
+            onClick={() => {
+              triggerHaptic("light");
+              setEditableGoal(weeklyGoal);
+              setIsGoalModalOpen(true);
+            }}
             data-testid="weekly-goal-card"
-            className="premium-panel rounded-2xl p-4 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-transform select-none text-left"
+            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-all select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0A84FF]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
-              <div className="flex items-center gap-1.5 text-on-surface-variant">
-                <Target className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Weekly Goal</span>
+              <div className="flex items-center gap-1.5 text-[#8E8E93]">
+                <Target className="w-4 h-4 text-[#0A84FF]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">Weekly Goal</span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-on-surface-variant opacity-50" />
+              <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
             </div>
-            <div className="flex items-center gap-3 z-10">
+            <div className="flex items-center gap-3 z-10 my-1">
               {/* SVG progress ring */}
-              <div className="relative flex-shrink-0 w-14 h-14">
+              <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-surface-variant" />
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-white/10" />
                   <circle
                     cx="28" cy="28" r="22" fill="none"
-                    stroke="#22c55e" strokeWidth="5" strokeLinecap="round"
+                    stroke="#30D158" strokeWidth="5" strokeLinecap="round"
                     strokeDasharray={circumference}
                     strokeDashoffset={circumference * (1 - goalProgress)}
                     style={{ transition: "stroke-dashoffset 0.6s ease" }}
@@ -576,24 +603,24 @@ export const Dashboard = React.memo(
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span data-testid="weekly-goal-progress" className="text-[13px] font-black text-primary tabular-nums">
+                  <span data-testid="weekly-goal-progress" className="text-[12px] font-extrabold text-white tabular-nums">
                     {workoutsThisWeek}/{weeklyGoal}
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[11px] font-bold text-on-surface">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-white">
                   {goalProgress >= 1 ? "Goal reached!" : `${weeklyGoal - workoutsThisWeek} left`}
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: weeklyGoal }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-4 h-1.5 rounded-full transition-all duration-300 ${i < workoutsThisWeek ? "bg-primary-fixed shadow-[0_0_6px_rgba(34,197,94,0.5)]" : "bg-surface-variant"}`}
+                      className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${i < workoutsThisWeek ? "bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.4)]" : "bg-white/10"}`}
                     />
                   ))}
                 </div>
-                <span className="text-[9px] text-on-surface-variant">{Math.round(goalProgress * 100)}% this week</span>
+                <span className="text-[10px] text-[#8E8E93]">{Math.round(goalProgress * 100)}% this week</span>
               </div>
             </div>
           </button>
@@ -840,11 +867,18 @@ export const Dashboard = React.memo(
         ) : selectedDayIndex === todayIndex ? null : (
           <section className="bg-surface-container border border-surface-variant border-dashed rounded-xl p-stack-md flex flex-col items-center justify-center gap-1">
             <p className="text-body-md text-on-surface-variant">
-              No activity logged for this day
+              {t("no_activity_logged_day") || "No activity logged for this day"}
             </p>
-            <p className="text-label-bold text-primary-container text-xs cursor-pointer hover:underline">
-              Add missed workout
-            </p>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                navigateTo("workout");
+              }}
+              className="text-label-bold text-primary-container text-xs cursor-pointer hover:underline bg-transparent border-none p-0 mt-0.5"
+            >
+              {t("start_empty") || "Inizia allenamento"}
+            </button>
           </section>
         )}
 
@@ -935,10 +969,13 @@ export const Dashboard = React.memo(
 
         {/* Next Workout Card */}
         {selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
-          <section className="premium-panel rounded-2xl overflow-hidden">
+          <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45)] flex flex-col">
             <button
-              onClick={() => onStartLiveWorkout(nextRoutine.id)}
-              className="relative w-full overflow-hidden h-36 md:h-48 flex flex-col justify-end p-4 md:p-6 group cursor-pointer active:scale-[0.99] transition-transform text-left"
+              onClick={() => {
+                triggerHaptic("medium");
+                onStartLiveWorkout(nextRoutine.id);
+              }}
+              className="relative w-full overflow-hidden h-40 md:h-52 flex flex-col justify-end p-5 md:p-6 group cursor-pointer active:scale-[0.98] transition-all text-left"
             >
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
@@ -947,21 +984,20 @@ export const Dashboard = React.memo(
                     "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDSD3OOEmD78fTaBnJqYilure6mY1McKJ6Jf1YUDBmD_tkwF4V9xcADKpFJ6mZC0WG9YzPbJjI9pkzHh5FvgbWxAynV0sOt5RRKb3pi0mBbsFseaaeOy2OcfvyTDKJe4VvXbd6dbF4k5K6iJ6dTH0whAiw-XxPrNtJzCQDiZKPndVIfzkohVpwQqQt93btkiwmYK63DcAS2kLXIq07sUSjjb9b7uieN1Y34-dGHL8doGbYa6rQ7H7M8mS5BgKCAXrfr-ZrYHVv-zoo')",
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent" />
-              <div className="absolute inset-0 bg-primary-container/5 mix-blend-overlay" />
-              <div className="relative z-10 flex flex-col gap-stack-sm">
-                <span className="w-fit border border-primary-container text-primary-container text-label-bold text-xs px-3 py-1 rounded bg-black/20">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+              <div className="relative z-10 flex flex-col gap-2">
+                <span className="w-fit border border-[#30D158]/40 text-[#30D158] text-[11px] font-bold px-3 py-1 rounded-full bg-black/40 backdrop-blur-md uppercase tracking-[0.06em]">
                   {t("next_workout") || "Next Workout"}
                 </span>
-                <h3 className="text-headline-md text-primary tracking-tight">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                   {nextRoutine.name}
                 </h3>
-                <div className="flex items-center gap-4 text-on-surface-variant">
-                  <p className="text-body-md flex items-center gap-1">
-                    <Clock className="w-4 h-4" /> {nextRoutine.duration} Min
+                <div className="flex items-center gap-4 text-[#8E8E93]">
+                  <p className="text-xs font-medium flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#30D158]" /> {nextRoutine.duration} Min
                   </p>
-                  <p className="text-body-md flex items-center gap-1">
-                    <ClipboardList className="w-4 h-4" />{" "}
+                  <p className="text-xs font-medium flex items-center gap-1.5">
+                    <ClipboardList className="w-3.5 h-3.5 text-[#30D158]" />{" "}
                     {Number(nextRoutine?.exercises?.length ?? 0) === 1
                       ? (t("one_exercise") || "1 Exercise")
                       : `${nextRoutine?.exercises?.length ?? 0} ${t("exercises") || "Exercises"}`}
@@ -969,6 +1005,61 @@ export const Dashboard = React.memo(
                 </div>
               </div>
             </button>
+            <div className="bg-black/40 border-t border-white/5 px-4 py-2.5 flex items-center justify-between">
+              <span className="text-[11px] text-[#8E8E93]">
+                {t("prefer_empty_session") || "Oppure inizia una sessione libera:"}
+              </span>
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  onStartLiveWorkout("empty");
+                }}
+                className="text-xs font-bold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("start_empty") || "Allenamento Libero"}</span>
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Quick Start Hero when no routine is scheduled */}
+        {selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
+          <section className="bg-gradient-to-br from-[#1C1C1E] to-black border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45)] relative overflow-hidden flex flex-col gap-4">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
+            <div className="relative z-10 flex flex-col gap-1">
+              <span className="w-fit text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">
+                {t("quick_start") || "Avvio Rapido"}
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-1">
+                {t("ready_to_train") || "Pronto ad allenarti?"}
+              </h3>
+              <p className="text-sm text-[#8E8E93] max-w-md">
+                {t("quick_start_desc") || "Inizia subito registrando serie, carichi e recupero in tempo reale, oppure scegli una scheda."}
+              </p>
+            </div>
+            <div className="relative z-10 flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={() => {
+                  triggerHaptic("medium");
+                  onStartLiveWorkout("empty");
+                }}
+                className="bg-[#30D158] text-black font-extrabold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" strokeWidth={2.5} />
+                <span>{t("start_empty") || "Inizia Allenamento Libero"}</span>
+              </button>
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("workout");
+                }}
+                className="bg-white/6 hover:bg-white/12 border border-white/10 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Dumbbell className="w-4 h-4 text-[#8E8E93]" />
+                <span>{t("view_routines") || "Sfoglia Schede"}</span>
+              </button>
+            </div>
           </section>
         )}
 
@@ -1445,18 +1536,7 @@ export const Dashboard = React.memo(
           </div>
         )}
 
-        {/* Start Empty Workout Action - Small and at the bottom */}
-        <section className="flex flex-col mt-4 self-center mb-8">
-          <button
-            onClick={() => onStartLiveWorkout("empty")}
-            className="premium-cta min-h-12 w-fit rounded-full px-6 py-3 flex items-center gap-2 group active:scale-[0.97] transition-all hover:brightness-105 text-black"
-          >
-            <Plus className="w-4 h-4" strokeWidth={2.5} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">
-              {t("start_empty")}
-            </span>
-          </button>
-        </section>
+
 
         {pendingDeleteLogId && onDeleteLog && (
           <ConfirmModal

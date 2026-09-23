@@ -108,5 +108,22 @@ assert.equal(store.get("other_key"), undefined);
 assert.deepEqual(parseGuestObject(JSON.stringify(JSON.stringify({ displayName: "x" }))), {});
 assert.deepEqual(parseGuestObject(JSON.stringify({ displayName: "Ada" })), { displayName: "Ada" });
 
+// Test _tmp cleanup on failure
+const failingStorage = {
+  getItem: (key: string) => store.get(key) ?? null,
+  setItem: (key: string, value: string) => {
+    if (key === "failing_key") throw new Error("QuotaExceededError");
+    store.set(key, value);
+  },
+  removeItem: (key: string) => store.delete(key),
+  clear: () => store.clear(),
+  key: (i: number) => null,
+  length: 0,
+} as unknown as Storage;
+
+writeJsonAtomic("failing_key", { data: 123 }, failingStorage);
+assert.equal(store.has("failing_key_tmp"), false, "tmp key must be cleaned up on failure");
+
 console.log("storage tests passed");
+
 

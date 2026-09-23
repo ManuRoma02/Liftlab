@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { Trash2, Trophy, CheckCircle2 } from "lucide-react";
+import { Trash2, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function ConfirmModal({
   message,
@@ -21,7 +22,14 @@ export function ConfirmModal({
   title?: string;
   icon?: "default" | "finish" | "warning";
 }) {
-  const Icon = destructive ? Trash2 : icon === "finish" ? Trophy : CheckCircle2;
+  const Icon = destructive
+    ? Trash2
+    : icon === "finish"
+    ? Trophy
+    : icon === "warning"
+    ? AlertTriangle
+    : CheckCircle2;
+
   useBackDismiss(true, onCancel);
 
   useEffect(() => {
@@ -38,38 +46,66 @@ export function ConfirmModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-md z-[300] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
       >
         <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={title || (destructive ? "Confirm destructive action" : "Confirm action")}
           aria-describedby="confirm-modal-message"
-          initial={{ opacity: 0, y: 18, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-          className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-5 relative overflow-hidden"
+          initial={{ opacity: 0, scale: 0.92, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 15 }}
+          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden"
         >
-          <div className={`absolute inset-x-0 top-0 h-1 ${destructive ? "bg-error" : "bg-primary-fixed"}`} />
-          <div className="flex items-start gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${destructive ? "bg-error/15 text-error" : "bg-primary-fixed text-black"}`}>
-              <Icon className="w-6 h-6" strokeWidth={2.5} />
-            </div>
-            <div className="min-w-0">
-              {title && (
-                <h2 className="text-on-surface font-black uppercase tracking-widest text-sm mb-1">
-                  {title}
-                </h2>
-              )}
-              <p id="confirm-modal-message" className="text-on-surface-variant text-sm leading-relaxed">{message}</p>
-            </div>
+          {/* iOS Alert Icon */}
+          <div
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+              destructive
+                ? "bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/25"
+                : "bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25"
+            }`}
+          >
+            <Icon className="w-7 h-7" strokeWidth={2.2} />
           </div>
-          <div className="flex gap-3 justify-end pt-1">
-            <button type="button" autoFocus onClick={onCancel} className="px-5 py-2.5 rounded-full font-bold text-sm text-on-surface-variant border border-surface-variant hover:bg-surface-variant active:scale-95 transition-all">
+
+          <div className="flex flex-col gap-1 w-full">
+            {title && (
+              <h2 className="text-white font-bold text-lg tracking-tight">
+                {title}
+              </h2>
+            )}
+            <p id="confirm-modal-message" className="text-[#8E8E93] text-sm leading-relaxed">
+              {message}
+            </p>
+          </div>
+
+          {/* iOS Alert Actions */}
+          <div className="flex gap-2.5 w-full pt-2">
+            <button
+              type="button"
+              autoFocus
+              onClick={() => {
+                triggerHaptic("light");
+                onCancel();
+              }}
+              className="flex-1 py-3 px-4 rounded-full font-semibold text-sm text-white bg-white/10 hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+            >
               {cancelLabel}
             </button>
-            <button type="button" onClick={onConfirm} className={`px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wider transition-all active:scale-95 shadow-lg ${destructive ? "bg-error text-on-error hover:opacity-90 shadow-error/20" : "bg-primary-fixed text-black hover:opacity-90 shadow-primary-fixed/20"}`}>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic(destructive ? "warning" : "success");
+                onConfirm();
+              }}
+              className={`flex-1 py-3 px-4 rounded-full font-bold text-sm transition-all active:scale-95 shadow-md cursor-pointer ${
+                destructive
+                  ? "bg-[#FF453A] text-white hover:brightness-105 shadow-[0_4px_16px_rgba(255,69,58,0.3)]"
+                  : "bg-[#30D158] text-black hover:brightness-105 shadow-[0_4px_16px_rgba(48,209,88,0.3)]"
+              }`}
+            >
               {confirmLabel}
             </button>
           </div>
@@ -113,4 +149,3 @@ export function useBackDismiss(isActive: boolean, onDismiss: () => void) {
     };
   }, [isActive]);
 }
-

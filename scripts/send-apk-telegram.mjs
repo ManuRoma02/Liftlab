@@ -50,7 +50,7 @@ async function sendApk() {
   formData.append("chat_id", CHAT_ID);
   formData.append(
     "caption",
-    `🏋️ *LiftLab Android Build*\n📅 Data: ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })}\n📦 Dimensione: ${sizeMb} MB\n\n✨ *Ultime Novità:*\n• Nuovo catalogo di 1.324 esercizi completi\n• GIF animate dimostrative per ogni esercizio\n• Istruzioni passo-passo in italiano al 100%\n• Selettore Demo (GIF) / Anatomy (Muscoli 2D)\n• Zero duplicati e collisioni ID risolte\n• Categorie e attrezzature standardizzate`,
+    `🏋️ *LiftLab Android Build*\n📅 Data: ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })}\n📦 Dimensione: ${sizeMb} MB\n\n✨ *Ultime Novità e Correzioni UX:*\n• 🔢 Risolto parsing decimali con virgola (es. 62,5 non viene più azzerato o scartato)\n• 💾 Fix salvataggio atomico locale contro leak di chiavi temporanee e crash di quota\n• 🚀 Nuovo Onboarding interattivo (Unità KG/LBS, peso corporeo iniziale, obiettivo settimanale)\n• 📊 Schermata Progress sbloccata fin da subito con tracciamento peso corporeo e achievement\n• 📅 Fix bug date calendario dashboard e range settimanale\n• ⚡ Stepper +/- rapidi nei set e carry-forward automatico dei carichi\n• 🎯 Rimossi doppi modali alla fine dell'allenamento ed eliminati testi misti IT/EN`,
   );
   formData.append("parse_mode", "Markdown");
   formData.append("document", blob, "LiftLab.apk");

@@ -3,6 +3,7 @@ import { Trophy, X, Search } from "lucide-react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function PRListModal({
   exercises,
@@ -28,101 +29,106 @@ export function PRListModal({
     });
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[300] flex items-center justify-center p-4">
-      <div className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
-        <div className="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-variant/20 shrink-0">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4">
+      <div className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <Trophy className="w-6 h-6" />
+            <div className="w-10 h-10 bg-[#FF9F0A]/15 border border-[#FF9F0A]/25 rounded-2xl flex items-center justify-center text-[#FF9F0A]">
+              <Trophy className="w-5 h-5" />
             </div>
-            <h3 className="font-[var(--font-headline-sm)] text-[20px] font-bold text-primary tracking-tight uppercase">
+            <h3 className="font-bold text-base text-white tracking-tight">
               {t("personal_records")}
             </h3>
           </div>
           <button
-            onClick={onClose}
-            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
           >
-            <X className="w-6 h-6" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="px-4 py-3 shrink-0">
+        {/* Search */}
+        <div className="px-5 py-3 border-b border-white/6 shrink-0 bg-black/20">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
             <input
               type="text"
               placeholder={t("search_exercise") || "Search exercise..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-surface-container border border-surface-variant rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-on-surface-variant/50"
+              className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
             />
           </div>
         </div>
 
-        <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-3 min-h-0">
+        {/* List */}
+        <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-2.5 min-h-0 custom-scrollbar">
           {allDisplayExercises.length === 0 ? (
-            <div className="py-12 text-center text-on-surface-variant">
-              <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p>No exercises found.</p>
+            <div className="py-16 text-center text-[#8E8E93]">
+              <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No exercises found.</p>
             </div>
           ) : (
             allDisplayExercises.map((ex) => (
               <div
                 key={ex.id}
-                className="bg-surface border border-surface-variant rounded-xl p-4 flex flex-col gap-3 hover:border-primary/30 transition-colors"
+                className="bg-black/40 border border-white/6 rounded-2xl p-3.5 flex flex-col gap-2.5"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-surface-variant rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/5 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
                     <ExerciseMuscleVisual exercise={ex} className="w-8 h-8" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-on-background font-bold truncate">
+                    <h4 className="text-white font-bold text-sm truncate">
                       {t(ex.title)}
                     </h4>
-                    <p className="text-[12px] text-on-surface-variant uppercase font-medium">
+                    <p className="text-[10px] text-[#8E8E93] uppercase font-semibold tracking-wider">
                       {ex.category}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 bg-surface-variant/10 rounded-lg p-2">
-                  <div className="text-center">
-                    <p className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">
+                <div className="grid grid-cols-3 gap-2 bg-black/30 rounded-xl p-2.5 text-center">
+                  <div>
+                    <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
                       {t("est_1rm")}
                     </p>
-                    <p className="font-black text-primary text-sm leading-none">
+                    <p className="font-black text-[#30D158] text-sm leading-none tabular-nums">
                       {ex.oneRepMax || 0}
-                      <span className="text-[9px] ml-0.5 opacity-70 font-normal">
+                      <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
                         {unit}
                       </span>
                     </p>
                   </div>
-                  <div className="text-center border-x border-surface-variant/30">
-                    <p className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">
+                  <div className="border-x border-white/6">
+                    <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
                       {t("max_weight")}
                     </p>
-                    <p className="font-black text-on-background text-sm leading-none">
+                    <p className="font-black text-white text-sm leading-none tabular-nums">
                       {ex.prWeight || 0}
-                      <span className="text-[9px] ml-0.5 opacity-70 font-normal">
+                      <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
                         {unit}
                       </span>
                     </p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">
+                  <div>
+                    <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
                       {t("best_set")}
                     </p>
-                    <p className="font-black text-on-background text-sm leading-none">
+                    <p className="font-black text-white text-sm leading-none tabular-nums">
                       {ex.prReps || 0}
-                      <span className="text-[9px] ml-0.5 opacity-70 font-normal">
-                        {isTimedExercise(ex) ? "SECS" : t("reps_upper")}
+                      <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
+                        {isTimedExercise(ex) ? "s" : t("reps_upper")}
                       </span>
                     </p>
                     {ex.prRepsWeight && (
-                      <p className="text-on-surface-variant text-[8px] mt-0.5 italic">
-                        @ {ex.prRepsWeight}
-                        {unit.toLowerCase()}
+                      <p className="text-[#8E8E93] text-[8px] mt-0.5">
+                        @ {ex.prRepsWeight} {unit.toLowerCase()}
                       </p>
                     )}
                   </div>
@@ -132,10 +138,14 @@ export function PRListModal({
           )}
         </div>
 
-        <div className="p-6 bg-surface-variant/10">
+        {/* Footer */}
+        <div className="p-4 border-t border-white/6">
           <button
-            onClick={onClose}
-            className="w-full px-4 py-3 bg-primary-fixed text-on-primary-fixed font-bold rounded-lg hover:opacity-90 transition-opacity uppercase tracking-wide text-xs"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-full py-3 bg-[#30D158] text-black font-bold rounded-full hover:brightness-105 active:scale-95 transition-all text-sm cursor-pointer shadow-sm"
           >
             {t("close")}
           </button>

@@ -28,6 +28,7 @@ import { showToast } from "./lib/toast";
 import type { RoutineData } from "./types/workout";
 import { ToastViewport } from "./components/common/ToastViewport";
 import { AnimatePresence, motion } from "motion/react";
+import { triggerHaptic } from "./lib/haptics";
 
 export default function App() {
   const {
@@ -121,6 +122,8 @@ export default function App() {
     handleDetailsAddExercise,
     createMissingImportedExercises,
     fillImportedRoutineWeights,
+    restartTutorial,
+    loadStarterRoutines,
   } = useWorkoutData();
 
   const renderAppContent = () => {
@@ -195,6 +198,7 @@ export default function App() {
             oneRepMaxFormula={oneRepMaxFormula}
             setOneRepMaxFormula={handleSetOneRepMaxFormula}
             onDeleteAccount={handleDeleteAccount}
+            onReplayTutorial={restartTutorial}
           />
         );
       } else if (activeTab === "add_exercise") {
@@ -350,31 +354,27 @@ export default function App() {
 
         {/* Weight Modal */}
         {isWeightModalOpen && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={() => setIsWeightModalOpen(false)}>
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[100] flex items-center justify-center p-4 animate-in fade-in duration-150" onClick={() => setIsWeightModalOpen(false)}>
             <div
               role="dialog"
               aria-modal="true"
               aria-labelledby="weight-dialog-title"
-              className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden relative"
+              className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_64px_rgba(0,0,0,0.8)] overflow-hidden relative animate-in zoom-in-95 duration-150"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                <Scale className="w-32 h-32" />
-              </div>
-
-              <div className="p-8 flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-primary-container/20 rounded-full flex items-center justify-center mb-6 border border-primary-container/30">
-                  <Scale className="w-8 h-8 text-primary" />
+              <div className="p-7 flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center mb-5 border border-[#30D158]/25 text-[#30D158]">
+                  <Scale className="w-7 h-7" />
                 </div>
 
-                <h2 id="weight-dialog-title" className="text-2xl font-bold text-on-background mb-2">
+                <h2 id="weight-dialog-title" className="text-xl font-bold text-white tracking-tight mb-1">
                   {t("morning_weigh_in") || "Morning Weigh-In"}
                 </h2>
-                <p className="text-body-md text-on-surface-variant mb-8">
+                <p className="text-xs text-[#8E8E93] mb-6">
                   {t("track") || "Consistency is key to tracking your progress."}
                 </p>
 
-                <div className="relative w-full mb-8">
+                <div className="relative w-full mb-7">
                   <input
                     type="number"
                     inputMode="decimal"
@@ -384,35 +384,43 @@ export default function App() {
                     aria-label={`Body weight in ${unit}`}
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
-                    className="w-full bg-transparent text-center text-6xl font-bold text-primary focus:outline-none placeholder:text-surface-variant"
+                    className="w-full bg-transparent text-center text-6xl font-extrabold text-white tracking-tight tabular-nums focus:outline-none placeholder:text-neutral-700"
                     placeholder="00.0"
                     autoFocus
-                    onKeyDown={(e) => e.key === "Enter" && handleUpdateWeight()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        triggerHaptic("success");
+                        handleUpdateWeight();
+                      }
+                    }}
                   />
-                  <div className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mt-2">
+                  <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mt-2">
                     {unit}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="grid grid-cols-2 gap-3 w-full">
                   <button
                     onClick={() => setIsWeightModalOpen(false)}
-                    className="py-4 px-6 rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all font-bold text-sm tracking-wide"
+                    className="py-3 px-5 rounded-full bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all font-semibold text-sm"
                   >
                     {t("cancel") || "Skip"}
                   </button>
                   <button
-                    onClick={handleUpdateWeight}
+                    onClick={() => {
+                      triggerHaptic("success");
+                      handleUpdateWeight();
+                    }}
                     disabled={!Number.isFinite(Number(weightInput)) || Number(weightInput) <= 0 || Number(weightInput) > 1000}
-                    className="py-4 px-6 bg-primary-fixed text-[#07110a] rounded-xl font-bold text-sm tracking-wide hover:shadow-[0_0_20px_rgba(34,197,94,0.28)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="py-3 px-5 bg-[#30D158] text-black rounded-full font-bold text-sm tracking-tight hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(48,209,88,0.3)]"
                   >
-                    {t("save") || "Save Progress"}
+                    {t("save") || "Save"}
                   </button>
                 </div>
               </div>
 
-              <div className="bg-surface-container-low px-8 py-4 border-t border-surface-variant flex justify-center">
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-bold">
+              <div className="bg-[#161618] px-6 py-3 border-t border-white/5 flex justify-center">
+                <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide">
                   {currentWeight > 0 ? `Current: ${currentWeight} ${unit}` : "No weight logged yet"}
                 </p>
               </div>
@@ -420,74 +428,111 @@ export default function App() {
           </div>
         )}
 
-        {showTutorial && <OnboardingTutorial onFinish={finishTutorial} />}
+        {showTutorial && <OnboardingTutorial onFinish={finishTutorial} language={language} t={t} />}
 
         {/* BottomNavBar */}
         <nav
           aria-label="Primary navigation"
-          className="console-nav fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl px-gutter pt-2 lg:top-0 lg:h-[100dvh] lg:w-24 lg:flex-col lg:justify-center lg:gap-3 lg:rounded-none lg:px-3 lg:py-4 gpu-accelerated"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+          className="console-nav fixed bottom-0 left-0 z-50 flex w-full items-center justify-around px-2 pt-1.5 pb-2 lg:top-0 lg:h-[100dvh] lg:w-24 lg:flex-col lg:justify-center lg:gap-3 lg:px-3 lg:py-4 gpu-accelerated"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
         >
           <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
-            <div className="premium-cta flex h-12 w-12 items-center justify-center rounded-2xl">
-              <Dumbbell className="h-6 w-6" strokeWidth={2.5} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#30D158] text-black shadow-[0_4px_14px_rgba(48,209,88,0.35)]">
+              <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-[0.18em] text-on-surface-variant">LiftLab</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
           </div>
+
           <button
-            onClick={() => navigateTo("dashboard")}
+            onClick={() => {
+              triggerHaptic("light");
+              navigateTo("dashboard");
+            }}
             aria-current={activeTab === "dashboard" ? "page" : undefined}
             aria-label={t("dashboard")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-4 py-1.5 active:scale-95 transition-all duration-150 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${activeTab === "dashboard" ? "premium-cta" : "text-on-surface-variant hover:bg-white/5 hover:text-primary"}`}
+            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
+              activeTab === "dashboard"
+                ? "text-[#30D158]"
+                : "text-[#8E8E93] hover:text-white"
+            }`}
           >
             <LayoutDashboard
-              className="w-6 h-6"
+              className="w-5 h-5 transition-transform"
               fill={activeTab === "dashboard" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "dashboard" ? 1 : 2}
+              strokeWidth={activeTab === "dashboard" ? 1.5 : 2}
             />
-            <span className="text-label-bold text-[10px] mt-1">{t("dashboard")}</span>
+            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "dashboard" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
+              {t("dashboard")}
+            </span>
           </button>
 
           <button
-            onClick={() => navigateTo("library")}
+            onClick={() => {
+              triggerHaptic("light");
+              navigateTo("library");
+            }}
             aria-current={activeTab === "library" ? "page" : undefined}
             aria-label={t("library")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-4 py-1.5 active:scale-95 transition-all duration-150 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${activeTab === "library" ? "premium-cta" : "text-on-surface-variant hover:bg-white/5 hover:text-primary"}`}
+            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
+              activeTab === "library"
+                ? "text-[#30D158]"
+                : "text-[#8E8E93] hover:text-white"
+            }`}
           >
             <Database
-              className="w-6 h-6"
+              className="w-5 h-5 transition-transform"
               fill={activeTab === "library" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "library" ? 1 : 1.5}
+              strokeWidth={activeTab === "library" ? 1.5 : 2}
             />
-            <span className="text-label-bold text-[10px] mt-1">{t("library")}</span>
+            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "library" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
+              {t("library")}
+            </span>
           </button>
 
           <button
-            onClick={() => navigateTo("workout")}
+            onClick={() => {
+              triggerHaptic("light");
+              navigateTo("workout");
+            }}
             aria-current={activeTab === "workout" ? "page" : undefined}
             aria-label={t("workout")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-4 py-1.5 active:scale-95 transition-all duration-150 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${activeTab === "workout" ? "premium-cta" : "text-on-surface-variant hover:bg-white/5 hover:text-primary"}`}
+            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
+              activeTab === "workout"
+                ? "text-[#30D158]"
+                : "text-[#8E8E93] hover:text-white"
+            }`}
           >
             <Dumbbell
-              className="w-6 h-6"
+              className="w-5 h-5 transition-transform"
               fill={activeTab === "workout" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "workout" ? 1 : 1.5}
+              strokeWidth={activeTab === "workout" ? 1.5 : 2}
             />
-            <span className="text-label-bold text-[10px] mt-1">{t("workout")}</span>
+            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "workout" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
+              {t("workout")}
+            </span>
           </button>
 
           <button
-            onClick={() => navigateTo("progress")}
+            onClick={() => {
+              triggerHaptic("light");
+              navigateTo("progress");
+            }}
             aria-current={activeTab === "progress" ? "page" : undefined}
             aria-label={t("progress")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-4 py-1.5 active:scale-95 transition-all duration-150 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${activeTab === "progress" ? "premium-cta" : "text-on-surface-variant hover:bg-white/5 hover:text-primary"}`}
+            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
+              activeTab === "progress"
+                ? "text-[#30D158]"
+                : "text-[#8E8E93] hover:text-white"
+            }`}
           >
             <LucideLineChart
-              className="w-6 h-6"
+              className="w-5 h-5 transition-transform"
               fill={activeTab === "progress" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "progress" ? 1 : 1.5}
+              strokeWidth={activeTab === "progress" ? 1.5 : 2}
             />
-            <span className="text-label-bold text-[10px] mt-1">{t("progress")}</span>
+            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "progress" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
+              {t("progress")}
+            </span>
           </button>
         </nav>
 
@@ -602,40 +647,56 @@ export default function App() {
 
       {isLiveWorkoutActive && activeTab !== "live_editor" && (
         <button
-          onClick={() => setActiveTab("live_editor")}
+          onClick={() => {
+            triggerHaptic("medium");
+            setActiveTab("live_editor");
+          }}
           aria-label="Return to active workout"
-          className="fixed bottom-24 right-4 z-[100] bg-primary-fixed text-[#07110a] w-14 h-14 rounded-full shadow-[0_8px_30px_rgba(34,197,94,0.32)] flex items-center justify-center hover:bg-primary-container active:scale-95 transition-colors cursor-pointer group lg:bottom-6 lg:right-6"
+          className="fixed bottom-20 right-4 z-[100] bg-[#1C1C1E]/95 backdrop-blur-2xl border border-[#30D158]/50 text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex items-center gap-2.5 active:scale-95 transition-all cursor-pointer group lg:bottom-6 lg:right-6"
         >
-          <Dumbbell className="w-6 h-6 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
-          <span className="sr-only">Workout in progress</span>
-          <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border border-black"></div>
+          <div className="relative flex items-center justify-center">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] animate-ping absolute opacity-75"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#30D158]"></span>
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#30D158] leading-none">
+              {t("live_session") || "Live Session"}
+            </span>
+            <span className="text-[12px] font-bold text-white leading-tight">
+              {t("in_progress") || "In Progress"}
+            </span>
+          </div>
+          <Dumbbell className="w-4 h-4 text-white/70 ml-0.5 group-hover:scale-110 transition-transform" />
         </button>
       )}
 
       {/* Save as Routine Modal */}
       {isEmptyPromptOpen && (
-        <div className="fixed inset-0 bg-background/90 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto mb-4">
-                <Save className="w-8 h-8" />
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[200] flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-150">
+            <div className="p-7 text-center">
+              <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center text-[#30D158] mx-auto mb-4 border border-[#30D158]/25">
+                <Save className="w-7 h-7" />
               </div>
-              <h2 className="text-xl font-bold text-on-background mb-2">
+              <h2 className="text-xl font-bold text-white tracking-tight mb-1">
                 {t("workout_completed")}
               </h2>
-              <p className="text-on-surface-variant text-sm mb-6">
+              <p className="text-xs text-[#8E8E93] mb-6">
                 Would you like to save this session as a regular routine for future use?
               </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5">
                 <button
-                  onClick={() => handleConfirmEmptySave(true)}
+                  onClick={() => {
+                    triggerHaptic("success");
+                    handleConfirmEmptySave(true);
+                  }}
                   disabled={isConfirming}
-                  className={`w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm uppercase tracking-widest border border-primary/20 flex items-center justify-center gap-2 ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`w-full bg-[#30D158] text-black font-bold py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all text-sm tracking-tight shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center gap-2 ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isConfirming ? (
                     <>
-                      <span className="w-4 h-4 border-2 border-on-primary-container border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
                       {t("saving") || "Saving..."}
                     </>
                   ) : (
@@ -643,9 +704,12 @@ export default function App() {
                   )}
                 </button>
                 <button
-                  onClick={() => handleConfirmEmptySave(false)}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    handleConfirmEmptySave(false);
+                  }}
                   disabled={isConfirming}
-                  className={`w-full bg-surface-variant text-on-surface-variant font-bold py-3 rounded-lg hover:bg-surface-container text-sm uppercase tracking-widest transition-all ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`w-full bg-white/10 text-white font-semibold py-3.5 rounded-full hover:bg-white/15 text-sm tracking-tight active:scale-95 transition-all ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {t("log_only")}
                 </button>

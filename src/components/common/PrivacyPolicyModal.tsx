@@ -1,37 +1,44 @@
 import React from "react";
 import { Shield, X } from "lucide-react";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-background/80 backdrop-blur-md"
-        onClick={onClose}
+        className="absolute inset-0 bg-black/75 backdrop-blur-xl"
+        onClick={() => {
+          triggerHaptic("light");
+          onClose();
+        }}
       />
-      <div className="bg-surface-container border border-surface-variant/50 rounded-[28px] w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-6 md:px-8 md:pt-8 md:pb-6 border-b border-surface-variant/30">
+      <div className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center p-6 md:p-7 border-b border-white/8 shrink-0">
           <div>
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary mb-4">
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-[#5E5CE6]/15 text-[#5E5CE6] border border-[#5E5CE6]/25 mb-3">
               <Shield className="w-5 h-5" />
             </div>
-            <h2 className="font-[var(--font-headline-md)] text-[28px] font-bold text-on-background tracking-tight leading-tight">
+            <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">
               Privacy Policy
             </h2>
-            <p className="text-on-surface-variant text-[14px] mt-1">
+            <p className="text-[#8E8E93] text-xs mt-0.5">
               Written in plain English, for a personal fitness app.
             </p>
           </div>
           <button
-            onClick={onClose}
-            className="p-2.5 bg-surface-variant/30 hover:bg-surface-variant transition-colors rounded-full text-on-surface-variant hover:text-on-background self-start"
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-all flex items-center justify-center text-[#8E8E93] hover:text-white self-start cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6 md:p-8 overflow-y-auto font-[var(--font-body-md)] text-on-surface-variant space-y-8 text-[15px] leading-relaxed">
+        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar text-[#8E8E93] space-y-7 text-sm leading-relaxed">
           <section>
-            <h3 className="text-on-background flex items-center gap-2 font-bold text-[18px] mb-3">
-              <span className="text-primary">1.</span> Who I Am
+            <h3 className="text-white flex items-center gap-2 font-bold text-base mb-2">
+              <span className="text-[#30D158]">1.</span> Who I Am
             </h3>
             <p>
               I am an independent developer building LiftLab as a personal
@@ -42,8 +49,8 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
           </section>
 
           <section>
-            <h3 className="text-on-background flex items-center gap-2 font-bold text-[18px] mb-3">
-              <span className="text-primary">2.</span> What I Collect
+            <h3 className="text-white flex items-center gap-2 font-bold text-base mb-2">
+              <span className="text-[#30D158]">2.</span> What I Collect
             </h3>
             <p>
               LiftLab operates entirely offline. No sign-up or registration is required. All data stays on your device:
@@ -59,23 +66,11 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
           </section>
 
           <section>
-            <h3 className="text-on-background flex items-center gap-2 font-bold text-[18px] mb-3">
-              <span className="text-primary">3.</span> Where Your Data Lives
+            <h3 className="text-white flex items-center gap-2 font-bold text-base mb-2">
+              <span className="text-[#30D158]">3.</span> Analytics & Third Parties
             </h3>
             <p>
-              Your data is stored locally on your device (via HTML5 local storage). There is no central server, database, or third-party cloud synchronization. This means you have total ownership and control over your data.
-            </p>
-            <p className="mt-2 text-on-surface-variant/80">
-              Note: If you uninstall the app or clear your storage data, your workout history will be lost. To prevent data loss, please use the Export Data option in the settings menu.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="text-on-background flex items-center gap-2 font-bold text-[18px] mb-3">
-              <span className="text-primary">4.</span> Your Right to Be Forgotten
-            </h3>
-            <p>
-              You own your data. You can export it at any time, or permanently clear all local data directly from the settings page. Clearing local data instantly deletes all local routines and logs from your device. It cannot be recovered.
+              LiftLab uses zero third-party tracking scripts, zero marketing pixels, and zero profiling cookies. All calculations and storage remain 100% on your device.
             </p>
           </section>
         </div>

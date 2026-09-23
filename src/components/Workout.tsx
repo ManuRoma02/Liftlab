@@ -12,12 +12,14 @@ import {
   Clock,
   Search,
   X,
+  Sparkles,
 } from "lucide-react";
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { RoutineData } from "../types/workout";
 import { motion } from "motion/react";
+import { triggerHaptic } from "../lib/haptics";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,6 +49,7 @@ export function Workout({
   activeRoutineId,
   onShareRoutine,
   onOpenImportCode,
+  onLoadStarterRoutines,
 }: {
   t: any;
   unit: string;
@@ -62,6 +65,7 @@ export function Workout({
   activeRoutineId?: string | null;
   onShareRoutine: (routine: RoutineData) => void;
   onOpenImportCode: () => void;
+  onLoadStarterRoutines?: () => void;
 }) {
   const [routineSearch, setRoutineSearch] = useState("");
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -115,7 +119,7 @@ export function Workout({
     const query = routineSearch.toLowerCase();
     return sortedRoutines.filter((r) =>
       r.name?.toLowerCase().includes(query) ||
-      r.exercises.some((ex) =>
+      (r.exercises || []).some((ex) =>
         ex.title?.toLowerCase().includes(query) ||
         (t && t(ex.title)?.toLowerCase().includes(query)) ||
         getExerciseSearchScore(query, ex, t) > 0
@@ -132,31 +136,46 @@ export function Workout({
         icon={<Dumbbell className="w-7 h-7" />}
         onOpenSettings={() => navigateTo("settings")}
         metric={
-          <span className="hidden sm:inline-flex text-xs font-black uppercase tracking-widest text-primary-fixed bg-primary-fixed/10 border border-primary-fixed/20 rounded-full px-3 py-2">
+          <span className="hidden sm:inline-flex text-xs font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/12 border border-[#30D158]/25 rounded-full px-3 py-1.5">
             {routinesToday > 0 ? `${routinesToday} today` : `${routines.length} routines`}
           </span>
         }
         action={
-          <div className="flex gap-2 w-full justify-end relative">
+          <div className="flex gap-2 w-full justify-end relative flex-wrap sm:flex-nowrap">
             <motion.button
-              whileTap={{ scale: 0.94 }}
-              onClick={onCreate}
-              className="bg-primary-fixed text-[#07110a] text-xs font-black uppercase tracking-wider px-4 py-3.5 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              style={{ flex: "1 1 60%", minWidth: "120px" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                triggerHaptic("medium");
+                onStartLiveWorkout("empty");
+              }}
+              className="bg-[#30D158] text-black text-xs font-extrabold px-4 py-3 rounded-full hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_4px_14px_rgba(48,209,88,0.3)] shrink-0"
             >
-              <Plus className="w-4 h-4 shrink-0" strokeWidth={3} />
-              <span className="truncate">Create New</span>
+              <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+              <span className="truncate">{t("start_empty") || "Allenamento Libero"}</span>
             </motion.button>
-            <div className="relative" style={{ flex: "1 1 40%", minWidth: "90px" }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                triggerHaptic("light");
+                onCreate();
+              }}
+              className="bg-white/8 text-white border border-white/10 text-xs font-bold px-4 py-3 rounded-full hover:bg-white/12 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <span className="truncate">{t("create_new") || "Nuova Scheda"}</span>
+            </motion.button>
+            <div className="relative shrink-0">
               <motion.button
-                whileTap={{ scale: 0.94 }}
-                onClick={() => setIsImportMenuOpen((prev) => !prev)}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  triggerHaptic("light");
+                  setIsImportMenuOpen((prev) => !prev);
+                }}
                 aria-expanded={isImportMenuOpen}
                 aria-haspopup="menu"
-                className="w-full bg-[#1c1f20] text-white border border-white/5 text-xs font-black uppercase tracking-wider px-3 py-3.5 rounded-xl hover:bg-[#25292a] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-10 h-10 rounded-full bg-white/6 hover:bg-white/10 border border-white/10 text-[#8E8E93] hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                title={t("upload_routine_file") || "Import"}
               >
-                <Upload className="w-4 h-4 shrink-0" strokeWidth={3} />
-                <span className="truncate">Import</span>
+                <Upload className="w-4 h-4" strokeWidth={2} />
               </motion.button>
               {isImportMenuOpen && (
                 <>
@@ -164,27 +183,29 @@ export function Workout({
                     className="fixed inset-0 z-[100]"
                     onClick={() => setIsImportMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#141618] border border-white/15 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[101] overflow-hidden py-1">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[101] overflow-hidden py-1.5">
                     <button
                       onClick={() => {
+                        triggerHaptic("light");
                         setIsImportMenuOpen(false);
                         importInputRef.current?.click();
                       }}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-primary-fixed/20 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <Upload className="w-4 h-4 text-primary-fixed shrink-0" />
-                      <span>Upload JSON File</span>
+                      <Upload className="w-4 h-4 text-[#30D158] shrink-0" />
+                      <span>{t("upload_routine_file") || "Carica File Scheda"}</span>
                     </button>
-                    <hr className="border-white/10" />
+                    <hr className="border-white/8 my-1" />
                     <button
                       onClick={() => {
+                        triggerHaptic("light");
                         setIsImportMenuOpen(false);
                         onOpenImportCode();
                       }}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-primary-fixed/20 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <LinkIcon className="w-4 h-4 text-primary-fixed shrink-0" />
-                      <span>Paste Code / Text</span>
+                      <LinkIcon className="w-4 h-4 text-[#30D158] shrink-0" />
+                      <span>{t("import_routine_code") || "Incolla Testo o Codice"}</span>
                     </button>
                   </div>
                 </>
@@ -213,18 +234,21 @@ export function Workout({
       {/* Routine Search Input */}
       {routines.length > 2 && (
         <div className="relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant group-focus-within:text-primary-fixed transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
           <input
             type="text"
             value={routineSearch}
             onChange={(e) => setRoutineSearch(e.target.value)}
             placeholder="Search routines by name or exercise..."
-            className="w-full bg-surface-container-lowest border border-surface-variant rounded-xl pl-11 pr-10 py-2.5 text-sm text-on-background focus:border-primary-fixed focus:outline-none transition-all placeholder:text-on-surface-variant"
+            className="w-full bg-[#1C1C1E] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
           />
           {routineSearch.length > 0 && (
             <button
-              onClick={() => setRoutineSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-on-surface-variant hover:text-primary hover:bg-white/10 transition-colors cursor-pointer"
+              onClick={() => {
+                triggerHaptic("light");
+                setRoutineSearch("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -235,34 +259,79 @@ export function Workout({
       {/* Routine library */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 overflow-visible">
         {routines.length === 0 ? (
-          <div className="md:col-span-3 flex flex-col items-center justify-center gap-6 py-20 border-2 border-dashed border-surface-variant rounded-xl bg-surface-container-low">
-            <div className="w-20 h-20 bg-surface-variant rounded-full flex items-center justify-center text-primary-fixed">
-              <ClipboardList className="w-10 h-10" />
+          <div className="md:col-span-3 flex flex-col items-center justify-center gap-6 py-20 border-2 border-dashed border-white/10 rounded-3xl bg-[#1C1C1E]/50">
+            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-[#30D158]">
+              <ClipboardList className="w-8 h-8" />
             </div>
             <div className="text-center max-w-sm px-4">
-              <h3 className="text-headline-md font-bold text-on-background mb-2">
-                No Routines Found
+              <h3 className="text-xl font-bold text-white mb-1 tracking-tight">
+                {t("no_routines_title") || "No Routines Found"}
               </h3>
-              <p className="text-body-lg text-on-surface-variant mb-6">
-                Start by creating a new workout program or importing a workout JSON.
+              <p className="text-sm text-[#8E8E93] mb-6">
+                {t("no_routines_subtitle") || "Start right away with a freestyle workout or create your first routine."}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  onClick={onCreate}
-                  className="bg-primary-fixed text-[#000000] text-label-bold px-6 py-3 rounded-lg hover:opacity-90 transition-all uppercase tracking-wide text-xs"
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    onStartLiveWorkout("empty");
+                  }}
+                  className="bg-[#30D158] text-black font-extrabold px-6 py-3 rounded-full hover:opacity-90 transition-all text-xs tracking-tight shadow-[0_4px_14px_rgba(48,209,88,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Create New Program
+                  <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+                  <span>{t("start_empty") || "Inizia Allenamento Libero"}</span>
                 </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    onCreate();
+                  }}
+                  className="bg-white/8 text-white border border-white/10 font-bold px-6 py-3 rounded-full hover:bg-white/12 transition-all text-xs tracking-tight cursor-pointer"
+                >
+                  {t("create_new") || "Crea Nuova Scheda"}
+                </motion.button>
+                {onLoadStarterRoutines && (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      triggerHaptic("medium");
+                      onLoadStarterRoutines();
+                    }}
+                    className="bg-white/10 text-white border border-white/20 font-bold px-6 py-3 rounded-full hover:bg-white/20 transition-all text-xs tracking-tight cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#30D158]" />
+                    <span>{t("restore_starter_routines") || "Carica Schede Starter"}</span>
+                  </motion.button>
+                )}
               </div>
+            </div>
+          </div>
+        ) : filteredRoutines.length === 0 ? (
+          <div className="md:col-span-3 flex flex-col items-center justify-center gap-4 py-16 border border-dashed border-white/10 rounded-3xl bg-[#1C1C1E]/50">
+            <Search className="w-8 h-8 text-[#8E8E93]" />
+            <div className="text-center max-w-sm px-4">
+              <h3 className="text-lg font-bold text-white mb-1">
+                {t("no_routines_search") || "Nessuna scheda trovata"}
+              </h3>
+              <p className="text-sm text-[#8E8E93] mb-4">
+                {routineSearch ? `Nessun risultato per "${routineSearch}"` : "Nessun risultato corrispondente."}
+              </p>
+              <button
+                onClick={() => setRoutineSearch("")}
+                className="bg-white/10 text-white border border-white/15 px-4 py-2 rounded-full text-xs font-semibold hover:bg-white/15 transition-all cursor-pointer"
+              >
+                {t("clear_search") || "Azzera Ricerca"}
+              </button>
             </div>
           </div>
         ) : (
           filteredRoutines.map((routine) => (
             <article
               key={routine.id}
-              className={`premium-panel rounded-2xl flex flex-col justify-between p-4 hover:border-primary-fixed/30 active:scale-[0.99] transition-all duration-150 relative group shadow-md gpu-accelerated ${
-                activeRoutineId === routine.id ? "ring-1 ring-primary-fixed/40 border-primary-fixed/40" : ""
+              className={`bg-[#1C1C1E] border border-white/8 rounded-3xl flex flex-col justify-between p-5 hover:border-white/15 active:scale-[0.99] transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
+                activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
               }`}
             >
               <div className="flex flex-col gap-3">
@@ -274,18 +343,18 @@ export function Workout({
                         {routine.name || "Unnamed Routine"}
                       </h3>
                       {routine.scheduledDay != null && (
-                        <span className="bg-[#0e271a] text-[#22c55e] border border-[#22c55e]/25 rounded-md px-2 py-0.5 text-[9px] font-black uppercase shrink-0">
+                        <span className="bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase shrink-0">
                           {scheduleLabels[Number(routine.scheduledDay)].toUpperCase()}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium">
+                    <div className="flex items-center gap-1.5 text-xs text-[#8E8E93] font-medium">
                       <span>{routine.duration} min</span>
-                      <span className="text-on-surface-variant/40">•</span>
+                      <span className="text-white/20">•</span>
                       <span>
                         {Number(routine.exercises?.length ?? 0) === 1
                           ? (t("one_exercise") || "1 exercise")
-                          : `${routine.exercises?.length || 0} ${t("exercises") || "exercises"}`}
+                          : `${routine.exercises?.length ?? 0} ${t("exercises") || "exercises"}`}
                       </span>
                     </div>
                   </div>
@@ -295,12 +364,13 @@ export function Workout({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        triggerHaptic("light");
                         onToggleFavoriteRoutine(routine.id);
                       }}
                       className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer active:scale-90 ${
                         routine.favorite
-                          ? "text-primary-fixed bg-primary-fixed/10"
-                          : "text-on-surface-variant hover:text-primary-fixed hover:bg-white/5"
+                          ? "text-[#30D158] bg-[#30D158]/15"
+                          : "text-[#8E8E93] hover:text-[#30D158] hover:bg-white/5"
                       }`}
                       aria-label={routine.favorite ? "Remove favorite" : "Favorite routine"}
                     >
@@ -309,6 +379,7 @@ export function Workout({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        triggerHaptic("light");
                         setActiveMenuId(
                           activeMenuId === routine.id ? null : routine.id,
                         );
@@ -316,7 +387,7 @@ export function Workout({
                       aria-label={`Actions for ${routine.name || "routine"}`}
                       aria-expanded={activeMenuId === routine.id}
                       aria-haspopup="menu"
-                      className="w-9 h-9 text-on-surface-variant hover:text-primary transition-colors p-1 relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
+                      className="w-9 h-9 text-[#8E8E93] hover:text-white transition-colors p-1 relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -330,13 +401,14 @@ export function Workout({
                             setActiveMenuId(null);
                           }}
                         />
-                        <div className="absolute right-0 top-full mt-1 w-44 bg-[#101112] border border-white/10 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] z-[101] overflow-hidden py-1">
+                        <div className="absolute right-0 top-full mt-1 w-44 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] z-[101] overflow-hidden py-1.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              triggerHaptic("light");
                               duplicateRoutine(routine);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors cursor-pointer"
+                            className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
                           >
                             <Copy className="w-4 h-4 text-white/70" />
                             <span>Duplicate</span>
@@ -344,23 +416,25 @@ export function Workout({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              triggerHaptic("light");
                               onShareRoutine(routine);
                               setActiveMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors cursor-pointer"
+                            className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
                           >
                             <LinkIcon className="w-4 h-4 text-white/70" />
                             <span>Share QR / Code</span>
                           </button>
-                          <div className="h-[1px] bg-white/5 my-1 mx-2" />
+                          <div className="h-[1px] bg-white/8 my-1 mx-2" />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              triggerHaptic("warning");
                               deleteRoutine(routine.id);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                            className="w-full text-left px-4 py-2 text-xs font-semibold text-[#FF453A] hover:bg-[#FF453A]/10 flex items-center gap-2.5 transition-colors cursor-pointer"
                           >
-                            <Trash2 className="w-4 h-4 text-red-400" />
+                            <Trash2 className="w-4 h-4 text-[#FF453A]" />
                             <span>Delete</span>
                           </button>
                         </div>
@@ -375,19 +449,21 @@ export function Workout({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic("light");
                     onSelectRoutine(routine.id);
                     navigateTo("routine_editor");
                   }}
-                  className="min-h-10 border border-white/10 text-on-surface text-xs font-bold py-2 rounded-xl hover:bg-white/5 hover:border-primary-fixed/40 active:scale-95 transition-all uppercase tracking-wider cursor-pointer text-center"
+                  className="min-h-10 border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full active:scale-95 transition-all cursor-pointer text-center"
                 >
                   EDIT
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic("medium");
                     onStartLiveWorkout(routine.id);
                   }}
-                  className="min-h-10 premium-cta text-[#07110a] text-xs font-black py-2 rounded-xl hover:brightness-110 active:scale-95 transition-all uppercase tracking-wider cursor-pointer text-center"
+                  className="min-h-10 bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 active:scale-95 transition-all cursor-pointer text-center shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
                 >
                   START
                 </button>
