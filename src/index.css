@@ -236,6 +236,29 @@ body::before {
   will-change: transform;
 }
 
+.apple-floating-dock {
+  background: rgba(22, 22, 24, 0.82);
+  backdrop-filter: blur(32px) saturate(210%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 16px 36px -6px rgba(0, 0, 0, 0.65),
+    0 4px 14px -2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (min-width: 1024px) {
+  .apple-floating-dock {
+    border-radius: 0;
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+    background: rgba(18, 18, 20, 0.88);
+  }
+}
+
 .console-nav {
   background: rgba(18, 18, 20, 0.82);
   backdrop-filter: blur(30px) saturate(200%);

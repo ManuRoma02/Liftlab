@@ -229,7 +229,7 @@ export default function App() {
 
     return (
       <div
-        className="app-shell bg-background text-on-background min-h-[100dvh] pb-24 lg:pb-0 lg:pl-24 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container"
+        className="app-shell bg-background text-on-background min-h-[100dvh] pb-28 sm:pb-32 lg:pb-0 lg:pl-24 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
       >
         <a
@@ -431,111 +431,73 @@ export default function App() {
 
         {showTutorial && <OnboardingTutorial onFinish={finishTutorial} language={language} t={t} />}
 
-        {/* BottomNavBar */}
-        <nav
-          aria-label="Primary navigation"
-          className="console-nav fixed bottom-0 left-0 z-50 flex w-full items-center justify-around px-2 pt-1.5 pb-2 lg:top-0 lg:h-[100dvh] lg:w-24 lg:flex-col lg:justify-center lg:gap-3 lg:px-3 lg:py-4 gpu-accelerated"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
+        {/* Apple-Style Floating Navigation Dock */}
+        <div
+          className="fixed bottom-0 inset-x-0 z-50 flex justify-center pointer-events-none px-3 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] lg:top-0 lg:bottom-0 lg:left-0 lg:right-auto lg:h-[100dvh] lg:w-24 lg:p-0 lg:pointer-events-auto"
         >
-          <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#30D158] text-black shadow-[0_4px_14px_rgba(48,209,88,0.35)]">
-              <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
+          <nav
+            aria-label="Primary navigation"
+            className="apple-floating-dock pointer-events-auto w-full max-w-[390px] sm:max-w-md h-[64px] px-2 py-1.5 rounded-[28px] sm:rounded-full flex items-center justify-around gap-1 lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:flex-col lg:justify-center lg:gap-3 lg:px-3 lg:py-4 gpu-accelerated"
+          >
+            <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#30D158] text-black shadow-[0_4px_14px_rgba(48,209,88,0.35)]">
+                <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
-          </div>
 
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              navigateTo("dashboard");
-            }}
-            aria-current={activeTab === "dashboard" ? "page" : undefined}
-            aria-label={t("dashboard")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
-              activeTab === "dashboard"
-                ? "text-[#30D158]"
-                : "text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <LayoutDashboard
-              className="w-5 h-5 transition-transform"
-              fill={activeTab === "dashboard" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "dashboard" ? 1.5 : 2}
-            />
-            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "dashboard" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
-              {t("dashboard")}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              navigateTo("library");
-            }}
-            aria-current={activeTab === "library" ? "page" : undefined}
-            aria-label={t("library")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
-              activeTab === "library"
-                ? "text-[#30D158]"
-                : "text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <Database
-              className="w-5 h-5 transition-transform"
-              fill={activeTab === "library" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "library" ? 1.5 : 2}
-            />
-            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "library" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
-              {t("library")}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              navigateTo("workout");
-            }}
-            aria-current={activeTab === "workout" ? "page" : undefined}
-            aria-label={t("workout")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
-              activeTab === "workout"
-                ? "text-[#30D158]"
-                : "text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <Dumbbell
-              className="w-5 h-5 transition-transform"
-              fill={activeTab === "workout" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "workout" ? 1.5 : 2}
-            />
-            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "workout" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
-              {t("workout")}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              navigateTo("progress");
-            }}
-            aria-current={activeTab === "progress" ? "page" : undefined}
-            aria-label={t("progress")}
-            className={`min-h-12 min-w-[64px] flex flex-col items-center justify-center px-3 py-1.5 active:scale-90 transition-all duration-100 rounded-2xl cursor-pointer lg:min-h-[72px] lg:w-full lg:px-2 ${
-              activeTab === "progress"
-                ? "text-[#30D158]"
-                : "text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <LucideLineChart
-              className="w-5 h-5 transition-transform"
-              fill={activeTab === "progress" ? "currentColor" : "none"}
-              strokeWidth={activeTab === "progress" ? 1.5 : 2}
-            />
-            <span className={`text-[10px] mt-1 tracking-tight ${activeTab === "progress" ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`}>
-              {t("progress")}
-            </span>
-          </button>
-        </nav>
+            {[
+              { id: "dashboard", label: t("dashboard"), icon: LayoutDashboard },
+              { id: "library", label: t("library"), icon: Database },
+              { id: "workout", label: t("workout"), icon: Dumbbell },
+              { id: "progress", label: t("progress"), icon: LucideLineChart },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    navigateTo(tab.id);
+                  }}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={tab.label}
+                  className="relative flex-1 min-h-[48px] flex flex-col items-center justify-center px-2 py-1 rounded-2xl sm:rounded-full cursor-pointer select-none transition-all duration-150 active:scale-90 apple-press lg:min-h-[72px] lg:w-full lg:flex-initial"
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="apple-nav-active-pill"
+                      className="absolute inset-0 rounded-2xl sm:rounded-full bg-white/[0.09] border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 420,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
+                    <Icon
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        isActive ? "scale-105 text-[#30D158]" : "text-[#8E8E93] group-hover:text-white"
+                      }`}
+                      fill={isActive ? "currentColor" : "none"}
+                      strokeWidth={isActive ? 1.5 : 2}
+                    />
+                    <span
+                      className={`text-[10px] sm:text-[10.5px] mt-1 tracking-tight transition-colors duration-150 ${
+                        isActive ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"
+                      }`}
+                    >
+                      {tab.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
         {showCookieConsent && (
           <CookieBanner
