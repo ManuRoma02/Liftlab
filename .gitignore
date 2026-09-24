@@ -28,3 +28,4 @@ dev-dist/
 brag-output/
 .agents/
 skills-lock.json
+.superpowers/
