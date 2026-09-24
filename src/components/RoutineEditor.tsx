@@ -1104,7 +1104,7 @@ export function RoutineEditor({
               }}
               className="text-error font-bold uppercase hover:bg-error/10 active:scale-95 transition-all tracking-wider px-3 py-2 rounded-full text-[11px] cursor-pointer"
             >
-              {t("discard") || "Discard"}
+              {t("exit_workout") || "Abbandona"}
             </button>
           )}
           <button
@@ -2241,13 +2241,13 @@ export function RoutineEditor({
 
       {discardConfirmOpen && (
         <ConfirmModal
-          message={(t("discard_workout_confirm") || "Discard this workout?").replace("{name}", userName || "friend")}
-          confirmLabel={t("discard") || "Discard"}
-          cancelLabel={t("cancel") || "Cancel"}
+          title={t("exit_workout") || "Abbandona allenamento"}
+          message={(t("discard_workout_confirm") || "Sei sicuro di voler eliminare questo allenamento? I progressi andranno persi.").replace("{name}", userName || "amico")}
+          confirmLabel={t("discard_workout_confirm_btn") || "Elimina allenamento"}
+          cancelLabel={t("keep_workout_btn") || "Continua allenamento"}
           destructive
           onConfirm={() => {
             setDiscardConfirmOpen(false);
-            // Clear crash-recovery data on intentional discard
             removeJsonAtomic(LIVE_PROGRESS_KEY);
             localStorage.removeItem(LIVE_ELAPSED_KEY);
             localStorage.removeItem(LIVE_REST_TIMER_KEY);
