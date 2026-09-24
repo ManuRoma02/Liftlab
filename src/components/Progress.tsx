@@ -374,32 +374,36 @@ export function Progress({
   return (
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg w-full">
       <TabHero
-        eyebrow="Progress"
+        eyebrow={t("progress")}
         title={t("progress")}
-        subtitle="Track your gains, refine your strategy."
+        subtitle={(t("progress_subtitle") !== "progress_subtitle" && t("progress_subtitle")) || "Monitora i tuoi progressi e perfeziona la tua strategia."}
         icon={<LucideLineChart className="w-7 h-7" />}
         onOpenSettings={() => navigateTo("settings")}
         metric={
           <span className="hidden sm:inline-flex text-xs font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/12 border border-[#30D158]/25 rounded-full px-3 py-1.5">
-            {totalLoggedSets} sets
+            {totalLoggedSets} {t("set")?.toLowerCase() || "serie"}
           </span>
         }
         action={
           <div className="flex p-1 bg-white/6 backdrop-blur-xl rounded-full border border-white/10">
-            {["Monthly", "Yearly", "All Time"].map((frame) => (
+            {[
+              { id: "Monthly", label: t("monthly") || "Mensile" },
+              { id: "Yearly", label: t("yearly") || "Annuale" },
+              { id: "All Time", label: t("all_time") || "Sempre" },
+            ].map((frame) => (
               <button
-                key={frame}
+                key={frame.id}
                 onClick={() => {
                   triggerHaptic("light");
-                  setTimeframe(frame);
+                  setTimeframe(frame.id);
                 }}
                 className={`flex-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  timeframe === frame
+                  timeframe === frame.id
                     ? "bg-[#30D158] text-black shadow-sm"
                     : "text-[#8E8E93] hover:text-white"
                 }`}
               >
-                {frame}
+                {frame.label}
               </button>
             ))}
           </div>
@@ -510,7 +514,7 @@ export function Progress({
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
               <Trophy className="w-5 h-5 text-[#FF9F0A]" />
-              Personal Records
+              {t("personal_records") || "Personal Records"}
             </h2>
             <p className="text-xs text-[#8E8E93] mt-0.5">
               Choose 3 exercises to track from local workout history.
@@ -1030,17 +1034,17 @@ export function Progress({
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
               <Calendar className="w-5 h-5 text-[#30D158]" />
-              Workout History
+              {(t("workout_history") !== "workout_history" && t("workout_history")) || "Storico Allenamenti"}
             </h2>
             <p className="text-xs text-[#8E8E93] mt-0.5">
-              Completed workout sessions ({workoutLogs.length})
+              {((t("completed_sessions_count") !== "completed_sessions_count" && t("completed_sessions_count")) || "Sessioni completate ({count})").replace("{count}", String(workoutLogs.length))}
             </p>
           </div>
         </div>
 
         {workoutLogs.length === 0 ? (
           <div className="py-8 text-center text-[#8E8E93] text-sm">
-            No completed workout logs found.
+            {t("no_data_yet") || "Nessun dato di allenamento registrato"}
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">

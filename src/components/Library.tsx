@@ -127,14 +127,14 @@ export function Library({
   return (
     <main className="px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col w-full max-w-[1280px] mx-auto gap-stack-lg relative">
       <TabHero
-        eyebrow="Library"
+        eyebrow={t("library")}
         title={t("library")}
-        subtitle={isCatalogLoading ? "Loading the offline exercise catalog..." : `${safeExercises.length} exercises stored locally`}
+        subtitle={isCatalogLoading ? (t("loading_catalog") || "Caricamento catalogo...") : (t("exercises_stored_offline") || "{count} esercizi disponibili offline").replace("{count}", String(safeExercises.length))}
         icon={<Database className="w-7 h-7" />}
         onOpenSettings={onOpenSettings}
         metric={
           <span className="hidden sm:inline-flex text-xs font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/12 border border-[#30D158]/25 rounded-full px-3 py-1.5">
-            {isSearching ? `${filteredExercises.length} found` : "Featured"}
+            {isSearching ? (t("found_badge") || "{count} trovati").replace("{count}", String(filteredExercises.length)) : (t("featured_badge") || "In evidenza")}
           </span>
         }
         action={
@@ -156,8 +156,8 @@ export function Library({
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
         <input
           className="w-full bg-[#1C1C1E] border border-white/8 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
-          placeholder="Search exercises..."
-          aria-label="Search exercises"
+          placeholder={t("search") || "Cerca esercizi..."}
+          aria-label={t("search") || "Cerca esercizi"}
           type="text"
           autoComplete="off"
           value={search}
@@ -180,7 +180,7 @@ export function Library({
               setSelectedMuscle("All");
             }}
             className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
-            aria-label="Clear search"
+            aria-label={t("clear_search") || "Azzera ricerca"}
           >
             <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
               <X className="w-3.5 h-3.5" />

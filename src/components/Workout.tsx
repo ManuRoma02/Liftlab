@@ -130,14 +130,14 @@ export function Workout({
   return (
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg w-full">
       <TabHero
-        eyebrow="Workout"
+        eyebrow={t("workout")}
         title={t("workout")}
-        subtitle={routines.length > 0 ? t("select_program") : "Create your first routine to start training."}
+        subtitle={routines.length > 0 ? t("select_program") : (t("no_routines_subtitle") || "Crea la tua prima scheda per iniziare ad allenarti.")}
         icon={<Dumbbell className="w-7 h-7" />}
         onOpenSettings={() => navigateTo("settings")}
         metric={
           <span className="hidden sm:inline-flex text-xs font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/12 border border-[#30D158]/25 rounded-full px-3 py-1.5">
-            {routinesToday > 0 ? `${routinesToday} today` : `${routines.length} routines`}
+            {routinesToday > 0 ? `${routinesToday} ${t("today")?.toLowerCase() || "oggi"}` : `${routines.length} ${t("routines")?.toLowerCase() || "schede"}`}
           </span>
         }
         action={
@@ -239,7 +239,8 @@ export function Workout({
             type="text"
             value={routineSearch}
             onChange={(e) => setRoutineSearch(e.target.value)}
-            placeholder="Search routines by name or exercise..."
+            placeholder={t("search") || "Cerca schede o esercizi..."}
+            aria-label={t("search") || "Cerca schede o esercizi"}
             className="w-full bg-[#1C1C1E] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
           />
           {routineSearch.length > 0 && (
@@ -249,7 +250,7 @@ export function Workout({
                 triggerHaptic("light");
                 setRoutineSearch("");
               }}
-              aria-label="Clear routine search"
+              aria-label={t("clear_search") || "Azzera ricerca"}
               className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
             >
               <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
