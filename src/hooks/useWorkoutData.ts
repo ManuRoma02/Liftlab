@@ -307,10 +307,10 @@ export function useWorkoutData() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return parsed.showRpe !== false;
+        return parsed.showRpe === true; // Default to FALSE for new users unless explicitly true
       } catch {}
     }
-    return true;
+    return false;
   });
 
   const [oneRepMaxFormula, setOneRepMaxFormula] = useState<OneRepMaxFormula>(() => {
@@ -630,7 +630,7 @@ export function useWorkoutData() {
       if (userData.language) setLanguage(userData.language);
       setUnit(userData.unit || "LBS");
       setRestTimer(userData.restTimer || 90);
-      setShowRpe(userData.showRpe !== false);
+      setShowRpe(userData.showRpe === true);
       const latestWeightInLogs =
         userData.weightLogs && userData.weightLogs.length > 0
           ? userData.weightLogs[userData.weightLogs.length - 1].weight

@@ -22,6 +22,7 @@ import {
   Search,
   Disc,
   Flame,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -80,7 +81,7 @@ export function RoutineEditor({
   savedExerciseNotes = {},
   exerciseRestPresets = {},
   onSaveExerciseRestPreset,
-  showRpe = true,
+  showRpe = false,
 }: {
   t: any;
   unit: string;
@@ -130,6 +131,14 @@ export function RoutineEditor({
   });
 
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
+  const [isGuideDismissed, setIsGuideDismissed] = useState<boolean>(() => {
+    return localStorage.getItem("liftlab_workout_guide_dismissed") === "true";
+  });
+
+  const handleDismissGuide = () => {
+    localStorage.setItem("liftlab_workout_guide_dismissed", "true");
+    setIsGuideDismissed(true);
+  };
   const activeNotificationRef = useRef<Notification | null>(null);
   const [routine, setRoutine] = useState<RoutineData>(() => {
     // In live mode, restore saved progress if valid and matches target ID or is empty/dynamic session
@@ -1278,6 +1287,29 @@ export function RoutineEditor({
             <span className="text-xs font-bold">{t("session_recovered") || "Session recovered after crash — check your sets"}</span>
           </div>
         )}
+        {mode === "live" && workoutLogs.length === 0 && !isGuideDismissed && (
+          <div className="mx-margin-mobile md:mx-margin-desktop mb-4 p-4 rounded-2xl bg-[#1C1C1E] border border-[#30D158]/30 shadow-lg relative flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#30D158]" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  {t("workout_guide_title") || "Come registrare la sessione"}
+                </h4>
+              </div>
+              <button
+                onClick={handleDismissGuide}
+                className="text-[#8E8E93] hover:text-white text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                {t("got_it") || "Ho capito"}
+              </button>
+            </div>
+            <ul className="text-xs text-[#8E8E93] space-y-1 pl-1">
+              <li>• <strong>{unit}</strong> e <strong>{t("reps_upper") || "RIPET."}</strong>: inserisci i valori per ogni serie completata.</li>
+              <li>• <strong>Numero serie (1, 2...)</strong>: tocca per segnarla come completata e avviare il recupero.</li>
+              <li>• <strong>{t("previous") || "Prec."}</strong>: mostra i tuoi carichi passati per confrontare i progressi.</li>
+            </ul>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-stack-lg relative">
           {(function () {
             const groups: any[][] = [];
@@ -1638,7 +1670,11 @@ export function RoutineEditor({
                                         </div>
                                       );
                                     }
-                                    return <span className="text-xs opacity-30 font-sans tabular-nums">-</span>;
+                                    return (
+                                      <span className="text-[10px] text-[#8E8E93]/60 font-medium uppercase tracking-tight">
+                                        {sIdx === 0 ? (t("first_time_badge") || "Nuovo") : "—"}
+                                      </span>
+                                    );
                                   })()}
                                 </div>
                                 <div className="col-span-3 relative flex items-center">
@@ -1705,7 +1741,7 @@ export function RoutineEditor({
                                   )}
                                   <input
                                     className={`w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 ${mode === "live" ? "px-6" : "px-2"} text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
-                                    placeholder={isTimedExercise(ex) ? "Secs" : "Reps"}
+                                    placeholder={isTimedExercise(ex) ? "Secs" : (t("reps_upper") || "Ripet.")}
                                     type="text"
                                     inputMode="decimal"
                                     value={set.reps === "" || set.reps === undefined ? "" : String(set.reps)}
