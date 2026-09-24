@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Trash2, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { triggerHaptic } from "../../lib/haptics";
+import { APPLE_SPRINGS } from "../../lib/motion";
 
 export function ConfirmModal({
   message,
@@ -56,7 +57,8 @@ export function ConfirmModal({
           initial={{ opacity: 0, scale: 0.92, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 15 }}
-          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          /* Critically damped Apple spring physics (damping: 1.0, duration: 0.35s) */
+          transition={{ type: "spring", ...APPLE_SPRINGS.criticallyDamped }}
           className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden"
         >
           {/* iOS Alert Icon */}
@@ -90,7 +92,7 @@ export function ConfirmModal({
                 triggerHaptic("light");
                 onCancel();
               }}
-              className="flex-1 py-3 px-4 rounded-full font-semibold text-sm text-white bg-white/10 hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 min-h-[44px] py-3 px-4 rounded-full font-semibold text-sm text-white bg-white/10 hover:bg-white/15 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
             >
               {cancelLabel}
             </button>
@@ -100,7 +102,7 @@ export function ConfirmModal({
                 triggerHaptic(destructive ? "warning" : "success");
                 onConfirm();
               }}
-              className={`flex-1 py-3 px-4 rounded-full font-bold text-sm transition-all active:scale-95 shadow-md cursor-pointer ${
+              className={`flex-1 min-h-[44px] py-3 px-4 rounded-full font-bold text-sm transition-all active:scale-95 shadow-md cursor-pointer flex items-center justify-center ${
                 destructive
                   ? "bg-[#FF453A] text-white hover:brightness-105 shadow-[0_4px_16px_rgba(255,69,58,0.3)]"
                   : "bg-[#30D158] text-black hover:brightness-105 shadow-[0_4px_16px_rgba(48,209,88,0.3)]"

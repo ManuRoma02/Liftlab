@@ -1,6 +1,6 @@
 import React from "react";
 import { Settings as SettingsIcon } from "lucide-react";
-import { triggerHaptic } from "../../lib/haptics";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 
 export function TabHero({
   eyebrow,
@@ -20,7 +20,7 @@ export function TabHero({
   onOpenSettings?: () => void;
 }) {
   return (
-    <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+    <section className="apple-glass-card rounded-3xl overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.12),transparent_16rem),radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.03),transparent_14rem)]" />
       </div>
@@ -47,8 +47,9 @@ export function TabHero({
                 triggerHaptic("light");
                 onOpenSettings();
               }}
+              onPointerDown={() => hapticPress("light")}
               aria-label="Settings"
-              className="w-10 h-10 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="w-11 h-11 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             >
               <SettingsIcon className="w-4 h-4" />
             </button>

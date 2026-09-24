@@ -201,9 +201,20 @@ body::before {
 /* Apple Materials & Panels */
 .apple-glass {
   background: rgba(28, 28, 30, 0.78);
-  backdrop-filter: blur(25px) saturate(190%);
-  -webkit-backdrop-filter: blur(25px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.apple-glass-card {
+  background: rgba(28, 28, 30, 0.78);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
+  border-radius: 1.5rem;
+  transform: translateZ(0);
 }
 
 .apple-panel {
@@ -293,7 +304,37 @@ body::before {
   opacity: 0.9;
 }
 
-/* Apple Inset Grouped Table Container */
+/* Apple Inset Grouped Table Container & Rows */
+.apple-group-container {
+  background: rgba(28, 28, 30, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateZ(0);
+}
+
+.apple-group-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 150ms ease;
+}
+.apple-group-row:last-child {
+  border-bottom: none;
+}
+.apple-group-row:active {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.apple-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-left: 3.5rem;
+  margin-right: 1rem;
+}
+
+/* Apple Inset Grouped Table Container (Legacy Compatibility) */
 .apple-inset-group {
   background: #1c1c1e;
   border: 1px solid rgba(255, 255, 255, 0.08);

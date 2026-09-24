@@ -117,11 +117,11 @@ export function OnboardingTutorial({
             onFinish();
           }}
           type="button"
-          className="absolute top-5 right-5 z-20 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-[#8E8E93] hover:text-white text-xs font-bold tracking-wide transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
+          className="absolute top-4 right-4 z-20 px-4 min-h-[44px] rounded-full bg-white/10 hover:bg-white/15 text-[#8E8E93] hover:text-white text-xs font-bold tracking-wide transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
           aria-label={i18n.skip}
         >
           <span>{i18n.skip}</span>
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
 
         <AnimatePresence mode="wait">
@@ -152,7 +152,7 @@ export function OnboardingTutorial({
                     triggerHaptic("light");
                     setSelectedUnit("KG");
                   }}
-                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer min-h-[64px] ${
                     selectedUnit === "KG"
                       ? "bg-[#30D158]/15 border-[#30D158] text-white shadow-[0_0_16px_rgba(48,209,88,0.2)]"
                       : "bg-white/5 border-white/10 text-[#8E8E93] hover:bg-white/10"
@@ -173,7 +173,7 @@ export function OnboardingTutorial({
                     triggerHaptic("light");
                     setSelectedUnit("LBS");
                   }}
-                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer min-h-[64px] ${
                     selectedUnit === "LBS"
                       ? "bg-[#30D158]/15 border-[#30D158] text-white shadow-[0_0_16px_rgba(48,209,88,0.2)]"
                       : "bg-white/5 border-white/10 text-[#8E8E93] hover:bg-white/10"
@@ -263,8 +263,10 @@ export function OnboardingTutorial({
                         : "bg-white/6 text-white border border-white/10 hover:bg-white/12"
                     }`}
                   >
-                    <span>{num}</span>
-                    <span className="text-[8px] font-bold uppercase opacity-60">giorni</span>
+                    <span className="tabular-nums">{num}</span>
+                    <span className="text-[8px] font-bold uppercase opacity-60">
+                      {language === "it" ? "giorni" : language === "es" ? "días" : "days"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -279,16 +281,22 @@ export function OnboardingTutorial({
         <div className="flex justify-between items-center mt-2 relative z-10 pt-2 border-t border-white/5">
           <div className="flex gap-2 items-center">
             {[0, 1, 2].map((i) => (
-              <div
+              <button
                 key={i}
-                className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
-                  i === step ? "w-6 bg-[#30D158]" : "w-2 bg-white/20"
-                }`}
+                type="button"
+                aria-label={`Go to step ${i + 1}`}
+                className="p-2 -m-2 flex items-center justify-center cursor-pointer"
                 onClick={() => {
                   triggerHaptic("light");
                   setStep(i);
                 }}
-              />
+              >
+                <div
+                  className={`h-2 rounded-full transition-all duration-200 ${
+                    i === step ? "w-6 bg-[#30D158]" : "w-2 bg-white/20"
+                  }`}
+                />
+              </button>
             ))}
           </div>
 
@@ -302,7 +310,7 @@ export function OnboardingTutorial({
                 handleComplete();
               }
             }}
-            className="bg-[#30D158] text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.3)] cursor-pointer active:scale-95 flex items-center gap-1.5"
+            className="bg-[#30D158] text-black px-6 min-h-[44px] rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.3)] cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
           >
             <span>{step === 2 ? i18n.finish : i18n.next}</span>
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />

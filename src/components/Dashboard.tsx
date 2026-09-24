@@ -33,6 +33,7 @@ import { triggerHaptic } from "../lib/haptics";
 
 import { PRListModal } from "./common/PRListModal";
 import { ConfirmModal } from "./common/ConfirmModal";
+import { AppleBottomSheet } from "./common/AppleBottomSheet";
 import {
   hasWorkoutLoggedOnDay,
   getNextScheduledRoutine,
@@ -593,51 +594,42 @@ export const Dashboard = React.memo(
         </div>
 
         {/* ── Streak History Modal ─────────────────────────────────────────── */}
-        {isStreakModalOpen && (() => {
-          const today = new Date();
-          const calDays: { date: Date; hasWorkout: boolean; isToday: boolean }[] = [];
-          for (let i = 34; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-            calDays.push({ date: d, hasWorkout: workoutDateKeys.has(key), isToday: i === 0 });
-          }
-          const workoutsLast35 = calDays.filter((d) => d.hasWorkout).length;
-          return (
-            <div className="fixed inset-0 z-[300] bg-black/70 flex items-end justify-center" onClick={() => setIsStreakModalOpen(false)}>
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="workout-history-title"
-                className="bg-surface-container-low w-full max-w-md rounded-t-3xl p-6 pb-10 animate-in slide-in-from-bottom-full duration-300"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-5" />
-                <div className="flex items-center justify-between mb-4">
-                  <h2 id="workout-history-title" className="font-black text-lg uppercase tracking-wide text-on-surface">Workout History</h2>
-                  <button aria-label="Close workout history" onClick={() => setIsStreakModalOpen(false)} className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:text-primary transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-5">
+        <AppleBottomSheet
+          isOpen={isStreakModalOpen}
+          onClose={() => setIsStreakModalOpen(false)}
+          title="Workout History"
+        >
+          {(() => {
+            const today = new Date();
+            const calDays: { date: Date; hasWorkout: boolean; isToday: boolean }[] = [];
+            for (let i = 34; i >= 0; i--) {
+              const d = new Date(today);
+              d.setDate(today.getDate() - i);
+              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+              calDays.push({ date: d, hasWorkout: workoutDateKeys.has(key), isToday: i === 0 });
+            }
+            const workoutsLast35 = calDays.filter((d) => d.hasWorkout).length;
+            return (
+              <div className="flex flex-col gap-5 pb-4">
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: "Total", value: workoutLogs.length, unit: "logs" },
                     { label: "Last 35 Days", value: workoutsLast35, unit: "sessions" },
                     { label: "This Week", value: workoutsThisWeek, unit: "sessions" },
                   ].map((s) => (
-                    <div key={s.label} className="bg-surface rounded-xl p-3 text-center">
-                      <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">{s.label}</p>
-                      <p className="text-2xl font-black text-primary">{s.value}</p>
-                      <p className="text-[9px] text-on-surface-variant">{s.unit}</p>
+                    <div key={s.label} className="apple-glass-card rounded-2xl p-3 text-center">
+                      <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-1">{s.label}</p>
+                      <p className="text-2xl font-black text-[#30D158] tabular-nums tracking-tight">{s.value}</p>
+                      <p className="text-[9px] text-[#8E8E93]">{s.unit}</p>
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="grid grid-cols-7 gap-1">
                   {["M","T","W","T","F","S","S"].map((d, i) => (
-                    <div key={i} className="text-center text-[10px] text-on-surface-variant font-bold">{d}</div>
+                    <div key={i} className="text-center text-[10px] text-[#8E8E93] font-bold">{d}</div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-1">
+                <div className="grid grid-cols-7 gap-1.5">
                   {(() => {
                     const firstDay = calDays[0].date;
                     const startPad = (firstDay.getDay() + 6) % 7;
@@ -647,12 +639,12 @@ export const Dashboard = React.memo(
                       cells.push(
                         <div
                           key={idx}
-                          className={`aspect-square rounded-lg flex items-center justify-center text-[11px] font-bold transition-all ${
+                          className={`aspect-square rounded-xl flex items-center justify-center text-[11px] font-bold transition-all tabular-nums ${
                             day.isToday
-                              ? "ring-2 ring-primary " + (day.hasWorkout ? "bg-primary text-on-primary" : "bg-surface text-primary")
+                              ? "ring-2 ring-[#30D158] " + (day.hasWorkout ? "bg-[#30D158] text-black" : "bg-white/10 text-[#30D158]")
                               : day.hasWorkout
-                                ? "bg-primary/90 text-on-primary shadow-[0_0_8px_rgba(195,244,0,0.4)]"
-                                : "bg-surface text-on-surface-variant opacity-40"
+                                ? "bg-[#30D158] text-black shadow-[0_0_8px_rgba(48,209,88,0.4)]"
+                                : "bg-white/5 text-[#8E8E93] opacity-50"
                           }`}
                         >
                           {day.date.getDate()}
@@ -662,59 +654,49 @@ export const Dashboard = React.memo(
                     return cells;
                   })()}
                 </div>
-                <p className="text-center text-[10px] text-on-surface-variant mt-4 opacity-60">
+                <p className="text-center text-[11px] text-[#8E8E93] mt-2 opacity-70">
                   Green = workout day • Last 35 days shown
                 </p>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </AppleBottomSheet>
 
         {/* ── Weekly Goal Modal ────────────────────────────────────────────── */}
-        {isGoalModalOpen && (() => {
-          const pastWeeks: number[] = [];
-          for (let w = 1; w <= 4; w++) {
-            const wStart = new Date();
-            wStart.setDate(wStart.getDate() - todayIndex - w * 7);
-            wStart.setHours(0, 0, 0, 0);
-            const wEnd = new Date(wStart);
-            wEnd.setDate(wStart.getDate() + 7);
-            const count = workoutLogs.filter((log) => {
-              if (!log.date) return false;
-              const d = getLogDate(log);
-              return d >= wStart && d < wEnd;
-            }).length;
-            pastWeeks.push(count);
-          }
-          const avgWeekly = pastWeeks.length > 0
-            ? (pastWeeks.reduce((a, b) => a + b, 0) / pastWeeks.length).toFixed(1)
-            : "—";
-          return (
-            <div className="fixed inset-0 z-[300] bg-black/70 flex items-end justify-center" onClick={() => setIsGoalModalOpen(false)}>
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="weekly-goal-title"
-                className="bg-surface-container-low w-full max-w-md rounded-t-3xl p-6 pb-10 animate-in slide-in-from-bottom-full duration-300"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-5" />
-                <div className="flex items-center justify-between mb-5">
-                  <h2 id="weekly-goal-title" className="font-black text-lg uppercase tracking-wide text-on-surface">Weekly Goal</h2>
-                  <button aria-label="Close weekly goal" onClick={() => setIsGoalModalOpen(false)} className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-variant text-on-surface-variant hover:text-primary transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="bg-surface rounded-2xl p-4 mb-4">
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">This Week</p>
+        <AppleBottomSheet
+          isOpen={isGoalModalOpen}
+          onClose={() => setIsGoalModalOpen(false)}
+          title="Weekly Goal"
+        >
+          {(() => {
+            const pastWeeks: number[] = [];
+            for (let w = 1; w <= 4; w++) {
+              const wStart = new Date();
+              wStart.setDate(wStart.getDate() - todayIndex - w * 7);
+              wStart.setHours(0, 0, 0, 0);
+              const wEnd = new Date(wStart);
+              wEnd.setDate(wStart.getDate() + 7);
+              const count = workoutLogs.filter((log) => {
+                if (!log.date) return false;
+                const d = getLogDate(log);
+                return d >= wStart && d < wEnd;
+              }).length;
+              pastWeeks.push(count);
+            }
+            const avgWeekly = pastWeeks.length > 0
+              ? (pastWeeks.reduce((a, b) => a + b, 0) / pastWeeks.length).toFixed(1)
+              : "—";
+            return (
+              <div className="flex flex-col gap-4 pb-4">
+                <div className="apple-glass-card rounded-2xl p-4">
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">This Week</p>
                   <div className="flex items-center gap-3">
                     <div className="relative w-16 h-16 flex-shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                        <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-surface-variant" />
+                        <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-white/10" />
                         <circle
                           cx="28" cy="28" r="22" fill="none"
-                          stroke="#c3f400" strokeWidth="5" strokeLinecap="round"
+                          stroke="#30D158" strokeWidth="5" strokeLinecap="round"
                           strokeDasharray={circumference}
                           strokeDashoffset={circumference * (1 - Math.min(workoutsThisWeek / editableGoal, 1))}
                           style={{ transition: "stroke-dashoffset 0.4s ease" }}
@@ -722,73 +704,75 @@ export const Dashboard = React.memo(
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[13px] font-black text-primary">{workoutsThisWeek}/{editableGoal}</span>
+                        <span className="text-[13px] font-black text-[#30D158] tabular-nums">{workoutsThisWeek}/{editableGoal}</span>
                       </div>
                     </div>
                     <div>
-                      <p className="font-bold text-on-surface">
-                        {workoutsThisWeek >= editableGoal ? "Goal reached! " : `${editableGoal - workoutsThisWeek} workout${editableGoal - workoutsThisWeek !== 1 ? "s" : ""} to go`}
+                      <p className="font-bold text-white text-base">
+                        {workoutsThisWeek >= editableGoal ? "Goal reached! 🎉" : `${editableGoal - workoutsThisWeek} workout${editableGoal - workoutsThisWeek !== 1 ? "s" : ""} to go`}
                       </p>
-                      <p className="text-[11px] text-on-surface-variant">Avg last 4 weeks: {avgWeekly} sessions</p>
+                      <p className="text-xs text-[#8E8E93] mt-0.5">Avg last 4 weeks: {avgWeekly} sessions</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-surface rounded-2xl p-4 mb-5">
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Past 4 Weeks</p>
-                  <div className="flex items-end gap-2 h-14">
+                <div className="apple-glass-card rounded-2xl p-4">
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">Past 4 Weeks</p>
+                  <div className="flex items-end gap-2 h-16">
                     {[...pastWeeks].reverse().map((count, i) => {
                       const h = editableGoal > 0 ? Math.min((count / editableGoal) * 100, 100) : 0;
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-[10px] text-on-surface-variant">{count}</span>
+                          <span className="text-[10px] text-[#8E8E93] tabular-nums">{count}</span>
                           <div className="w-full rounded-t-sm relative" style={{ height: "40px" }}>
                             <div
-                              className="absolute bottom-0 w-full rounded-t bg-primary/70 transition-all duration-500"
+                              className="absolute bottom-0 w-full rounded-t bg-[#30D158]/70 transition-all duration-500"
                               style={{ height: `${Math.max(h, count > 0 ? 10 : 0)}%` }}
                             />
-                            <div className="absolute bottom-0 w-full border-b-2 border-surface-variant" />
+                            <div className="absolute bottom-0 w-full border-b-2 border-white/10" />
                           </div>
-                          <span className="text-[9px] text-on-surface-variant">-{4-i}w</span>
+                          <span className="text-[9px] text-[#8E8E93]">-{4-i}w</span>
                         </div>
                       );
                     })}
                     <div className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-primary font-bold">{workoutsThisWeek}</span>
+                      <span className="text-[10px] text-[#30D158] font-bold tabular-nums">{workoutsThisWeek}</span>
                       <div className="w-full rounded-t-sm relative" style={{ height: "40px" }}>
                         <div
-                          className="absolute bottom-0 w-full rounded-t bg-primary transition-all duration-500"
+                          className="absolute bottom-0 w-full rounded-t bg-[#30D158] transition-all duration-500"
                           style={{ height: `${Math.min((workoutsThisWeek / editableGoal) * 100, 100)}%` }}
                         />
-                        <div className="absolute bottom-0 w-full border-b-2 border-primary/30" />
+                        <div className="absolute bottom-0 w-full border-b-2 border-[#30D158]/40" />
                       </div>
-                      <span className="text-[9px] text-primary font-bold">Now</span>
+                      <span className="text-[9px] text-[#30D158] font-bold">Now</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-surface rounded-2xl p-4">
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-3">Set Your Goal</p>
+                <div className="apple-glass-card rounded-2xl p-4">
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">Set Your Goal</p>
                   <div className="flex gap-2">
                     {[2, 3, 4, 5, 6].map((n) => (
                       <button
                         key={n}
+                        type="button"
                         onClick={() => {
+                          triggerHaptic("light");
                           setEditableGoal(n);
                           setWeeklyGoal(n);
                         }}
-                        className={`flex-1 py-2.5 rounded-xl font-black text-sm transition-all ${editableGoal === n ? "bg-primary text-on-primary shadow-[0_0_12px_rgba(195,244,0,0.4)]" : "bg-surface-variant text-on-surface-variant hover:bg-surface-container"}`}
+                        className={`flex-1 min-h-[44px] py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${editableGoal === n ? "bg-[#30D158] text-black shadow-[0_0_12px_rgba(48,209,88,0.4)]" : "bg-white/8 text-[#8E8E93] hover:text-white hover:bg-white/15"}`}
                       >
                         {n}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mt-2 text-center">workouts per week</p>
+                  <p className="text-[10px] text-[#8E8E93] mt-2 text-center">workouts per week</p>
                 </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </AppleBottomSheet>
 
         {/* Selected Day Summary */}
         {selectedActivities.length > 0 ? (
@@ -849,60 +833,50 @@ export const Dashboard = React.memo(
         )}
 
         {/* Summary Modal */}
-        {isSummaryModalOpen && focusedActivity && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div role="dialog" aria-modal="true" aria-labelledby="activity-summary-title" className="bg-surface-container-high border border-surface-variant rounded-xl w-full max-w-lg flex flex-col shadow-2xl max-h-[85vh]">
-              <div className="p-6 border-b border-surface-variant flex justify-between items-center">
-                <div>
-                  <h2 id="activity-summary-title" className="text-xl font-bold text-primary mb-1">
-                    {focusedActivity.title}
-                  </h2>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-wider">
-                    {days[selectedDayIndex].full} • {getWorkoutLogDurationMinutes(focusedActivity.duration)}{" "}
-                    min
-                  </p>
-                </div>
-                <button
-                  aria-label="Close activity summary"
-                  onClick={() => {
-                    setIsSummaryModalOpen(false);
-                    setFocusedActivity(null);
-                  }}
-                  className="text-on-surface-variant hover:text-primary transition-colors min-w-11 min-h-11 flex items-center justify-center rounded-full hover:bg-surface-variant"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto flex flex-col gap-6">
-                {focusedActivity?.exercises?.map((ex, exIdx) => (
-                  <div key={exIdx} className="flex flex-col gap-3">
+        <AppleBottomSheet
+          isOpen={isSummaryModalOpen && Boolean(focusedActivity)}
+          onClose={() => {
+            setIsSummaryModalOpen(false);
+            setFocusedActivity(null);
+          }}
+          title={focusedActivity?.title || t("activity_summary") || "Activity Summary"}
+          subtitle={
+            focusedActivity
+              ? `${days[selectedDayIndex]?.full || ""} • ${getWorkoutLogDurationMinutes(focusedActivity.duration)} min`
+              : undefined
+          }
+        >
+          {focusedActivity && (
+            <div className="flex flex-col gap-5 pb-4">
+              <div className="flex flex-col gap-4">
+                {focusedActivity.exercises?.map((ex: any, exIdx: number) => (
+                  <div key={exIdx} className="apple-glass-card rounded-2xl p-4 flex flex-col gap-3">
                     <div className="flex justify-between items-center">
-                      <h4 className="font-bold text-on-surface flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                        {t(ex.title)}
+                      <h4 className="font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                        <CheckCircle2 className="w-4 h-4 text-[#30D158]" />
+                        {t(ex.title) || ex.title}
                       </h4>
-                      <span className="text-xs text-on-surface-variant">
+                      <span className="text-xs text-[#8E8E93] font-medium tabular-nums">
                         {ex.sets?.filter((s: any) => s.completed).length || 0} sets
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
-                      {ex.sets?.filter((s: any) => s.completed).map((set, setIdx) => (
+                      {ex.sets?.filter((s: any) => s.completed).map((set: any, setIdx: number) => (
                         <div
                           key={setIdx}
-                          className="bg-surface p-2 rounded border border-surface-variant text-center"
+                          className="bg-white/5 p-2 rounded-xl border border-white/8 text-center"
                         >
-                          <p className="text-[10px] text-on-surface-variant uppercase font-bold">
+                          <p className="text-[10px] text-[#8E8E93] uppercase font-bold">
                             {t("set")} {setIdx + 1}
                           </p>
-                          <p className="text-sm font-bold text-primary">
+                          <p className="text-sm font-extrabold text-[#30D158] tabular-nums tracking-tight">
                             {set.weight}{" "}
-                            <span className="text-[10px] font-normal">
+                            <span className="text-[10px] font-normal text-[#8E8E93]">
                               {unit}
                             </span>
                           </p>
-                          <p className="text-[10px] text-on-surface-variant">
-                            {set.reps} {isTimedExercise(ex) ? "secs" : t("reps")?.toLowerCase()}
+                          <p className="text-[10px] text-[#8E8E93] tabular-nums">
+                            {set.reps} {isTimedExercise(ex) ? "secs" : (t("reps")?.toLowerCase() || "reps")}
                           </p>
                         </div>
                       ))}
@@ -911,27 +885,34 @@ export const Dashboard = React.memo(
                 ))}
               </div>
 
-              <div className="p-6 border-t border-surface-variant bg-surface-container flex gap-3">
-                {onDeleteLog && focusedActivity?.id && (
+              <div className="flex gap-3 pt-2">
+                {onDeleteLog && focusedActivity.id && (
                   <button
+                    type="button"
                     onClick={() => {
+                      triggerHaptic("medium");
                       setPendingDeleteLogId(focusedActivity.id!);
                     }}
-                    className="w-full py-3 bg-error/10 text-error rounded text-label-bold hover:bg-error/20 transition-colors"
+                    className="flex-1 min-h-[44px] py-3 bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/30 rounded-2xl font-bold text-sm hover:bg-[#FF453A]/25 transition-colors cursor-pointer"
                   >
                     {t("delete") || "Delete"}
                   </button>
                 )}
                 <button
-                  onClick={() => setIsSummaryModalOpen(false)}
-                  className="w-full py-3 bg-surface-variant text-on-surface rounded text-label-bold hover:opacity-90 transition-opacity"
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setIsSummaryModalOpen(false);
+                    setFocusedActivity(null);
+                  }}
+                  className="flex-1 min-h-[44px] py-3 bg-white/10 text-white rounded-2xl font-bold text-sm hover:bg-white/15 transition-colors cursor-pointer"
                 >
                   Close
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </AppleBottomSheet>
 
         {/* Next Workout Card */}
         {selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
@@ -1061,25 +1042,28 @@ export const Dashboard = React.memo(
             };
 
             return (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-stack-md">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {/* Stat Card Avg Duration */}
             {dashboardStats.includes("avg_duration") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("avg_duration")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("avg_duration")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <Clock className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <Clock className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <Clock className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("avg_duration") || "Avg Duration"}</p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("avg_duration") || "Avg Duration"}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {avgDurationMin}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">min</span>
+                    <span className="text-xs text-[#8E8E93] font-medium">min</span>
                   </p>
                 </div>
               </div>
@@ -1087,21 +1071,24 @@ export const Dashboard = React.memo(
             {/* Stat Card Total Sets Week */}
             {dashboardStats.includes("total_sets_week") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("total_sets_week")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("total_sets_week")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <Layers className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <Layers className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <Layers className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("sets_done") || "Sets Done"}</p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("sets_done") || "Sets Done"}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {totalSetsThisWeek}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">{t("this_week") || "this week"}</span>
+                    <span className="text-xs text-[#8E8E93] font-medium">{t("this_week") || "this week"}</span>
                   </p>
                 </div>
               </div>
@@ -1109,21 +1096,24 @@ export const Dashboard = React.memo(
             {/* Stat Card Best Volume */}
             {dashboardStats.includes("best_volume") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("best_volume")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("best_volume")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <TrendingUp className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <TrendingUp className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <TrendingUp className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">{t("best_session") || "Best Session"}</p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("best_session") || "Best Session"}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {bestVolumeSession >= 1000 ? (bestVolumeSession / 1000).toFixed(1) + "k" : (Math.round(bestVolumeSession * 10) / 10)}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">{unit.toLowerCase()}</span>
+                    <span className="text-xs text-[#8E8E93] font-medium">{unit.toLowerCase()}</span>
                   </p>
                 </div>
               </div>
@@ -1131,23 +1121,26 @@ export const Dashboard = React.memo(
             {/* Stat Card Weight */}
             {dashboardStats.includes("weight") && (
               <div
-                onClick={onUpdateWeight}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("weight")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  onUpdateWeight();
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("weight")}`}
               >
-                <div className="absolute -right-4 -top-4 text-secondary-container opacity-[0.03]">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <LucideLineChart className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-secondary-container relative z-10">
-                  <LucideLineChart className="w-5 h-5 group-hover:text-secondary-fixed transition-colors" />
-                  <ChevronRight className="w-4 h-4 group-hover:text-secondary-fixed transition-colors" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <LucideLineChart className="w-5 h-5 text-[#FF9F0A] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
                     {t("body_weight") || "Body Weight"}
                   </p>
-                  <p className="text-headline-md text-secondary-fixed">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-[#FF9F0A] tabular-nums tracking-tight">
                     {displayWeight}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">
+                    <span className="text-xs text-[#8E8E93] font-medium">
                       {unit.toLowerCase()}
                     </span>
                   </p>
@@ -1157,23 +1150,26 @@ export const Dashboard = React.memo(
             {/* Stat Card Volume */}
             {dashboardStats.includes("volume") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("volume")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("volume")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <Dumbbell className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <BarChart2 className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4 group-hover:text-primary-container transition-colors" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <BarChart2 className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
                     {t("total_volume") || "Total Volume"}
                   </p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {totalVolumeStr}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">
+                    <span className="text-xs text-[#8E8E93] font-medium">
                       {unit.toLowerCase()}
                     </span>
                   </p>
@@ -1183,23 +1179,26 @@ export const Dashboard = React.memo(
             {/* Stat Card PRs */}
             {dashboardStats.includes("prs") && (
               <div
-                onClick={() => setIsPRModalOpen(true)}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("prs")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  setIsPRModalOpen(true);
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("prs")}`}
               >
-                <div className="absolute -right-4 -top-4 text-primary-container opacity-[0.03]">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <Trophy className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-primary-container relative z-10">
-                  <Trophy className="w-5 h-5" />
-                  <ChevronRight className="w-4 h-4" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <Trophy className="w-5 h-5 text-[#FFD60A]" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
                     {t("personal_records") || "Personal Records"}
                   </p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-[#FFD60A] tabular-nums tracking-tight">
                     {totalPRs}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">
+                    <span className="text-xs text-[#8E8E93] font-medium">
                       Total
                     </span>
                   </p>
@@ -1209,23 +1208,26 @@ export const Dashboard = React.memo(
             {/* Stat Card Workouts */}
             {dashboardStats.includes("workouts_week") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("workouts_week")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("workouts_week")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <CheckCircle2 className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <CheckCircle2 className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4 group-hover:text-primary-container transition-colors" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <CheckCircle2 className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
                     {t("workouts") || "Workouts"}
                   </p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {workoutsThisWeek}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">
+                    <span className="text-xs text-[#8E8E93] font-medium">
                       {t("this_week") || "This Week"}
                     </span>
                   </p>
@@ -1235,23 +1237,26 @@ export const Dashboard = React.memo(
             {/* Stat Card Time */}
             {dashboardStats.includes("time_week") && (
               <div
-                onClick={() => navigateTo("progress")}
-                className={`bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-stack-md relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group ${getCardSpanClass("time_week")}`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("progress");
+                }}
+                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("time_week")}`}
               >
-                <div className="absolute -right-4 -top-4 text-surface-variant opacity-20">
+                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
                   <Clock className="w-20 h-20" fill="currentColor" />
                 </div>
-                <div className="flex justify-between items-center text-on-surface-variant relative z-10">
-                  <Clock className="w-5 h-5 group-hover:text-primary-container transition-colors" />
-                  <ChevronRight className="w-4 h-4 group-hover:text-primary-container transition-colors" />
+                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
+                  <Clock className="w-5 h-5 text-[#30D158] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
                 </div>
                 <div className="relative z-10">
-                  <p className="text-label-bold text-on-surface-variant uppercase mb-1">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
                     {t("duration") || "Total Time"}
                   </p>
-                  <p className="text-headline-md text-primary">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {Math.floor(durationThisWeek / 60)}{" "}
-                    <span className="text-body-md text-on-surface-variant font-normal">
+                    <span className="text-xs text-[#8E8E93] font-medium">
                       Min
                     </span>
                   </p>
@@ -1341,7 +1346,7 @@ export const Dashboard = React.memo(
                     >
                       <Bar
                         dataKey="volume"
-                        fill="#c3f400"
+                        fill="#30D158"
                         radius={[2, 2, 0, 0]}
                         maxBarSize={30}
                         isAnimationActive={false}
@@ -1378,129 +1383,116 @@ export const Dashboard = React.memo(
           />
         )}
 
-        {/* Customize Stats Modal */}
-        {isCustomizeStatsOpen && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="customize-stats-title"
-              className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden relative max-h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-container shrink-0">
-                <h2 id="customize-stats-title" className="text-xl font-bold text-primary mb-1 tracking-tight">
-                  Customize Stats
-                </h2>
-                <button
-                  aria-label="Close dashboard customization"
-                  onClick={() => setIsCustomizeStatsOpen(false)}
-                  className="text-on-surface-variant hover:text-primary transition-colors min-w-11 min-h-11 flex items-center justify-center rounded-full hover:bg-surface-variant"
+        {/* Customize Stats Sheet */}
+        <AppleBottomSheet
+          isOpen={isCustomizeStatsOpen}
+          onClose={() => setIsCustomizeStatsOpen(false)}
+          title="Customize Stats"
+          subtitle="Select the quick stats you want to display on your dashboard."
+        >
+          <div className="flex flex-col gap-2.5 pb-4">
+            {[
+              {
+                id: "avg_duration",
+                label: "Avg Workout Duration",
+                icon: <Clock className="w-5 h-5" />,
+              },
+              {
+                id: "total_sets_week",
+                label: "Sets Done This Week",
+                icon: <Layers className="w-5 h-5" />,
+              },
+              {
+                id: "best_volume",
+                label: "Best Session Volume",
+                icon: <TrendingUp className="w-5 h-5" />,
+              },
+              {
+                id: "weight",
+                label: "Body Weight",
+                icon: <LucideLineChart className="w-5 h-5" />,
+              },
+              {
+                id: "volume",
+                label: "Total Volume (All Time)",
+                icon: <Dumbbell className="w-5 h-5" />,
+              },
+              {
+                id: "prs",
+                label: "Personal Records",
+                icon: <Trophy className="w-5 h-5" />,
+              },
+              {
+                id: "workouts_week",
+                label: "Workouts This Week",
+                icon: <CheckCircle2 className="w-5 h-5" />,
+              },
+              {
+                id: "time_week",
+                label: "Total Time This Week",
+                icon: <Clock className="w-5 h-5" />,
+              },
+              {
+                id: "weight_chart",
+                label: "Body Weight Trend Chart",
+                icon: <TrendingUp className="w-5 h-5" />,
+              },
+              {
+                id: "volume_chart",
+                label: "Volume Trend Chart",
+                icon: <BarChart2 className="w-5 h-5" />,
+              },
+            ].map((stat) => {
+              const isActive = dashboardStats.includes(stat.id);
+              return (
+                <label
+                  key={stat.id}
+                  className={`flex items-center justify-between p-3.5 min-h-[52px] rounded-2xl border cursor-pointer transition-all active:scale-[0.99] ${
+                    isActive
+                      ? "apple-glass-card border-[#30D158]/40 text-white"
+                      : "bg-white/5 border-white/8 text-[#8E8E93] hover:bg-white/10"
+                  }`}
                 >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <div className="p-6 flex flex-col gap-4 overflow-y-auto">
-                <p className="text-body-sm text-on-surface-variant">
-                  Select the quick stats you want to display on your dashboard.
-                </p>
-
-                {[
-                  {
-                    id: "avg_duration",
-                    label: "Avg Workout Duration",
-                    icon: <Clock className="w-5 h-5" />,
-                  },
-                  {
-                    id: "total_sets_week",
-                    label: "Sets Done This Week",
-                    icon: <Layers className="w-5 h-5" />,
-                  },
-                  {
-                    id: "best_volume",
-                    label: "Best Session Volume",
-                    icon: <TrendingUp className="w-5 h-5" />,
-                  },
-                  {
-                    id: "weight",
-                    label: "Body Weight",
-                    icon: <LucideLineChart className="w-5 h-5" />,
-                  },
-                  {
-                    id: "volume",
-                    label: "Total Volume (All Time)",
-                    icon: <Dumbbell className="w-5 h-5" />,
-                  },
-                  {
-                    id: "prs",
-                    label: "Personal Records",
-                    icon: <Trophy className="w-5 h-5" />,
-                  },
-                  {
-                    id: "workouts_week",
-                    label: "Workouts This Week",
-                    icon: <CheckCircle2 className="w-5 h-5" />,
-                  },
-                  {
-                    id: "time_week",
-                    label: "Total Time This Week",
-                    icon: <Clock className="w-5 h-5" />,
-                  },
-                  {
-                    id: "weight_chart",
-                    label: "Body Weight Trend Chart",
-                    icon: <TrendingUp className="w-5 h-5" />,
-                  },
-                  {
-                    id: "volume_chart",
-                    label: "Volume Trend Chart",
-                    icon: <BarChart2 className="w-5 h-5" />,
-                  },
-                ].map((stat) => {
-                  const isActive = dashboardStats.includes(stat.id);
-                  return (
-                    <label
-                      key={stat.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${isActive ? "bg-primary-container/10 border-primary-container text-on-background" : "bg-surface border-surface-variant text-on-surface-variant hover:bg-surface-variant"}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`${isActive ? "text-primary" : "text-on-surface-variant"}`}
-                        >
-                          {stat.icon}
-                        </div>
-                        <span className="font-bold text-sm tracking-wide">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <div
-                        className={`w-10 h-5 rounded-full relative flex items-center shrink-0 transition-colors ${isActive ? "bg-primary-fixed" : "bg-surface-variant border border-outline-variant"}`}
-                      >
-                        <div
-                          className={`w-4 h-4 rounded-full absolute shadow-sm transition-all ${isActive ? "right-0.5 bg-on-primary-fixed" : "left-0.5 bg-on-surface-variant"}`}
-                        ></div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={isActive}
-                        onChange={() => {
-                          if (isActive) {
-                            setDashboardStats(
-                              dashboardStats.filter((id) => id !== stat.id),
-                            );
-                          } else {
-                            setDashboardStats([...dashboardStats, stat.id]);
-                          }
-                        }}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+                  <div className="flex items-center gap-3">
+                    <div className={isActive ? "text-[#30D158]" : "text-[#8E8E93]"}>
+                      {stat.icon}
+                    </div>
+                    <span className="font-semibold text-sm tracking-wide">
+                      {stat.label}
+                    </span>
+                  </div>
+                  {/* Apple Toggle Switch */}
+                  <div
+                    className={`w-12 h-7 rounded-full relative flex items-center shrink-0 transition-colors p-0.5 ${
+                      isActive ? "bg-[#30D158]" : "bg-white/20"
+                    }`}
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-200 ${
+                        isActive ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={isActive}
+                    onChange={() => {
+                      triggerHaptic("light");
+                      if (isActive) {
+                        setDashboardStats(
+                          dashboardStats.filter((id) => id !== stat.id),
+                        );
+                      } else {
+                        setDashboardStats([...dashboardStats, stat.id]);
+                      }
+                    }}
+                  />
+                </label>
+              );
+            })}
           </div>
-        )}
+        </AppleBottomSheet>
 
 
 

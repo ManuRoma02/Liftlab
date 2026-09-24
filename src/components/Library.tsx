@@ -179,10 +179,12 @@ export function Library({
               setFilter("All");
               setSelectedMuscle("All");
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
             aria-label="Clear search"
           >
-            <X className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+              <X className="w-3.5 h-3.5" />
+            </div>
           </button>
         )}
       </div>
@@ -279,7 +281,7 @@ export function Library({
               triggerHaptic("light");
               onOpenDetail(ex);
             }}
-            className="w-full text-left bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden flex hover:border-white/18 active:scale-[0.98] transition-all group cursor-pointer shadow-sm"
+            className="w-full text-left apple-glass-card rounded-3xl overflow-hidden flex hover:border-white/20 active:scale-[0.98] transition-all group cursor-pointer shadow-sm"
           >
             <div className="flex-shrink-0">
               <ExerciseMuscleVisual exercise={ex} className="w-24 h-24" />

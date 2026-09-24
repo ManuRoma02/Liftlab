@@ -102,11 +102,15 @@ export function AddExercise({
   return (
     <div className="bg-surface-container-lowest text-on-surface font-body-md min-h-screen pb-20 selection:bg-primary-container selection:text-on-primary-container">
       {/* TopAppBar */}
-      <header className="w-full top-0 sticky z-50 bg-surface border-b border-surface-variant flex items-center justify-between px-margin-mobile h-16">
+      <header
+        className="w-full top-0 sticky z-50 bg-surface/90 backdrop-blur-md border-b border-surface-variant flex items-center justify-between px-margin-mobile h-16"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="flex items-center gap-stack-md">
           <button
             onClick={onBack}
-            className="active:scale-95 transition-all text-primary-fixed p-2 hover:bg-surface-variant rounded-full"
+            className="active:scale-95 transition-all text-primary-fixed p-2 hover:bg-surface-variant rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Back"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -132,7 +136,7 @@ export function AddExercise({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-surface-container-low border border-surface-variant focus:border-primary-fixed focus:ring-1 focus:ring-primary-fixed rounded-xl px-4 py-4 text-on-surface font-body-lg transition-all outline-none placeholder:text-on-surface-variant/30"
+            className="w-full bg-surface-container-low border border-surface-variant focus:border-primary-fixed focus:ring-1 focus:ring-primary-fixed rounded-2xl px-4 py-4 text-on-surface font-body-lg transition-all outline-none placeholder:text-on-surface-variant/30 min-h-[44px]"
             placeholder="e.g. Incline Bench Press"
             type="text"
           />
@@ -148,7 +152,7 @@ export function AddExercise({
               <button
                 key={group}
                 onClick={() => setMuscleGroup(group)}
-                className={`px-5 py-2.5 rounded-full border font-bold text-sm transition-all active:scale-95 ${
+                className={`px-5 py-2.5 rounded-full border font-bold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
                   muscleGroup === group
                     ? "border-primary-fixed bg-primary-fixed text-[#000000]"
                     : "border-surface-variant text-on-surface-variant hover:bg-surface-variant"
@@ -170,7 +174,7 @@ export function AddExercise({
               <button
                 key={type}
                 onClick={() => setEquipment(type)}
-                className={`px-5 py-2.5 rounded-full border font-bold text-sm transition-all active:scale-95 ${
+                className={`px-5 py-2.5 rounded-full border font-bold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
                   equipment === type
                     ? "border-primary-fixed bg-primary-fixed text-[#000000]"
                     : "border-surface-variant text-on-surface-variant hover:bg-surface-variant"
@@ -187,11 +191,11 @@ export function AddExercise({
           <label className="font-bold text-xs text-on-surface-variant uppercase tracking-widest ml-1">
             {t("notes_long")}
           </label>
-          <div className="relative border-l-4 border-primary-fixed rounded-r-xl overflow-hidden shadow-[0_0_15px_rgba(195,244,0,0.05)]">
+          <div className="relative rounded-2xl overflow-hidden apple-glass-card">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-surface-container-low border border-surface-variant border-l-0 focus:ring-0 px-4 py-4 text-on-surface font-body-md transition-all outline-none"
+              className="w-full bg-surface-container-low/70 border border-surface-variant focus:border-primary-fixed rounded-2xl focus:ring-0 px-4 py-4 text-on-surface font-body-md transition-all outline-none"
               placeholder="Retract scapula, keep elbows at 45 degrees..."
               rows={4}
             ></textarea>
@@ -199,9 +203,9 @@ export function AddExercise({
         </section>
 
         {/* Image Upload Placeholder */}
-        <section className="bg-surface-container rounded-xl border-2 border-surface-variant border-dashed p-10 flex flex-col items-center justify-center text-on-surface-variant cursor-pointer hover:bg-surface-variant/30 transition-colors group">
-          <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-container/10 group-hover:text-primary transition-colors">
-            <Plus className="w-8 h-8" />
+        <section className="apple-glass-card rounded-2xl border border-surface-variant p-8 flex flex-col items-center justify-center text-on-surface-variant cursor-pointer hover:bg-surface-variant/30 transition-all active:scale-[0.98] group">
+          <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center mb-3 group-hover:bg-primary-container/10 group-hover:text-primary transition-colors">
+            <Plus className="w-7 h-7" />
           </div>
           <span className="font-bold text-sm uppercase tracking-widest">
             Upload Demo Photo/Video
@@ -216,10 +220,10 @@ export function AddExercise({
           <button
             disabled={!name}
             onClick={handleSave}
-            className={`w-full font-bold py-5 rounded-2xl uppercase tracking-tighter text-lg active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(195,244,0,0.2)] ${
+            className={`w-full font-bold py-4 rounded-2xl uppercase tracking-tighter text-base min-h-[50px] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(48,209,88,0.2)] ${
               !name
                 ? "opacity-40 bg-surface-variant text-on-surface-variant cursor-not-allowed"
-                : "bg-primary-fixed text-[#000000] hover:shadow-[0_0_40px_rgba(195,244,0,0.3)]"
+                : "bg-primary-fixed text-[#000000] hover:shadow-[0_0_40px_rgba(48,209,88,0.3)]"
             }`}
           >
             {t("create_exercise_upper")}

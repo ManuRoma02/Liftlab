@@ -65,7 +65,7 @@ export function ToastViewport() {
                 triggerHaptic("light");
                 setToasts((current) => current.filter((item) => item.id !== toast.id));
               }}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex min-h-[44px] min-w-[44px] h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer -mr-1"
               aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" aria-hidden="true" />

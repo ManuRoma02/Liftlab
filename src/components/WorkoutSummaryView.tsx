@@ -3,6 +3,7 @@ import { Trophy, Clock, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { getVolumeComparison, getWorkoutComparisonMetrics } from "../lib/workoutUtils";
 import { triggerHaptic } from "../lib/haptics";
+import { APPLE_SPRINGS } from "../lib/motion";
 
 export function WorkoutSummaryView({
   logData,
@@ -72,7 +73,13 @@ export function WorkoutSummaryView({
   );
 
   return (
-    <div className="bg-black text-white min-h-[100dvh] flex flex-col p-4 relative font-sans antialiased overflow-y-auto">
+    <div
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)",
+      }}
+      className="bg-black text-white min-h-[100dvh] flex flex-col px-4 relative font-sans antialiased overflow-y-auto"
+    >
       {/* Dynamic Background Effects */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -86,7 +93,7 @@ export function WorkoutSummaryView({
         <motion.div
           initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 18 }}
+          transition={APPLE_SPRINGS.bouncy}
           className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#30D158] to-[#64D2FF] p-0.5 shadow-[0_0_50px_rgba(48,209,88,0.35)]"
         >
           <div className="w-full h-full bg-[#1C1C1E] rounded-[22px] flex items-center justify-center text-[#30D158]">
@@ -98,7 +105,7 @@ export function WorkoutSummaryView({
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={APPLE_SPRINGS.criticallyDamped}
         >
           <div className="flex items-center justify-center gap-1.5 text-[#30D158] font-bold text-xs uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
@@ -116,10 +123,10 @@ export function WorkoutSummaryView({
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+          transition={APPLE_SPRINGS.criticallyDamped}
           className="grid grid-cols-2 gap-3 w-full"
         >
-          <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+          <div className="apple-glass-card rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
             <div className="absolute top-3.5 right-3.5 opacity-20 text-[#8E8E93]">
               <Clock className="w-5 h-5" />
             </div>
@@ -131,7 +138,7 @@ export function WorkoutSummaryView({
             </p>
           </div>
 
-          <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+          <div className="apple-glass-card rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
             <div className="absolute top-3.5 right-3.5 opacity-20 text-[#8E8E93]">
               <Dumbbell className="w-5 h-5" />
             </div>
@@ -148,8 +155,8 @@ export function WorkoutSummaryView({
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 w-full flex flex-col gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+          transition={APPLE_SPRINGS.criticallyDamped}
+          className="apple-glass-card rounded-3xl p-5 w-full flex flex-col gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
         >
           <div className="flex items-center justify-between border-b border-white/6 pb-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-[#30D158] flex items-center gap-1.5">
@@ -204,10 +211,10 @@ export function WorkoutSummaryView({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.55, type: "spring" }}
+            transition={APPLE_SPRINGS.criticallyDamped}
             className="w-full relative"
           >
-            <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
+            <div className="apple-glass-card rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
               <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
                 {t("total_volume") || "Total Volume"}
               </span>
@@ -244,10 +251,10 @@ export function WorkoutSummaryView({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.55, type: "spring" }}
+            transition={APPLE_SPRINGS.criticallyDamped}
             className="w-full relative"
           >
-            <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
+            <div className="apple-glass-card rounded-3xl p-6 flex flex-col items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
               <span className="text-[10px] text-[#8E8E93] font-bold uppercase tracking-wider mb-1">
                 {t("total_reps") || "Total Repetitions"}
               </span>
@@ -269,15 +276,15 @@ export function WorkoutSummaryView({
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, type: "spring", stiffness: 120 }}
-        className="pb-6 pt-2 px-4 w-full max-w-md mx-auto z-10 sticky bottom-0"
+        transition={APPLE_SPRINGS.criticallyDamped}
+        className="pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-2 px-4 w-full max-w-md mx-auto z-10 sticky bottom-0"
       >
         <button
           onClick={() => {
             triggerHaptic("success");
             onBack();
           }}
-          className="w-full bg-[#30D158] text-black font-extrabold text-base py-4 rounded-full shadow-[0_8px_24px_rgba(48,209,88,0.3)] hover:brightness-105 active:scale-95 transition-all cursor-pointer uppercase tracking-wider"
+          className="w-full bg-[#30D158] text-black font-extrabold text-base py-4 rounded-full shadow-[0_8px_24px_rgba(48,209,88,0.3)] hover:brightness-105 active:scale-95 transition-all cursor-pointer uppercase tracking-wider min-h-[44px]"
         >
           {t("finish_workout") || "Finish"}
         </button>

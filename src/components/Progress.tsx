@@ -415,7 +415,7 @@ export function Progress({
             setPickerTarget("best");
             setIsLiftPickerOpen(true);
           }}
-          className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group hover:border-white/18 transition-all cursor-pointer active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+          className="apple-glass-card rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all cursor-pointer active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
         >
           <div className="flex items-center justify-between text-[#8E8E93] mb-3">
             <div className="flex items-center gap-1.5">
@@ -439,7 +439,7 @@ export function Progress({
         </div>
 
         {/* Stat Card 2 - Workouts */}
-        <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="apple-glass-card rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-1.5 text-[#8E8E93] mb-3">
             <Calendar className="w-4 h-4 text-[#0A84FF]" strokeWidth={2} />
             <span className="text-[11px] font-bold uppercase tracking-wider">{t("workouts")}</span>
@@ -460,7 +460,7 @@ export function Progress({
             triggerHaptic("light");
             onUpdateWeight();
           }}
-          className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden hover:border-white/18 transition-all cursor-pointer active:scale-95 group shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+          className="apple-glass-card rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden hover:border-white/20 transition-all cursor-pointer active:scale-95 group shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
         >
           <div className="flex items-center justify-between text-[#8E8E93] mb-3">
             <div className="flex items-center gap-1.5">
@@ -485,7 +485,7 @@ export function Progress({
         </div>
 
         {/* Stat Card 4 - Volume */}
-        <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="apple-glass-card rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-1.5 text-[#8E8E93] mb-3">
             <Zap className="w-4 h-4 text-[#BF5AF2]" strokeWidth={2} />
             <span className="text-[11px] font-bold uppercase tracking-wider">{t("total_volume")}</span>
@@ -505,7 +505,7 @@ export function Progress({
       </div>
 
       {/* Personal Records Bento */}
-      <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+      <div className="apple-glass-card rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -573,14 +573,18 @@ export function Progress({
                   {pickerTarget.startsWith("record-") ? "Choose Record Exercise" : "Track Personal Record"}
                 </h3>
                 <button
+                  type="button"
                   onClick={() => {
                     triggerHaptic("light");
                     setIsLiftPickerOpen(false);
                     setLiftSearch("");
                   }}
-                  className="p-1.5 bg-white/10 hover:bg-white/15 rounded-full text-[#8E8E93] hover:text-white transition-colors"
+                  aria-label="Close lift picker"
+                  className="min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <div className="w-8 h-8 bg-white/10 hover:bg-white/15 rounded-full flex items-center justify-center">
+                    <X className="w-4 h-4" />
+                  </div>
                 </button>
               </div>
 
@@ -696,7 +700,7 @@ export function Progress({
       )}
 
       {/* Main Chart Area - Strength Progression */}
-      <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+      <div className="apple-glass-card rounded-3xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">
@@ -831,7 +835,7 @@ export function Progress({
       {/* Secondary Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Volume Trend */}
-        <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="apple-glass-card rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <h3 className="font-bold text-white text-sm mb-0.5">
             {t("volume_trend")}
           </h3>
@@ -885,7 +889,7 @@ export function Progress({
         </div>
 
         {/* Muscle Volume Breakdown */}
-        <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="apple-glass-card rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <h3 className="font-bold text-white text-sm mb-0.5">
             Muscle Volume Breakdown
           </h3>
@@ -934,7 +938,7 @@ export function Progress({
         </div>
 
         {/* Body Composition / Weight */}
-        <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <div className="apple-glass-card rounded-3xl p-5 sm:p-6 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <div className="flex justify-between items-start mb-0.5">
             <div>
               <h3 className="font-bold text-white text-sm">
@@ -1021,7 +1025,7 @@ export function Progress({
       </div>
 
       {/* Workout History List */}
-      <div className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+      <div className="apple-glass-card rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">

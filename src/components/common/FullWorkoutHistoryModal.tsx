@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Search, X, ChevronDown, ChevronUp, Trash2, Dumbbell } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { ConfirmModal } from "./ConfirmModal";
 import { getWorkoutLogDurationMinutes } from "../../lib/workoutUtils";
 import { triggerHaptic } from "../../lib/haptics";
+import { APPLE_SPRINGS } from "../../lib/motion";
 
 export interface FullWorkoutHistoryModalProps {
   isOpen: boolean;
@@ -89,48 +91,65 @@ export function FullWorkoutHistoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4">
-      <div className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-        {/* Header */}
-        <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#30D158]/15 border border-[#30D158]/25 rounded-2xl flex items-center justify-center text-[#30D158]">
-              <Calendar className="w-5 h-5" />
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label={tr("full_workout_history", "Full Workout History")}
+          initial={{ opacity: 0, scale: 0.94, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 15 }}
+          transition={APPLE_SPRINGS.criticallyDamped}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+        >
+          {/* Header */}
+          <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#30D158]/15 border border-[#30D158]/25 rounded-2xl flex items-center justify-center text-[#30D158]">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base md:text-lg text-white tracking-tight">
+                  {tr("full_workout_history", "Full Workout History")}
+                </h3>
+                <p className="text-xs text-[#8E8E93]">
+                  {filteredLogs.length} {filteredLogs.length === 1 ? "workout" : "workouts"} logged
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-base md:text-lg text-white tracking-tight">
-                {tr("full_workout_history", "Full Workout History")}
-              </h3>
-              <p className="text-xs text-[#8E8E93]">
-                {filteredLogs.length} {filteredLogs.length === 1 ? "workout" : "workouts"} logged
-              </p>
-            </div>
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                onClose();
+              }}
+              className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              onClose();
-            }}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* Search Bar */}
-        <div className="px-5 py-3 border-b border-white/6 shrink-0 bg-black/20">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
-            <input
-              type="text"
-              placeholder={tr("search_workout_or_exercise", "Search workout or exercise...")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
-            />
+          {/* Search Bar */}
+          <div className="px-5 py-3 border-b border-white/6 shrink-0 bg-black/20">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+              <input
+                type="text"
+                placeholder={tr("search_workout_or_exercise", "Search workout or exercise...")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full min-h-[44px] bg-black/40 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
+              />
+            </div>
           </div>
-        </div>
 
         {/* Logs List */}
         <div className="p-4 md:p-5 overflow-y-auto custom-scrollbar flex flex-col gap-2.5 flex-1">
@@ -221,7 +240,7 @@ export function FullWorkoutHistoryModal({
                             triggerHaptic("warning");
                             setPendingDeleteLogId(logId);
                           }}
-                          className="p-2 rounded-xl text-[#8E8E93] hover:text-[#FF453A] hover:bg-white/5 transition-colors cursor-pointer"
+                          className="min-w-[44px] min-h-[44px] p-2 rounded-xl text-[#8E8E93] hover:text-[#FF453A] hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-center"
                           title="Delete workout log"
                           aria-label="Delete workout log"
                         >
@@ -271,7 +290,7 @@ export function FullWorkoutHistoryModal({
             })
           )}
         </div>
-      </div>
+      </motion.div>
 
       {pendingDeleteLogId && onDeleteWorkoutLog && (
         <ConfirmModal
@@ -286,6 +305,7 @@ export function FullWorkoutHistoryModal({
           onCancel={() => setPendingDeleteLogId(null)}
         />
       )}
-    </div>
+    </motion.div>
+  </AnimatePresence>
   );
 }

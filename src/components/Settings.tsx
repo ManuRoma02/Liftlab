@@ -36,15 +36,19 @@ function AppleSwitch({
         triggerHaptic("light");
         onChange(!checked);
       }}
-      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer relative shrink-0 focus:outline-none ${
-        checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
-      }`}
+      className="min-w-[44px] min-h-[44px] flex items-center justify-center p-0 bg-transparent border-none cursor-pointer select-none"
     >
       <div
-        className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-          checked ? "translate-x-5" : "translate-x-0"
+        className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative shrink-0 ${
+          checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
         }`}
-      />
+      >
+        <div
+          className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+            checked ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </div>
     </button>
   );
 }
@@ -94,14 +98,17 @@ export function Settings({
 
   return (
     <div className="bg-black text-white min-h-[100dvh] antialiased flex flex-col w-full pb-24">
-      {/* iOS Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 h-14 px-4 flex items-center justify-between">
+      {/* iOS Top Navigation Bar with Safe Area Inset */}
+      <header
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] px-4 flex items-center justify-between"
+      >
         <button
           onClick={() => {
             triggerHaptic("light");
             onBack();
           }}
-          className="flex items-center gap-1 text-[#30D158] font-medium text-base hover:opacity-80 active:opacity-60 transition-opacity cursor-pointer"
+          className="min-w-[44px] min-h-[44px] px-2 flex items-center gap-1 text-[#30D158] font-medium text-base hover:opacity-80 active:opacity-60 transition-opacity cursor-pointer"
           aria-label={t("go_back") || "Go back"}
         >
           <ChevronLeft className="w-5 h-5 -ml-1.5" />
@@ -242,18 +249,18 @@ export function Settings({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-2 py-1 shrink-0">
+              <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-full p-0.5 shrink-0">
                 <button
                   onClick={() => {
                     triggerHaptic("light");
                     setRestTimer(Math.max(0, restTimer - 15));
                   }}
                   aria-label="Decrease rest timer by 15 seconds"
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-bold text-white w-10 text-center tabular-nums">
+                <span className="text-sm font-bold text-white min-w-10 text-center tabular-nums">
                   {restTimer}s
                 </span>
                 <button
@@ -262,7 +269,7 @@ export function Settings({
                     setRestTimer(restTimer + 15);
                   }}
                   aria-label="Increase rest timer by 15 seconds"
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                 </button>

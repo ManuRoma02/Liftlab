@@ -48,14 +48,17 @@ export function ExerciseDetails({
 
   return (
     <div className="bg-black text-white min-h-[100dvh] pb-24 flex flex-col font-sans antialiased">
-      {/* iOS Top Navigation Bar */}
-      <header className="sticky top-0 w-full z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 h-14">
+      {/* iOS Top Navigation Bar with Safe Area Inset */}
+      <header
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        className="sticky top-0 w-full z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))]"
+      >
         <button
           onClick={() => {
             triggerHaptic("light");
             onBack();
           }}
-          className="flex items-center gap-1 text-[#30D158] font-medium text-base hover:opacity-80 active:opacity-60 transition-opacity cursor-pointer shrink-0"
+          className="min-w-[44px] min-h-[44px] px-2 flex items-center gap-1 text-[#30D158] font-medium text-base hover:opacity-80 active:opacity-60 transition-opacity cursor-pointer shrink-0"
         >
           <ChevronLeft className="w-5 h-5 -ml-1.5" />
           <span>{t("cancel") || "Back"}</span>
@@ -72,7 +75,7 @@ export function ExerciseDetails({
                 triggerHaptic("medium");
                 onAddExercise(ex);
               }}
-              className="bg-[#30D158] text-black font-bold text-xs px-3.5 py-1.5 rounded-full hover:brightness-105 active:scale-95 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+              className="min-h-[44px] bg-[#30D158] text-black font-bold text-xs px-4 py-2 rounded-full hover:brightness-105 active:scale-95 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Add
             </button>
@@ -85,7 +88,7 @@ export function ExerciseDetails({
                 "_blank",
               );
             }}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-all flex items-center justify-center text-white cursor-pointer"
+            className="min-w-[44px] min-h-[44px] rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-all flex items-center justify-center text-white cursor-pointer"
             title="Watch tutorial on YouTube"
           >
             <Youtube className="w-4 h-4 text-red-400" />
@@ -127,7 +130,7 @@ export function ExerciseDetails({
         {/* Bento Layout for Details */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Visual Card (Animated Demo / Muscle Anatomy Toggle) */}
-          <div className="md:col-span-1 bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden flex flex-col min-h-[260px] relative shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+          <div className="md:col-span-1 apple-glass-card rounded-3xl overflow-hidden flex flex-col min-h-[260px] relative shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between p-3 border-b border-white/6 bg-black/20">
               <div className="flex bg-black/40 rounded-full p-0.5 border border-white/10 text-xs font-semibold">
                 <button
@@ -186,7 +189,7 @@ export function ExerciseDetails({
           <AccordionItem
             title={t("technical_cues")}
             icon={<Zap className="w-5 h-5 text-[#30D158]" />}
-            className="md:col-span-3 border-l-4 border-l-[#30D158] bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="md:col-span-3 apple-glass-card rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
             defaultOpen={true}
           >
             <ul className="space-y-3.5 mt-2">
@@ -208,7 +211,7 @@ export function ExerciseDetails({
           </AccordionItem>
 
           {/* Personal Records Card */}
-          <div className="md:col-span-2 bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+          <div className="md:col-span-2 apple-glass-card rounded-3xl p-5 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-5 h-5 text-[#FF9F0A]" />

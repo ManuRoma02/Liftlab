@@ -403,7 +403,7 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-3 w-full">
                   <button
                     onClick={() => setIsWeightModalOpen(false)}
-                    className="py-3 px-5 rounded-full bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all font-semibold text-sm"
+                    className="min-h-[44px] py-3 px-5 rounded-full bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all font-semibold text-sm flex items-center justify-center cursor-pointer"
                   >
                     {t("cancel") || "Skip"}
                   </button>
@@ -413,7 +413,7 @@ export default function App() {
                       handleUpdateWeight();
                     }}
                     disabled={!Number.isFinite(Number(weightInput)) || Number(weightInput) <= 0 || Number(weightInput) > 1000}
-                    className="py-3 px-5 bg-[#30D158] text-black rounded-full font-bold text-sm tracking-tight hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(48,209,88,0.3)]"
+                    className="min-h-[44px] py-3 px-5 bg-[#30D158] text-black rounded-full font-bold text-sm tracking-tight hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center cursor-pointer"
                   >
                     {t("save") || "Save"}
                   </button>
@@ -655,7 +655,7 @@ export default function App() {
                     handleConfirmEmptySave(true);
                   }}
                   disabled={isConfirming}
-                  className={`w-full bg-[#30D158] text-black font-bold py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all text-sm tracking-tight shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center gap-2 ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`w-full min-h-[44px] bg-[#30D158] text-black font-bold py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all text-sm tracking-tight shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center gap-2 cursor-pointer ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isConfirming ? (
                     <>
@@ -672,7 +672,7 @@ export default function App() {
                     handleConfirmEmptySave(false);
                   }}
                   disabled={isConfirming}
-                  className={`w-full bg-white/10 text-white font-semibold py-3.5 rounded-full hover:bg-white/15 text-sm tracking-tight active:scale-95 transition-all ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`w-full min-h-[44px] bg-white/10 text-white font-semibold py-3.5 rounded-full hover:bg-white/15 text-sm tracking-tight active:scale-95 transition-all cursor-pointer flex items-center justify-center ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {t("log_only")}
                 </button>

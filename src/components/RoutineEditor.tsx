@@ -1228,21 +1228,31 @@ export function RoutineEditor({
                 <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   {t("rest_duration")}
                 </span>
-                <div className="flex items-center gap-2 bg-black/30 border border-white/10 rounded-full flex-wrap px-1 py-1">
+                <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-full p-0.5 shrink-0">
                   <button
-                    onClick={() => setRestTimer?.(Math.max(0, restTimer - 15))}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setRestTimer?.(Math.max(0, restTimer - 15));
+                    }}
+                    aria-label="Decrease rest timer by 15 seconds"
+                    className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Minus className="w-3 h-3" />
+                    <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className="font-bold text-xs w-8 text-center text-primary">
+                  <span className="font-bold text-xs min-w-8 text-center text-primary tabular-nums">
                     {restTimer}s
                   </span>
                   <button
-                    onClick={() => setRestTimer?.(restTimer + 15)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setRestTimer?.(restTimer + 15);
+                    }}
+                    aria-label="Increase rest timer by 15 seconds"
+                    className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -1250,7 +1260,7 @@ export function RoutineEditor({
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                   {t("time_elapsed")}
                 </span>
-                <span className="font-[var(--font-stats-xl)] text-[24px] font-black tracking-tight leading-none h-8">
+                <span className="font-[var(--font-stats-xl)] text-[24px] font-black tracking-tight leading-none h-8 tabular-nums">
                   {formatTime(elapsed)}
                 </span>
               </div>
@@ -1306,7 +1316,7 @@ export function RoutineEditor({
                     transition={{ duration: 0.16, ease: "easeOut" }}
                     className="relative z-10 w-full"
                   >
-                    <div className="premium-panel rounded-2xl p-stack-lg relative transition-all duration-200 hover:border-primary-fixed/35 hover:shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
+                    <div className="apple-glass-card rounded-3xl p-stack-lg relative transition-all duration-200 hover:border-white/20 hover:shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
                       {/* Header */}
                       <div className="flex justify-between items-start mb-stack-md">
                         <div className="flex items-center gap-stack-md">
@@ -1326,8 +1336,11 @@ export function RoutineEditor({
                               />
                               <button
                                 type="button"
-                                onClick={() => openPlateCalculator(ex)}
-                                className="text-on-surface-variant hover:text-primary-fixed p-1.5 transition-colors active:scale-90 cursor-pointer rounded-lg hover:bg-white/5 shrink-0 mb-1"
+                                onClick={() => {
+                                  triggerHaptic("light");
+                                  openPlateCalculator(ex);
+                                }}
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary-fixed transition-colors active:scale-90 cursor-pointer rounded-xl hover:bg-white/5 shrink-0 mb-1"
                                 title={t("plate_calculator") || "Plate Calculator"}
                                 aria-label="Open plate calculator"
                               >
@@ -1339,7 +1352,7 @@ export function RoutineEditor({
                                 {ex.category || "General"}
                               </span>
                               <span className="text-white/20">•</span>
-                              <span className="text-on-surface-variant font-mono">
+                              <span className="text-on-surface-variant font-sans font-semibold tabular-nums">
                                 ⏱ {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s rest
                               </span>
                             </div>
@@ -1606,7 +1619,7 @@ export function RoutineEditor({
                                                 reps: set.reps !== "" ? set.reps : targetR,
                                               });
                                             }}
-                                            className="group inline-flex items-center gap-0.5 bg-surface-variant/40 hover:bg-primary-fixed/20 text-on-surface px-1.5 py-0.5 rounded text-[11px] font-bold font-mono border border-white/5 hover:border-primary-fixed/40 transition-colors cursor-pointer active:scale-95 shadow-inner"
+                                            className="group inline-flex items-center gap-0.5 bg-surface-variant/40 hover:bg-primary-fixed/20 text-on-surface px-1.5 py-0.5 rounded text-[11px] font-bold font-sans tabular-nums border border-white/5 hover:border-primary-fixed/40 transition-colors cursor-pointer active:scale-95 shadow-inner"
                                             title={`Scorsa volta: ${prevW}×${prevR}. Tocca per compilare target (${targetW}×${targetR})`}
                                           >
                                             <span>{prevW}<span className="text-primary-fixed/80 mx-0.5">×</span>{prevR}</span>
@@ -1625,22 +1638,26 @@ export function RoutineEditor({
                                         </div>
                                       );
                                     }
-                                    return <span className="text-xs opacity-30 font-mono">-</span>;
+                                    return <span className="text-xs opacity-30 font-sans tabular-nums">-</span>;
                                   })()}
                                 </div>
                                 <div className="col-span-3 relative flex items-center">
                                   {mode === "live" && !isBodyweightExercise(ex) && (
                                     <button
                                       type="button"
-                                      onClick={() => adjustSetWeight(ex.id, set.id, -2.5)}
-                                      className="absolute left-0.5 z-10 w-4 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90"
+                                      onClick={() => {
+                                        triggerHaptic("light");
+                                        adjustSetWeight(ex.id, set.id, -2.5);
+                                      }}
+                                      className="absolute left-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
                                       title="-2.5"
+                                      aria-label="Decrease weight"
                                     >
                                       -
                                     </button>
                                   )}
                                   <input
-                                    className={`w-full bg-black/40 border border-white/10 rounded-lg text-on-surface text-center py-2 ${mode === "live" && !isBodyweightExercise(ex) ? "px-4" : "px-1"} text-sm font-bold font-mono focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
+                                    className={`w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 ${mode === "live" && !isBodyweightExercise(ex) ? "px-6" : "px-2"} text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
                                     placeholder={isBodyweightExercise(ex) ? "BW" : unit}
                                     type="text"
                                     inputMode="decimal"
@@ -1659,9 +1676,13 @@ export function RoutineEditor({
                                   {mode === "live" && !isBodyweightExercise(ex) && (
                                     <button
                                       type="button"
-                                      onClick={() => adjustSetWeight(ex.id, set.id, 2.5)}
-                                      className="absolute right-0.5 z-10 w-4 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90"
+                                      onClick={() => {
+                                        triggerHaptic("light");
+                                        adjustSetWeight(ex.id, set.id, 2.5);
+                                      }}
+                                      className="absolute right-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
                                       title="+2.5"
+                                      aria-label="Increase weight"
                                     >
                                       +
                                     </button>
@@ -1671,15 +1692,19 @@ export function RoutineEditor({
                                   {mode === "live" && (
                                     <button
                                       type="button"
-                                      onClick={() => adjustSetReps(ex.id, set.id, -1)}
-                                      className="absolute left-0.5 z-10 w-4 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90"
+                                      onClick={() => {
+                                        triggerHaptic("light");
+                                        adjustSetReps(ex.id, set.id, -1);
+                                      }}
+                                      className="absolute left-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
                                       title="-1"
+                                      aria-label="Decrease reps"
                                     >
                                       -
                                     </button>
                                   )}
                                   <input
-                                    className={`w-full bg-black/40 border border-white/10 rounded-lg text-on-surface text-center py-2 ${mode === "live" ? "px-4" : "px-1"} text-sm font-bold font-mono focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
+                                    className={`w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 ${mode === "live" ? "px-6" : "px-2"} text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
                                     placeholder={isTimedExercise(ex) ? "Secs" : "Reps"}
                                     type="text"
                                     inputMode="decimal"
@@ -1698,9 +1723,13 @@ export function RoutineEditor({
                                   {mode === "live" && (
                                     <button
                                       type="button"
-                                      onClick={() => adjustSetReps(ex.id, set.id, 1)}
-                                      className="absolute right-0.5 z-10 w-4 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90"
+                                      onClick={() => {
+                                        triggerHaptic("light");
+                                        adjustSetReps(ex.id, set.id, 1);
+                                      }}
+                                      className="absolute right-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
                                       title="+1"
+                                      aria-label="Increase reps"
                                     >
                                       +
                                     </button>
@@ -1709,7 +1738,7 @@ export function RoutineEditor({
                                 {showRpe && (
                                   <div className="col-span-2">
                                     <input
-                                      className="w-full bg-black/40 border border-white/10 rounded-lg text-on-surface text-center py-2 px-1 text-sm font-bold font-mono focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner"
+                                      className="w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner"
                                       placeholder="RPE"
                                       type="text"
                                       inputMode="decimal"

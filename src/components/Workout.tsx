@@ -244,13 +244,17 @@ export function Workout({
           />
           {routineSearch.length > 0 && (
             <button
+              type="button"
               onClick={() => {
                 triggerHaptic("light");
                 setRoutineSearch("");
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Clear routine search"
+              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                <X className="w-3.5 h-3.5" />
+              </div>
             </button>
           )}
         </div>
@@ -330,7 +334,7 @@ export function Workout({
           filteredRoutines.map((routine) => (
             <article
               key={routine.id}
-              className={`bg-[#1C1C1E] border border-white/8 rounded-3xl flex flex-col justify-between p-5 hover:border-white/15 active:scale-[0.99] transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
+              className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 active:scale-[0.98] transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
                 activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
               }`}
             >
@@ -367,7 +371,7 @@ export function Workout({
                         triggerHaptic("light");
                         onToggleFavoriteRoutine(routine.id);
                       }}
-                      className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer active:scale-90 ${
+                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors cursor-pointer active:scale-90 ${
                         routine.favorite
                           ? "text-[#30D158] bg-[#30D158]/15"
                           : "text-[#8E8E93] hover:text-[#30D158] hover:bg-white/5"
@@ -387,7 +391,7 @@ export function Workout({
                       aria-label={`Actions for ${routine.name || "routine"}`}
                       aria-expanded={activeMenuId === routine.id}
                       aria-haspopup="menu"
-                      className="w-9 h-9 text-[#8E8E93] hover:text-white transition-colors p-1 relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
+                      className="min-w-[44px] min-h-[44px] text-[#8E8E93] hover:text-white transition-colors relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -453,7 +457,7 @@ export function Workout({
                     onSelectRoutine(routine.id);
                     navigateTo("routine_editor");
                   }}
-                  className="min-h-10 border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full active:scale-95 transition-all cursor-pointer text-center"
+                  className="min-h-[44px] border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full active:scale-95 transition-all cursor-pointer text-center"
                 >
                   EDIT
                 </button>
@@ -463,7 +467,7 @@ export function Workout({
                     triggerHaptic("medium");
                     onStartLiveWorkout(routine.id);
                   }}
-                  className="min-h-10 bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 active:scale-95 transition-all cursor-pointer text-center shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
+                  className="min-h-[44px] bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 active:scale-95 transition-all cursor-pointer text-center shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
                 >
                   START
                 </button>
