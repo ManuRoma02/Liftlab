@@ -23,6 +23,15 @@ assert.ok(it.no_log_day, "no_log_day should exist in IT");
 assert.ok(it.welcome_title, "welcome_title should exist in IT");
 assert.ok(it.progress_preview_title, "progress_preview_title should exist in IT");
 assert.ok(it.workout_guide_title, "workout_guide_title should exist in IT");
+assert.equal(it.history, "Storico");
+assert.equal(it.workout_singular, "allenamento");
+assert.equal(it.workouts_plural, "allenamenti");
+assert.equal(it.weekly_goal, "Obiettivo Settimanale");
+assert.equal(it.recommended, "Consigliata per oggi");
+assert.equal(it.freestyle, "Libero");
+assert.equal(it.workout_history, "Storico Allenamenti");
+assert.equal(it.total, "Totale");
+assert.equal(it.last_35_days, "Ultimi 35 Giorni");
 
 // English verification
 const en = translations.en;
@@ -32,6 +41,15 @@ assert.equal(en.keep_workout_btn, "Keep Workout");
 assert.equal(en.exit_workout, "Discard");
 assert.ok(en.no_log_day, "no_log_day should exist in EN");
 assert.ok(en.welcome_title, "welcome_title should exist in EN");
+assert.equal(en.history, "History");
+assert.equal(en.workout_singular, "workout");
+assert.equal(en.workouts_plural, "workouts");
+assert.equal(en.weekly_goal, "Weekly Goal");
+assert.equal(en.recommended, "Recommended for today");
+assert.equal(en.freestyle, "Freestyle");
+assert.equal(en.workout_history, "Workout History");
+assert.equal(en.total, "Total");
+assert.equal(en.last_35_days, "Last 35 Days");
 
 // Spanish verification
 const es = translations.es;
@@ -41,5 +59,14 @@ assert.equal(es.keep_workout_btn, "Mantener entrenamiento");
 assert.equal(es.exit_workout, "Descartar");
 assert.ok(es.no_log_day, "no_log_day should exist in ES");
 assert.ok(es.welcome_title, "welcome_title should exist in ES");
+assert.equal(es.history, "Historial");
+assert.equal(es.workout_singular, "entrenamiento");
+assert.equal(es.workouts_plural, "entrenamientos");
+assert.equal(es.weekly_goal, "Objetivo Semanal");
+assert.equal(es.recommended, "Recomendada para hoy");
+assert.equal(es.freestyle, "Libre");
+assert.equal(es.workout_history, "Historial de Entrenamientos");
+assert.equal(es.total, "Total");
+assert.equal(es.last_35_days, "Últimos 35 Días");
 
 console.log("Translations tests passed!");

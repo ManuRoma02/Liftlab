@@ -19,7 +19,6 @@ import {
   LineChart as LucideLineChart,
   Plus,
   Play,
-  Sparkles,
 } from "lucide-react";
 import {
   AreaChart,
