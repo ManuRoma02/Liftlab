@@ -18,6 +18,8 @@ import {
   BarChart2,
   LineChart as LucideLineChart,
   Plus,
+  Play,
+  Sparkles,
 } from "lucide-react";
 import {
   AreaChart,
@@ -75,6 +77,7 @@ export const Dashboard = React.memo(
     weeklyGoal,
     setWeeklyGoal,
     onDeleteLog,
+    userName: userNameProp,
   }: {
     t: any;
     unit: string;
@@ -93,7 +96,22 @@ export const Dashboard = React.memo(
     weeklyGoal: number;
     setWeeklyGoal: (n: number) => void;
     onDeleteLog?: (id: string) => void;
+    userName?: string;
   }) => {
+    const userName = userNameProp || (() => {
+      try {
+        const raw = localStorage.getItem("liftlab_guest_data");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.displayName && parsed.displayName !== "Guest" && parsed.displayName !== "User") {
+            return parsed.displayName;
+          }
+        }
+      } catch {}
+      return undefined;
+    })();
+    const welcomeBase = (t("welcome_title") || "Benvenuto su LiftLab").replace(/[!¡]/g, "").trim();
+
     const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
     const hasTodayWorkout = hasWorkoutLoggedOnDay(workoutLogs, new Date());
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -408,13 +426,13 @@ export const Dashboard = React.memo(
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158]">
-                Dashboard
+                {t("dashboard")}
               </p>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.025em] leading-none">
                 LiftLab
               </h1>
               <p className="text-xs text-[#8E8E93] mt-0.5">
-                {days[selectedDayIndex].full} training calendar
+                {(t("training_calendar_day") || "Calendario: {day}").replace("{day}", days[selectedDayIndex].full)}
               </p>
             </div>
             <button
@@ -436,8 +454,8 @@ export const Dashboard = React.memo(
               </h2>
               <span className="text-xs font-semibold text-[#30D158]">
                 {selectedActivities.length > 0
-                  ? `${selectedActivities.length} logged`
-                  : "No log"}
+                  ? (t("logged_count") || "{count} completati").replace("{count}", String(selectedActivities.length))
+                  : (t("no_log_day") || "Nessun allenamento")}
               </span>
             </div>
             <div className="flex justify-between items-center w-full gap-1.5">
@@ -516,7 +534,7 @@ export const Dashboard = React.memo(
             <div className="flex items-center justify-between z-10">
               <div className="flex items-center gap-1.5 text-[#8E8E93]">
                 <Calendar className="w-4 h-4 text-[#30D158]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">History</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">{(t("history") !== "history" && t("history")) || "Storico"}</span>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
             </div>
@@ -528,11 +546,13 @@ export const Dashboard = React.memo(
                 {workoutLogs.length}
               </span>
               <span className="text-xs text-[#8E8E93] font-medium mb-1.5">
-                {workoutLogs.length === 1 ? "log" : "logs"}
+                {workoutLogs.length === 1
+                  ? ((t("workout_singular") !== "workout_singular" && t("workout_singular")) || "allenamento")
+                  : ((t("workouts_plural") !== "workouts_plural" && t("workouts_plural")) || "allenamenti")}
               </span>
             </div>
             <p className="text-[11px] text-[#8E8E93] leading-tight z-10">
-              Workout history saved locally
+              {t("history_saved_local") || "Storico salvato sul dispositivo"}
             </p>
           </button>
 
@@ -551,7 +571,7 @@ export const Dashboard = React.memo(
             <div className="flex items-center justify-between z-10">
               <div className="flex items-center gap-1.5 text-[#8E8E93]">
                 <Target className="w-4 h-4 text-[#0A84FF]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">Weekly Goal</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">{(t("weekly_goal") !== "weekly_goal" && t("weekly_goal")) || "Obiettivo Settimanale"}</span>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
             </div>
@@ -577,7 +597,9 @@ export const Dashboard = React.memo(
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-semibold text-white">
-                  {goalProgress >= 1 ? "Goal reached!" : `${weeklyGoal - workoutsThisWeek} left`}
+                  {goalProgress >= 1
+                    ? (t("goal_reached_badge") || "Obiettivo raggiunto!")
+                    : (t("workouts_left") || "{count} rimanenti").replace("{count}", String(weeklyGoal - workoutsThisWeek))}
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: weeklyGoal }).map((_, i) => (
@@ -587,7 +609,9 @@ export const Dashboard = React.memo(
                     />
                   ))}
                 </div>
-                <span className="text-[10px] text-[#8E8E93]">{Math.round(goalProgress * 100)}% this week</span>
+                <span className="text-[10px] text-[#8E8E93]">
+                  {(t("percent_this_week") || "{percent}% questa settimana").replace("{percent}", String(Math.round(goalProgress * 100)))}
+                </span>
               </div>
             </div>
           </button>
@@ -597,7 +621,7 @@ export const Dashboard = React.memo(
         <AppleBottomSheet
           isOpen={isStreakModalOpen}
           onClose={() => setIsStreakModalOpen(false)}
-          title="Workout History"
+          title={(t("workout_history") !== "workout_history" && t("workout_history")) || (t("history") !== "history" && t("history")) || "Workout History"}
         >
           {(() => {
             const today = new Date();
@@ -613,9 +637,9 @@ export const Dashboard = React.memo(
               <div className="flex flex-col gap-5 pb-4">
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: "Total", value: workoutLogs.length, unit: "logs" },
-                    { label: "Last 35 Days", value: workoutsLast35, unit: "sessions" },
-                    { label: "This Week", value: workoutsThisWeek, unit: "sessions" },
+                    { label: (t("total") !== "total" && t("total")) || "Total", value: workoutLogs.length, unit: workoutLogs.length === 1 ? ((t("workout_singular") !== "workout_singular" && t("workout_singular")) || "log") : ((t("workouts_plural") !== "workouts_plural" && t("workouts_plural")) || "logs") },
+                    { label: (t("last_35_days") !== "last_35_days" && t("last_35_days")) || "Last 35 Days", value: workoutsLast35, unit: "sessions" },
+                    { label: t("this_week") || "This Week", value: workoutsThisWeek, unit: "sessions" },
                   ].map((s) => (
                     <div key={s.label} className="apple-glass-card rounded-2xl p-3 text-center">
                       <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-1">{s.label}</p>
@@ -655,7 +679,7 @@ export const Dashboard = React.memo(
                   })()}
                 </div>
                 <p className="text-center text-[11px] text-[#8E8E93] mt-2 opacity-70">
-                  Green = workout day • Last 35 days shown
+                  {t("green_workout_legend") || "Green = workout day • Last 35 days shown"}
                 </p>
               </div>
             );
@@ -666,7 +690,7 @@ export const Dashboard = React.memo(
         <AppleBottomSheet
           isOpen={isGoalModalOpen}
           onClose={() => setIsGoalModalOpen(false)}
-          title="Weekly Goal"
+          title={(t("weekly_goal") !== "weekly_goal" && t("weekly_goal")) || "Weekly Goal"}
         >
           {(() => {
             const pastWeeks: number[] = [];
@@ -689,7 +713,7 @@ export const Dashboard = React.memo(
             return (
               <div className="flex flex-col gap-4 pb-4">
                 <div className="apple-glass-card rounded-2xl p-4">
-                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">This Week</p>
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">{t("this_week") || "This Week"}</p>
                   <div className="flex items-center gap-3">
                     <div className="relative w-16 h-16 flex-shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
@@ -709,15 +733,19 @@ export const Dashboard = React.memo(
                     </div>
                     <div>
                       <p className="font-bold text-white text-base">
-                        {workoutsThisWeek >= editableGoal ? "Goal reached! 🎉" : `${editableGoal - workoutsThisWeek} workout${editableGoal - workoutsThisWeek !== 1 ? "s" : ""} to go`}
+                        {workoutsThisWeek >= editableGoal
+                          ? `${t("goal_reached_badge") || "Goal reached!"} 🎉`
+                          : (t("workouts_left") || "{count} to go").replace("{count}", String(editableGoal - workoutsThisWeek))}
                       </p>
-                      <p className="text-xs text-[#8E8E93] mt-0.5">Avg last 4 weeks: {avgWeekly} sessions</p>
+                      <p className="text-xs text-[#8E8E93] mt-0.5">
+                        {(t("avg_last_4_weeks") || "Avg last 4 weeks: {count} sessions").replace("{count}", avgWeekly)}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="apple-glass-card rounded-2xl p-4">
-                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">Past 4 Weeks</p>
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">{t("past_4_weeks") || "Past 4 Weeks"}</p>
                   <div className="flex items-end gap-2 h-16">
                     {[...pastWeeks].reverse().map((count, i) => {
                       const h = editableGoal > 0 ? Math.min((count / editableGoal) * 100, 100) : 0;
@@ -744,13 +772,13 @@ export const Dashboard = React.memo(
                         />
                         <div className="absolute bottom-0 w-full border-b-2 border-[#30D158]/40" />
                       </div>
-                      <span className="text-[9px] text-[#30D158] font-bold">Now</span>
+                      <span className="text-[9px] text-[#30D158] font-bold">{t("now_label") || "Now"}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="apple-glass-card rounded-2xl p-4">
-                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">Set Your Goal</p>
+                  <p className="text-[10px] text-[#8E8E93] uppercase tracking-widest mb-3">{t("set_your_goal") || "Set Your Goal"}</p>
                   <div className="flex gap-2">
                     {[2, 3, 4, 5, 6].map((n) => (
                       <button
@@ -767,7 +795,7 @@ export const Dashboard = React.memo(
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] text-[#8E8E93] mt-2 text-center">workouts per week</p>
+                  <p className="text-[10px] text-[#8E8E93] mt-2 text-center">{t("workouts_per_week") || "workouts per week"}</p>
                 </div>
               </div>
             );
@@ -914,8 +942,97 @@ export const Dashboard = React.memo(
           )}
         </AppleBottomSheet>
 
+        {/* Day One Welcome Hub when workoutLogs.length === 0 */}
+        {workoutLogs.length === 0 && selectedDayIndex === todayIndex && (
+          <section className="bg-gradient-to-br from-[#1C1C1E] via-[#1C1C1E] to-[#161618] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45)] relative overflow-hidden flex flex-col gap-4">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-[#30D158]/10 blur-[90px] rounded-full pointer-events-none" />
+            <div className="relative z-10 flex flex-col gap-1.5">
+              <span className="w-fit text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">
+                LiftLab Starter
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                {userName ? `${welcomeBase}, ${userName}!` : (t("welcome_title") || "Benvenuto su LiftLab!")}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#8E8E93] max-w-xl">
+                {t("welcome_subtitle") || "Il tuo percorso inizia oggi. Scegli come svolgere il tuo primo allenamento:"}
+              </p>
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+              {/* Option A: Scheduled or Default Starter Routine */}
+              {nextRoutine ? (
+                <div className="bg-white/5 hover:bg-white/8 border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all group">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full">
+                        {(t("recommended") !== "recommended" && t("recommended")) || "Consigliata per oggi"}
+                      </span>
+                      <span className="text-xs text-[#8E8E93] flex items-center gap-1 font-medium">
+                        <Clock className="w-3.5 h-3.5" /> {nextRoutine.duration} min
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white group-hover:text-[#30D158] transition-colors">
+                      {nextRoutine.name}
+                    </h3>
+                    <p className="text-xs text-[#8E8E93] mt-1 line-clamp-1">
+                      {nextRoutine.exercises?.map((e) => t(e.title)).join(" • ")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      triggerHaptic("medium");
+                      onStartLiveWorkout(nextRoutine.id);
+                    }}
+                    className="w-full bg-[#30D158] text-black font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_14px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-black" />
+                    <span>{t("start_today_routine") || "Avvia Scheda di Oggi"}</span>
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Option B: Freestyle Session */}
+              <div className="bg-white/5 hover:bg-white/8 border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/10 px-2 py-0.5 rounded-full mb-2 inline-block">
+                    {(t("freestyle") !== "freestyle" && t("freestyle")) || "Libero"}
+                  </span>
+                  <h3 className="text-lg font-bold text-white">
+                    {t("freestyle_session") || "Inizia Allenamento Libero"}
+                  </h3>
+                  <p className="text-xs text-[#8E8E93] mt-1">
+                    {t("freestyle_desc") || "Allenati senza scheda e aggiungi gli esercizi mentre ti alleni."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    onStartLiveWorkout("empty");
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{t("start_empty") || "Allenamento Libero"}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="relative z-10 pt-1 text-center sm:text-left">
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("workout");
+                }}
+                className="text-xs text-[#8E8E93] hover:text-[#30D158] transition-colors underline-offset-4 hover:underline cursor-pointer"
+              >
+                {t("or_browse_routines") || "Oppure sfoglia e crea nuove schede nella sezione Allenamento →"}
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Next Workout Card */}
-        {selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
+        {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
           <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45)] flex flex-col">
             <button
               onClick={() => {
@@ -971,7 +1088,7 @@ export const Dashboard = React.memo(
         )}
 
         {/* Quick Start Hero when no routine is scheduled */}
-        {selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
+        {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
           <section className="bg-gradient-to-br from-[#1C1C1E] to-black border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45)] relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
             <div className="relative z-10 flex flex-col gap-1">
@@ -1015,14 +1132,39 @@ export const Dashboard = React.memo(
           <h2 className="text-headline-md font-bold font-[var(--font-headline-md)] text-primary uppercase tracking-widest">
             {t("quick_stats")}
           </h2>
-          <button
-            onClick={() => setIsCustomizeStatsOpen(true)}
-            className="min-h-11 rounded-xl px-3 text-primary hover:bg-white/5 text-xs flex items-center gap-1.5 font-bold uppercase tracking-wider transition-colors"
-          >
-            <SettingsIcon className="w-3 h-3" /> {t("customize")}
-          </button>
+          {workoutLogs.length > 0 && (
+            <button
+              onClick={() => setIsCustomizeStatsOpen(true)}
+              className="min-h-11 rounded-xl px-3 text-primary hover:bg-white/5 text-xs flex items-center gap-1.5 font-bold uppercase tracking-wider transition-colors"
+            >
+              <SettingsIcon className="w-3 h-3" /> {t("customize")}
+            </button>
+          )}
         </section>
-        {dashboardStats.length > 0 ? (
+        {workoutLogs.length === 0 ? (
+          <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+            <div className="w-14 h-14 rounded-2xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center shrink-0 text-[#30D158]">
+              <LucideLineChart className="w-7 h-7" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                {t("progress_preview_title") || "I tuoi progressi appariranno qui"}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#8E8E93] mt-1 max-w-xl">
+                {t("progress_preview_desc") || "Volume totale, serie settimanali, massimali stimati e record personali si popoleranno automaticamente non appena completerai la tua prima sessione."}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                triggerHaptic("medium");
+                onStartLiveWorkout(nextRoutine?.id || "empty");
+              }}
+              className="bg-white/10 hover:bg-white/15 text-white text-xs font-bold px-4 py-3 rounded-xl border border-white/10 shrink-0 cursor-pointer active:scale-95 transition-all"
+            >
+              {(t("start_first_workout_cta") !== "start_first_workout_cta" && t("start_first_workout_cta")) || "Inizia ora"}
+            </button>
+          </section>
+        ) : dashboardStats.length > 0 ? (
           (() => {
             const activeSmallStatCards = [
               "avg_duration",
