@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('server.js',{force:true})\"",
     "lint": "tsc --noEmit",
-    "test": "tsx src/lib/workoutUtils.test.ts && tsx src/lib/routineImport.test.ts && tsx src/lib/storage.test.ts && tsx src/lib/achievements.test.ts && tsx src/lib/searchUtils.test.ts",
+    "test": "tsx src/lib/workoutUtils.test.ts && tsx src/lib/routineImport.test.ts && tsx src/lib/storage.test.ts && tsx src/lib/achievements.test.ts && tsx src/lib/searchUtils.test.ts && tsx src/lib/translations.test.ts",
     "send:apk": "node scripts/send-apk-telegram.mjs"
   },
   "dependencies": {
