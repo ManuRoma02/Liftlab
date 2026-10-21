@@ -910,6 +910,12 @@ export function useWorkoutData() {
       } catch {}
       return;
     }
+    const isMainTab = ["dashboard", "library", "workout", "progress"].includes(current);
+    if (!isMainTab) {
+      const target = prevTabRef.current && prevTabRef.current !== current ? prevTabRef.current : "dashboard";
+      setActiveTab(target);
+      return;
+    }
     if (current !== "dashboard") {
       setActiveTab("dashboard");
       return;

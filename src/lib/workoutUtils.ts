@@ -817,4 +817,37 @@ export function calculateStreaks(workoutLogs: WorkoutLogLike[], referenceDate: D
   };
 }
 
+/**
+ * Normalizes dataset image/gif URLs to fast, reliable CDN endpoints.
+ * Prefers jsDelivr global edge CDN over GitHub raw endpoints which are rate-limited or blocked in webviews.
+ */
+export function normalizeExerciseImageUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  return url.replace(
+    "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/",
+    "https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/"
+  );
+}
+
+/**
+ * Returns an array of candidate fallback URLs for an exercise image/gif across multiple CDNs.
+ */
+export function getExerciseMediaCandidates(url?: string): string[] {
+  if (!url) return [];
+  const candidates: string[] = [];
+
+  // Match dataset paths like images/0025-EIeI8Vf.jpg or videos/0025-EIeI8Vf.gif
+  const datasetMatch = url.match(/(?:hasaneyldrm\/exercises-dataset(?:@main|\/main)?\/)(.+)$/);
+  if (datasetMatch) {
+    const subPath = datasetMatch[1];
+    candidates.push(`https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/${subPath}`);
+    candidates.push(`https://fastly.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/${subPath}`);
+    candidates.push(`https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/${subPath}`);
+  } else {
+    candidates.push(url);
+  }
+
+  return [...new Set(candidates)];
+}
+
 

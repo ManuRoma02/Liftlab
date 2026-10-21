@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <g fill="currentColor">
+    <!-- Outer Bumper Rim Ring -->
+    <circle cx="256" cy="256" r="186" fill="none" stroke="currentColor" stroke-width="12" />
+    <circle cx="256" cy="256" r="154" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="8 8" />
+
+    <!-- 4 Cardinal Olympic Notches -->
+    <rect x="252" y="58" width="8" height="24" rx="4" />
+    <rect x="252" y="430" width="8" height="24" rx="4" />
+    <rect x="58" y="252" width="24" height="8" rx="4" />
+    <rect x="430" y="252" width="24" height="8" rx="4" />
+
+    <!-- Solid Athletic 'L' Monogram Silhouette -->
+    <path d="
+      M 196, 136
+      L 236, 136
+      L 236, 316
+      L 336, 316
+      L 336, 356
+      L 316, 376
+      L 176, 376
+      L 176, 156
+      Z"
+    />
+  </g>
+</svg>

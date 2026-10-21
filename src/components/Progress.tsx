@@ -36,7 +36,9 @@ import {
 
 import { TabHero } from "./common/TabHero";
 import { ExerciseMuscleVisual } from "./common/ExerciseMuscleVisual";
+import { ExerciseFilterBar } from "./common/ExerciseFilterBar";
 import { triggerHaptic } from "../lib/haptics";
+import { appleSpringDefault } from "../lib/motion";
 import { AchievementsModal } from "./common/AchievementsModal";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { FullWorkoutHistoryModal } from "./common/FullWorkoutHistoryModal";
@@ -87,6 +89,7 @@ export function Progress({
   const [isLiftPickerOpen, setIsLiftPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<"best" | "strength" | `record-${number}`>("best");
   const [liftSearch, setLiftSearch] = useState("");
+  const [liftCategory, setLiftCategory] = useState("All");
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [unlockedCelebration, setUnlockedCelebration] = useState<Achievement | null>(null);
   const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
@@ -321,6 +324,31 @@ export function Progress({
     const sortByTitle = (a: any, b: any) => t(a.title).localeCompare(t(b.title));
     return [...withRecords.sort(sortByTitle), ...withoutRecords.sort(sortByTitle)];
   }, [safeExercises, personalRecords, t]);
+
+  const pickerCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: sortedExercisesForPicker.length };
+    for (const ex of sortedExercisesForPicker) {
+      const cat = ex.category || "Other";
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return counts;
+  }, [sortedExercisesForPicker]);
+
+  const filteredPickerExercises = useMemo(() => {
+    const q = liftSearch.trim().toLowerCase();
+    return sortedExercisesForPicker.filter((ex) => {
+      const matchesCategory =
+        liftCategory === "All" ||
+        (ex.category || "").toLowerCase() === liftCategory.toLowerCase();
+      if (!matchesCategory) return false;
+
+      if (!q) return true;
+      const titleMatch = (t(ex.title) || "").toLowerCase().includes(q);
+      const catMatch = (ex.category || "").toLowerCase().includes(q);
+      const eqMatch = (ex.equipment || "").toLowerCase().includes(q);
+      return titleMatch || catMatch || eqMatch;
+    });
+  }, [sortedExercisesForPicker, liftSearch, liftCategory, t]);
 
   const getTotalVolume = () => {
     const vol = getTotalVolumeNum();
@@ -582,6 +610,7 @@ export function Progress({
                     triggerHaptic("light");
                     setIsLiftPickerOpen(false);
                     setLiftSearch("");
+                    setLiftCategory("All");
                   }}
                   aria-label="Close lift picker"
                   className="min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
@@ -597,105 +626,117 @@ export function Progress({
                 <input
                   type="text"
                   placeholder="Search exercises..."
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:ring-1 focus:ring-[#30D158] focus:border-[#30D158] outline-none transition-all"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-[#8E8E93] focus:ring-1 focus:ring-[#30D158] focus:border-[#30D158] outline-none transition-all"
                   value={liftSearch}
                   onChange={(e) => setLiftSearch(e.target.value)}
                   autoFocus
                 />
+                {liftSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setLiftSearch("");
+                    }}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
+
+              <ExerciseFilterBar
+                selectedCategory={liftCategory}
+                onSelectCategory={setLiftCategory}
+                counts={pickerCategoryCounts}
+                t={t}
+              />
             </div>
 
             <div className="p-3.5 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-2">
-                {sortedExercisesForPicker
-                  .filter(
-                    (ex) =>
-                      (t(ex.title) || "")
-                        .toLowerCase()
-                        .includes(liftSearch.toLowerCase()) ||
-                      (ex.category || "")
-                        .toLowerCase()
-                        .includes(liftSearch.toLowerCase()) ||
-                      (ex.equipment || "")
-                        .toLowerCase()
-                        .includes(liftSearch.toLowerCase()),
-                  )
-                  .map((ex) => {
-                    const isSelected = (pickerTarget === "best"
-                      ? bestLiftExId
-                      : pickerTarget.startsWith("record-")
-                        ? recordExerciseIds[Number(pickerTarget.replace("record-", ""))]
-                        : strengthLiftExId) === ex.id;
-                    return (
-                      <button
-                        key={ex.id}
-                        onClick={() => {
-                          triggerHaptic("light");
-                          if (pickerTarget === "best") {
-                            setBestLiftExId(ex.id);
-                          } else if (pickerTarget.startsWith("record-")) {
-                            const index = Number(pickerTarget.replace("record-", ""));
-                            setRecordExerciseIds((prev) => {
-                              const next = [...prev];
-                              next[index] = ex.id;
-                              const saved = next.slice(0, 3);
-                              writeJsonAtomic("liftlab_pr_exercise_slots", saved);
-                              return saved;
-                            });
-                          } else {
-                            setStrengthLiftExId(ex.id);
-                          }
-                          setIsLiftPickerOpen(false);
-                          setLiftSearch("");
-                        }}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left relative group overflow-hidden ${
-                          isSelected
-                            ? "border-[#30D158] bg-[#30D158]/10 ring-1 ring-[#30D158]"
-                            : "border-white/6 hover:border-white/20 bg-black/40"
-                        }`}
-                      >
-                        <ExerciseMuscleVisual
-                          exercise={ex}
-                          className="w-10 h-10 shrink-0 opacity-80 group-hover:opacity-100"
-                        />
-                        <div className="flex flex-col flex-1 min-w-0 pr-6">
-                          <span
-                            className={`font-bold text-sm truncate transition-colors ${
-                              isSelected ? "text-[#30D158]" : "text-white"
-                            }`}
-                          >
-                            {t(ex.title)}
-                          </span>
-                          <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider truncate">
-                            {ex.category}
-                          </span>
+                {filteredPickerExercises.map((ex) => {
+                  const isSelected = (pickerTarget === "best"
+                    ? bestLiftExId
+                    : pickerTarget.startsWith("record-")
+                      ? recordExerciseIds[Number(pickerTarget.replace("record-", ""))]
+                      : strengthLiftExId) === ex.id;
+                  return (
+                    <button
+                      key={ex.id}
+                      onClick={() => {
+                        triggerHaptic("light");
+                        if (pickerTarget === "best") {
+                          setBestLiftExId(ex.id);
+                        } else if (pickerTarget.startsWith("record-")) {
+                          const index = Number(pickerTarget.replace("record-", ""));
+                          setRecordExerciseIds((prev) => {
+                            const next = [...prev];
+                            next[index] = ex.id;
+                            const saved = next.slice(0, 3);
+                            writeJsonAtomic("liftlab_pr_exercise_slots", saved);
+                            return saved;
+                          });
+                        } else {
+                          setStrengthLiftExId(ex.id);
+                        }
+                        setIsLiftPickerOpen(false);
+                        setLiftSearch("");
+                        setLiftCategory("All");
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left relative group overflow-hidden ${
+                        isSelected
+                          ? "border-[#30D158] bg-[#30D158]/10 ring-1 ring-[#30D158]"
+                          : "border-white/6 hover:border-white/20 bg-black/40"
+                      }`}
+                    >
+                      <ExerciseMuscleVisual
+                        exercise={ex}
+                        className="w-10 h-10 shrink-0 opacity-80 group-hover:opacity-100"
+                      />
+                      <div className="flex flex-col flex-1 min-w-0 pr-6">
+                        <span
+                          className={`font-bold text-sm truncate transition-colors ${
+                            isSelected ? "text-[#30D158]" : "text-white"
+                          }`}
+                        >
+                          {t(ex.title)}
+                        </span>
+                        <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider truncate">
+                          {ex.category}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-3 right-3">
+                          <CheckCircle2 className="w-4 h-4 text-[#30D158]" />
                         </div>
-                        {isSelected && (
-                          <div className="absolute top-3 right-3">
-                            <CheckCircle2 className="w-4 h-4 text-[#30D158]" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              {sortedExercisesForPicker.filter(
-                (ex) =>
-                  (t(ex.title) || "")
-                    .toLowerCase()
-                    .includes(liftSearch.toLowerCase()) ||
-                  (ex.category || "")
-                    .toLowerCase()
-                    .includes(liftSearch.toLowerCase()) ||
-                  (ex.equipment || "")
-                    .toLowerCase()
-                    .includes(liftSearch.toLowerCase()),
-              ).length === 0 && (
+              {filteredPickerExercises.length === 0 && (
                 <div className="py-16 text-center flex flex-col items-center gap-3">
                   <Search className="w-10 h-10 text-[#8E8E93] opacity-30" />
                   <p className="text-[#8E8E93] text-sm">
-                    No exercises found for "{liftSearch}"
+                    {liftSearch
+                      ? `No exercises found for "${liftSearch}"`
+                      : "No exercises in this category"}
                   </p>
+                  {(liftSearch || liftCategory !== "All") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setLiftSearch("");
+                        setLiftCategory("All");
+                      }}
+                      className="text-xs text-[#30D158] hover:underline pt-1"
+                    >
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -723,13 +764,22 @@ export function Progress({
                     triggerHaptic("light");
                     setChartMetric(metric);
                   }}
-                  className={`border-none px-3.5 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-150 ${
+                  className={`relative border-none px-3.5 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider transition-colors duration-150 cursor-pointer ${
                     chartMetric === metric
-                      ? "bg-[#30D158] text-black shadow-sm"
-                      : "text-[#8E8E93] hover:text-white bg-transparent"
+                      ? "text-black"
+                      : "text-[#8E8E93] hover:text-white"
                   }`}
                 >
-                  {metric === "max" ? "Max" : metric === "1rm" ? "1RM" : "Both"}
+                  {chartMetric === metric && (
+                    <motion.div
+                      layoutId="chartMetricIndicator"
+                      transition={appleSpringDefault}
+                      className="absolute inset-0 bg-[#30D158] rounded-full shadow-sm"
+                    />
+                  )}
+                  <span className="relative z-10">
+                    {metric === "max" ? "Max" : metric === "1rm" ? "1RM" : "Both"}
+                  </span>
                 </button>
               ))}
             </div>
@@ -1043,8 +1093,19 @@ export function Progress({
         </div>
 
         {workoutLogs.length === 0 ? (
-          <div className="py-8 text-center text-[#8E8E93] text-sm">
-            {t("no_data_yet") || "Nessun dato di allenamento registrato"}
+          <div
+            data-testid="progress-logs-empty-state"
+            className="py-12 px-6 text-center border border-white/10 rounded-3xl bg-[#121418]/80 flex flex-col items-center justify-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8E8E93]">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-semibold text-white">
+              {t("no_data_yet") || "Nessun dato di allenamento registrato"}
+            </p>
+            <p className="text-xs text-[#8E8E93] max-w-xs">
+              {t("start_first_workout_desc") || "Completa il tuo primo allenamento per visualizzare lo storico dettagliato delle sessioni."}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">

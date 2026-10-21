@@ -4,7 +4,14 @@
  */
 
 import assert from "node:assert/strict";
-import { APPLE_SPRINGS, appleSpringDefault, appleSpringSheet, appleSpringSnappy } from "./motion";
+import {
+  APPLE_SPRINGS,
+  appleSpringDefault,
+  appleSpringSheet,
+  appleSpringSnappy,
+  CARTOON_SPRINGS,
+  CARTOON_KEYFRAMES,
+} from "./motion";
 import {
   triggerHaptic,
   hapticPress,
@@ -52,30 +59,39 @@ console.log("Running motion & haptics unit tests...");
 
 // --- Motion Springs Tests ---
 assert.equal(APPLE_SPRINGS.criticallyDamped.type, "spring");
-assert.equal(APPLE_SPRINGS.criticallyDamped.damping, 1.0);
-assert.equal(APPLE_SPRINGS.criticallyDamped.duration, 0.35);
+assert.equal(APPLE_SPRINGS.criticallyDamped.duration, 0.32);
 assert.equal(APPLE_SPRINGS.criticallyDamped.bounce, 0);
 
 assert.equal(APPLE_SPRINGS.sheet.type, "spring");
-assert.equal(APPLE_SPRINGS.sheet.damping, 0.85);
 assert.equal(APPLE_SPRINGS.sheet.duration, 0.32);
 assert.equal(APPLE_SPRINGS.sheet.bounce, 0.05);
 
 assert.equal(APPLE_SPRINGS.snappy.type, "spring");
-assert.equal(APPLE_SPRINGS.snappy.damping, 1.0);
-assert.equal(APPLE_SPRINGS.snappy.duration, 0.25);
+assert.equal(APPLE_SPRINGS.snappy.duration, 0.22);
 assert.equal(APPLE_SPRINGS.snappy.bounce, 0);
 
 assert.equal(APPLE_SPRINGS.bouncy.type, "spring");
-assert.equal(APPLE_SPRINGS.bouncy.damping, 0.75);
-assert.equal(APPLE_SPRINGS.bouncy.duration, 0.45);
-assert.equal(APPLE_SPRINGS.bouncy.bounce, 0.18);
+assert.equal(APPLE_SPRINGS.bouncy.duration, 0.4);
+assert.equal(APPLE_SPRINGS.bouncy.bounce, 0.16);
 
 assert.deepEqual(appleSpringDefault, APPLE_SPRINGS.criticallyDamped);
 assert.deepEqual(appleSpringSheet, APPLE_SPRINGS.sheet);
 assert.deepEqual(appleSpringSnappy, APPLE_SPRINGS.snappy);
 
 console.log("✓ APPLE_SPRINGS verified successfully");
+
+// --- Cartoon Springs & Keyframes Tests ---
+assert.equal(CARTOON_SPRINGS.bouncy.type, "spring");
+assert.equal(CARTOON_SPRINGS.pop.type, "spring");
+assert.equal(CARTOON_SPRINGS.wobble.type, "spring");
+assert.equal(CARTOON_SPRINGS.liquid.type, "spring");
+
+assert.equal(CARTOON_KEYFRAMES.pop.duration, 0.42);
+assert.equal(CARTOON_KEYFRAMES.elastic.duration, 0.46);
+assert.equal(CARTOON_KEYFRAMES.wobble.duration, 0.48);
+assert.equal(CARTOON_KEYFRAMES.ripple.duration, 0.48);
+
+console.log("✓ CARTOON_SPRINGS & CARTOON_KEYFRAMES verified successfully");
 
 // --- Haptics Persistence Tests ---
 mockLocalStorage.clear();

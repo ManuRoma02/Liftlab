@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Trophy, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
+import { ExerciseFilterBar } from "./ExerciseFilterBar";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
 import { triggerHaptic } from "../../lib/haptics";
@@ -19,16 +20,42 @@ export function PRListModal({
   t: (key: string) => string;
 }) {
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const allDisplayExercises = exercises
-    .filter((ex) => {
-      const hasPR = ex.prWeight || ex.oneRepMax;
-      const titleStr = t(ex.title) || ex.title;
-      return hasPR && titleStr.toLowerCase().includes(search.toLowerCase());
-    })
-    .sort((a, b) => {
-      return a.title.localeCompare(b.title);
+  const prCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: 0 };
+    exercises.forEach((ex) => {
+      const hasPR = Boolean(ex.prWeight || ex.oneRepMax);
+      if (hasPR) {
+        counts.All = (counts.All || 0) + 1;
+        if (ex.category) {
+          counts[ex.category] = (counts[ex.category] || 0) + 1;
+        }
+      }
     });
+    return counts;
+  }, [exercises]);
+
+  const allDisplayExercises = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return exercises
+      .filter((ex) => {
+        const hasPR = Boolean(ex.prWeight || ex.oneRepMax);
+        if (!hasPR) return false;
+        if (
+          selectedCategory !== "All" &&
+          (ex.category || "").toLowerCase() !== selectedCategory.toLowerCase()
+        ) {
+          return false;
+        }
+        if (!q) return true;
+        const titleStr = (t(ex.title) || ex.title).toLowerCase();
+        return titleStr.includes(q);
+      })
+      .sort((a, b) => {
+        return a.title.localeCompare(b.title);
+      });
+  }, [exercises, selectedCategory, search, t]);
 
   return (
     <AnimatePresence>
@@ -56,9 +83,15 @@ export function PRListModal({
               <div className="w-10 h-10 bg-[#FF9F0A]/15 border border-[#FF9F0A]/25 rounded-2xl flex items-center justify-center text-[#FF9F0A]">
                 <Trophy className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-base text-white tracking-tight">
-                {t("personal_records")}
-              </h3>
+              <div>
+                <h3 className="font-bold text-base text-white tracking-tight">
+                  {t("personal_records")}
+                </h3>
+                <p className="text-[11px] text-[#8E8E93] font-medium">
+                  {allDisplayExercises.length}{" "}
+                  {allDisplayExercises.length === 1 ? "record" : "records"}
+                </p>
+              </div>
             </div>
             <button
               onClick={() => {
@@ -72,8 +105,8 @@ export function PRListModal({
             </button>
           </div>
 
-          {/* Search */}
-          <div className="px-5 py-3 border-b border-white/6 shrink-0 bg-black/20">
+          {/* Search & Category Filter Pills */}
+          <div className="px-5 pt-3.5 pb-2.5 border-b border-white/6 shrink-0 bg-black/20 flex flex-col gap-2.5">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
               <input
@@ -81,9 +114,30 @@ export function PRListModal({
                 placeholder={t("search_exercise") || "Search exercise..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full min-h-[44px] bg-black/40 border border-white/10 rounded-2xl py-2 pl-10 pr-4 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
+                className="w-full min-h-[44px] bg-black/40 border border-white/10 rounded-2xl py-2 pl-10 pr-10 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] transition-all"
               />
+              {search.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setSearch("");
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
+
+            {/* Reusable Category Filter Bar with Count Badges */}
+            <ExerciseFilterBar
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              counts={prCategoryCounts}
+              t={t}
+            />
           </div>
 
           {/* List */}
@@ -91,7 +145,23 @@ export function PRListModal({
             {allDisplayExercises.length === 0 ? (
               <div className="py-16 text-center text-[#8E8E93]">
                 <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">No exercises found.</p>
+                <p className="text-sm">
+                  {search || selectedCategory !== "All"
+                    ? "Nessun record corrisponde ai filtri."
+                    : "Nessun record trovato."}
+                </p>
+                {(search || selectedCategory !== "All") && (
+                  <button
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setSearch("");
+                      setSelectedCategory("All");
+                    }}
+                    className="mt-3 px-4 py-2 bg-white/8 hover:bg-white/12 border border-white/10 text-xs font-semibold text-white rounded-full transition-all cursor-pointer"
+                  >
+                    {t("clear_search") || "Azzera filtri"}
+                  </button>
+                )}
               </div>
             ) : (
               allDisplayExercises.map((ex) => (
@@ -118,57 +188,36 @@ export function PRListModal({
                       <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
                         {t("est_1rm")}
                       </p>
-                      <p className="font-black text-[#30D158] text-sm leading-none tabular-nums">
-                        {ex.oneRepMax || 0}
-                        <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
-                          {unit}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="border-x border-white/6">
-                      <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
-                        {t("max_weight")}
-                      </p>
-                      <p className="font-black text-white text-sm leading-none tabular-nums">
-                        {ex.prWeight || 0}
-                        <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
-                          {unit}
-                        </span>
+                      <p className="text-sm font-extrabold text-[#30D158] tabular-nums">
+                        {ex.oneRepMax ? `${ex.oneRepMax} ${unit}` : "-"}
                       </p>
                     </div>
                     <div>
                       <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
-                        {t("best_set")}
+                        {t("max_weight")}
                       </p>
-                      <p className="font-black text-white text-sm leading-none tabular-nums">
-                        {ex.prReps || 0}
-                        <span className="text-[9px] ml-0.5 text-[#8E8E93] font-normal">
-                          {isTimedExercise(ex) ? "s" : t("reps_upper")}
-                        </span>
+                      <p className="text-sm font-bold text-white tabular-nums">
+                        {ex.prWeight ? `${ex.prWeight} ${unit}` : "-"}
                       </p>
-                      {ex.prRepsWeight && (
-                        <p className="text-[#8E8E93] text-[8px] mt-0.5">
-                          @ {ex.prRepsWeight} {unit.toLowerCase()}
-                        </p>
-                      )}
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
+                        {t("max_reps")}
+                      </p>
+                      <p className="text-sm font-bold text-white tabular-nums">
+                        {isTimedExercise(ex)
+                          ? ex.prReps
+                            ? `${ex.prReps}s`
+                            : "-"
+                          : ex.prReps
+                            ? `${ex.prReps} reps`
+                            : "-"}
+                      </p>
                     </div>
                   </div>
                 </div>
               ))
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-white/6">
-            <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
-              className="w-full py-3 min-h-[44px] bg-[#30D158] text-black font-bold rounded-full hover:brightness-105 active:scale-95 transition-all text-sm cursor-pointer shadow-sm flex items-center justify-center"
-            >
-              {t("close")}
-            </button>
           </div>
         </motion.div>
       </motion.div>

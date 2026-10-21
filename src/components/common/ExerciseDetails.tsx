@@ -10,8 +10,9 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
+import { ExerciseMedia } from "./ExerciseMedia";
 import { AccordionItem } from "./AccordionItem";
-import { isTimedExercise } from "../../lib/workoutUtils";
+import { isTimedExercise, normalizeExerciseImageUrl, getExerciseMediaCandidates } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
 import { triggerHaptic } from "../../lib/haptics";
 
@@ -34,9 +35,39 @@ export function ExerciseDetails({
   onSelectVariation?: (ex: ExerciseData) => void;
   onAddExercise?: (ex: ExerciseData) => void;
 }) {
+  const allCandidates = React.useMemo(() => {
+    const list: string[] = [];
+    if (ex.gifUrl) list.push(...getExerciseMediaCandidates(ex.gifUrl));
+    if (ex.image) list.push(...getExerciseMediaCandidates(ex.image));
+    return [...new Set(list)];
+  }, [ex.gifUrl, ex.image]);
+
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const [imgLoading, setImgLoading] = useState(true);
+  const [imgFailed, setImgFailed] = useState(false);
+
   const [visualMode, setVisualMode] = useState<"demo" | "anatomy">(
-    ex.gifUrl || ex.image ? "demo" : "anatomy"
+    allCandidates.length > 0 ? "demo" : "anatomy"
   );
+
+  React.useEffect(() => {
+    setCandidateIndex(0);
+    setImgLoading(true);
+    setImgFailed(false);
+  }, [ex.id, ex.gifUrl, ex.image]);
+
+  const activeImgUrl = allCandidates[candidateIndex] || null;
+
+  const handleImgError = () => {
+    if (candidateIndex + 1 < allCandidates.length) {
+      setCandidateIndex((prev) => prev + 1);
+      setImgLoading(true);
+    } else {
+      setImgFailed(true);
+      setImgLoading(false);
+    }
+  };
+
   const variations = exercises
     .filter(
       (e) =>
@@ -169,14 +200,26 @@ export function ExerciseDetails({
               )}
             </div>
 
-            <div className="flex-1 flex items-center justify-center p-3 bg-black/30">
-              {visualMode === "demo" && (ex.gifUrl || ex.image) ? (
+            <div className="flex-1 flex items-center justify-center p-3 bg-black/30 relative min-h-[220px]">
+              {visualMode === "demo" && activeImgUrl && !imgFailed ? (
                 <div className="relative w-full h-full flex items-center justify-center min-h-[190px]">
+                  {imgLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 rounded-2xl animate-pulse">
+                      <Dumbbell className="w-8 h-8 text-[#30D158]/50 animate-bounce" />
+                      <span className="text-[11px] font-semibold text-[#8E8E93]">
+                        {t("loading_demo") || "Caricamento demo..."}
+                      </span>
+                    </div>
+                  )}
                   <img
-                    src={ex.gifUrl || ex.image}
+                    src={activeImgUrl}
                     alt={ex.title}
-                    loading="lazy"
-                    className="max-h-[220px] w-auto max-w-full object-contain rounded-2xl shadow-sm"
+                    loading="eager"
+                    onLoad={() => setImgLoading(false)}
+                    onError={handleImgError}
+                    className={`max-h-[220px] w-auto max-w-full object-contain rounded-2xl shadow-sm transition-opacity duration-300 ${
+                      imgLoading ? "opacity-0" : "opacity-100"
+                    }`}
                   />
                 </div>
               ) : (
@@ -316,9 +359,9 @@ export function ExerciseDetails({
                   }}
                   className="bg-[#1C1C1E] border border-white/6 hover:border-white/20 rounded-2xl p-3.5 flex flex-col items-center text-center gap-2 transition-all active:scale-95 group cursor-pointer"
                 >
-                  <ExerciseMuscleVisual
+                  <ExerciseMedia
                     exercise={variant}
-                    className="w-14 h-14 opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="w-14 h-14 rounded-xl"
                   />
                   <span className="text-xs font-bold text-white line-clamp-2 group-hover:text-[#30D158] transition-colors">
                     {t(variant.title)}

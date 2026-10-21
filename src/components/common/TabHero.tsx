@@ -47,7 +47,6 @@ export function TabHero({
                 triggerHaptic("light");
                 onOpenSettings();
               }}
-              onPointerDown={() => hapticPress("light")}
               aria-label="Settings"
               className="w-11 h-11 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             >

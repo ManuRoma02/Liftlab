@@ -25,7 +25,14 @@ android/build/
 dev-dist/
 *.apk
 .gitconfig
+dist-ota/
 brag-output/
 .agents/
 skills-lock.json
 .superpowers/
+.gemini/
+.ignore
+test_logos/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

@@ -1,25 +1,23 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 
+export interface LiveWorkoutOptions {
+  currentExercise?: string;
+  currentSetInfo?: string;
+  restRemainingSeconds?: number;
+  isResting?: boolean;
+  setNumber?: number;
+  totalSets?: number;
+  defaultRestSeconds?: number;
+  weightRepsInfo?: string;
+  isRestFinished?: boolean;
+}
+
 export interface LiveWorkoutPluginInterface {
-  startLiveService(options: {
-    currentExercise?: string;
-    currentSetInfo?: string;
-    restRemainingSeconds?: number;
-    isResting?: boolean;
-  }): Promise<void>;
-
-  updateLiveService(options: {
-    currentExercise?: string;
-    currentSetInfo?: string;
-    restRemainingSeconds?: number;
-    isResting?: boolean;
-  }): Promise<void>;
-
+  startLiveService(options: LiveWorkoutOptions): Promise<void>;
+  updateLiveService(options: LiveWorkoutOptions): Promise<void>;
   stopLiveService(): Promise<void>;
-
   drainPendingActions(): Promise<{ action?: string }>;
-
   addListener(
     eventName: "notificationAction",
     listenerFunc: (info: { action: string; timestamp: number }) => void,
@@ -36,12 +34,9 @@ export type LiveNotificationResult = {
   permissionDenied: boolean;
 };
 
-export const startLiveWorkoutNotification = async (options: {
-  currentExercise?: string;
-  currentSetInfo?: string;
-  restRemainingSeconds?: number;
-  isResting?: boolean;
-}): Promise<LiveNotificationResult> => {
+export const startLiveWorkoutNotification = async (
+  options: LiveWorkoutOptions,
+): Promise<LiveNotificationResult> => {
   if (!isNativeAndroid()) {
     return { ok: true, permissionDenied: false };
   }
@@ -63,12 +58,9 @@ export const startLiveWorkoutNotification = async (options: {
   }
 };
 
-export const updateLiveWorkoutNotification = async (options: {
-  currentExercise?: string;
-  currentSetInfo?: string;
-  restRemainingSeconds?: number;
-  isResting?: boolean;
-}): Promise<boolean> => {
+export const updateLiveWorkoutNotification = async (
+  options: LiveWorkoutOptions,
+): Promise<boolean> => {
   if (!isNativeAndroid()) return true;
   try {
     await LiveWorkoutNative.updateLiveService(options);

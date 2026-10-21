@@ -25,6 +25,11 @@ public class LiveWorkoutService extends Service {
     public static final String EXTRA_SET_INFO = "set_info";
     public static final String EXTRA_REST_SECONDS = "rest_seconds";
     public static final String EXTRA_IS_RESTING = "is_resting";
+    public static final String EXTRA_SET_NUMBER = "set_number";
+    public static final String EXTRA_TOTAL_SETS = "total_sets";
+    public static final String EXTRA_DEFAULT_REST = "default_rest_seconds";
+    public static final String EXTRA_TARGET_WEIGHT_REPS = "target_weight_reps";
+    public static final String EXTRA_IS_REST_FINISHED = "is_rest_finished";
 
     private static LiveWorkoutService instance;
     private NotificationManager notificationManager;
@@ -35,6 +40,11 @@ public class LiveWorkoutService extends Service {
     private String currentSetInfo = "In corso";
     private int restRemainingSeconds = 0;
     private boolean isResting = false;
+    private boolean isRestFinished = false;
+    private int currentSetNumber = 1;
+    private int totalSets = 3;
+    private int defaultRestSeconds = 90;
+    private String targetWeightReps = "";
 
     public static LiveWorkoutService getInstance() {
         return instance;
@@ -57,12 +67,29 @@ public class LiveWorkoutService extends Service {
             }
             if (intent.hasExtra(EXTRA_SET_INFO)) {
                 currentSetInfo = intent.getStringExtra(EXTRA_SET_INFO);
+                parseSetInfoFallback(currentSetInfo);
             }
             if (intent.hasExtra(EXTRA_REST_SECONDS)) {
                 restRemainingSeconds = intent.getIntExtra(EXTRA_REST_SECONDS, 0);
             }
             if (intent.hasExtra(EXTRA_IS_RESTING)) {
                 isResting = intent.getBooleanExtra(EXTRA_IS_RESTING, false);
+            }
+            if (intent.hasExtra(EXTRA_SET_NUMBER)) {
+                currentSetNumber = intent.getIntExtra(EXTRA_SET_NUMBER, currentSetNumber);
+            }
+            if (intent.hasExtra(EXTRA_TOTAL_SETS)) {
+                totalSets = intent.getIntExtra(EXTRA_TOTAL_SETS, totalSets);
+            }
+            if (intent.hasExtra(EXTRA_DEFAULT_REST)) {
+                defaultRestSeconds = intent.getIntExtra(EXTRA_DEFAULT_REST, defaultRestSeconds);
+            }
+            if (intent.hasExtra(EXTRA_TARGET_WEIGHT_REPS)) {
+                String twr = intent.getStringExtra(EXTRA_TARGET_WEIGHT_REPS);
+                if (twr != null) targetWeightReps = twr;
+            }
+            if (intent.hasExtra(EXTRA_IS_REST_FINISHED)) {
+                isRestFinished = intent.getBooleanExtra(EXTRA_IS_REST_FINISHED, false);
             }
             persistState();
         } else if (!restoreState()) {
@@ -86,11 +113,54 @@ public class LiveWorkoutService extends Service {
         return START_STICKY;
     }
 
-    public void updateState(String exercise, String setInfo, int restSeconds, boolean resting) {
+    private void parseSetInfoFallback(String info) {
+        if (info == null) return;
+        try {
+            // e.g. "Serie 2 di 4 (80 kg × 8 reps)"
+            if (info.startsWith("Serie ")) {
+                int diPos = info.indexOf(" di ");
+                if (diPos != -1) {
+                    String curStr = info.substring(6, diPos).trim();
+                    currentSetNumber = Integer.parseInt(curStr);
+                    int openParen = info.indexOf('(', diPos);
+                    String totStr;
+                    if (openParen != -1) {
+                        totStr = info.substring(diPos + 4, openParen).trim();
+                        int closeParen = info.lastIndexOf(')');
+                        if (closeParen > openParen) {
+                            targetWeightReps = info.substring(openParen + 1, closeParen).trim();
+                        }
+                    } else {
+                        totStr = info.substring(diPos + 4).trim();
+                    }
+                    totalSets = Integer.parseInt(totStr);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void updateState(
+            String exercise,
+            String setInfo,
+            int restSeconds,
+            boolean resting,
+            int setNum,
+            int total,
+            int defaultRest,
+            String weightReps,
+            boolean restFinished
+    ) {
         this.currentExercise = exercise != null ? exercise : this.currentExercise;
         this.currentSetInfo = setInfo != null ? setInfo : this.currentSetInfo;
+        if (setNum > 0) this.currentSetNumber = setNum;
+        if (total > 0) this.totalSets = total;
+        if (defaultRest > 0) this.defaultRestSeconds = defaultRest;
+        if (weightReps != null) this.targetWeightReps = weightReps;
+        parseSetInfoFallback(this.currentSetInfo);
+
         this.restRemainingSeconds = restSeconds;
         this.isResting = resting;
+        this.isRestFinished = restFinished;
 
         if (isResting && restRemainingSeconds > 0) {
             startRestCountdown();
@@ -104,11 +174,44 @@ public class LiveWorkoutService extends Service {
         }
     }
 
+    /**
+     * Natively advances set and triggers rest countdown immediately (<5ms response).
+     */
+    public void completeSet() {
+        stopRestCountdown();
+        isRestFinished = false;
+
+        // Advance set counter
+        if (currentSetNumber < totalSets) {
+            currentSetNumber++;
+            currentSetInfo = "Serie " + currentSetNumber + " di " + totalSets +
+                    (targetWeightReps != null && !targetWeightReps.isEmpty() ? " (" + targetWeightReps + ")" : "");
+        } else if (currentSetNumber >= totalSets && totalSets > 0) {
+            currentSetInfo = "Tutte le serie completate (" + totalSets + "/" + totalSets + ")";
+        }
+
+        // Start rest countdown immediately
+        int restToUse = (defaultRestSeconds > 0) ? defaultRestSeconds : 90;
+        this.restRemainingSeconds = restToUse;
+        this.isResting = true;
+        this.isRestFinished = false;
+        startRestCountdown();
+
+        persistState();
+
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, buildNotification());
+        }
+    }
+
     public void addRestSeconds(int deltaSeconds) {
         this.restRemainingSeconds = Math.max(0, this.restRemainingSeconds + deltaSeconds);
         this.isResting = this.restRemainingSeconds > 0;
+        this.isRestFinished = false;
         if (this.isResting) {
             startRestCountdown();
+        } else {
+            stopRestCountdown();
         }
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_ID, buildNotification());
@@ -119,6 +222,7 @@ public class LiveWorkoutService extends Service {
     public void skipRest() {
         this.restRemainingSeconds = 0;
         this.isResting = false;
+        this.isRestFinished = false;
         stopRestCountdown();
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_ID, buildNotification());
@@ -133,13 +237,24 @@ public class LiveWorkoutService extends Service {
             public void run() {
                 if (restRemainingSeconds > 0) {
                     restRemainingSeconds--;
-                    if (notificationManager != null) {
-                        notificationManager.notify(NOTIFICATION_ID, buildNotification());
+                    if (restRemainingSeconds == 0) {
+                        isResting = false;
+                        isRestFinished = true;
+                        triggerRestFinishedAlert();
+                        persistState();
+                        if (notificationManager != null) {
+                            notificationManager.notify(NOTIFICATION_ID, buildNotification());
+                        }
+                    } else {
+                        if (notificationManager != null) {
+                            notificationManager.notify(NOTIFICATION_ID, buildNotification());
+                        }
+                        persistState();
+                        timerHandler.postDelayed(this, 1000);
                     }
-                    persistState();
-                    timerHandler.postDelayed(this, 1000);
                 } else {
                     isResting = false;
+                    isRestFinished = true;
                     triggerRestFinishedAlert();
                     persistState();
                     if (notificationManager != null) {
@@ -206,30 +321,51 @@ public class LiveWorkoutService extends Service {
 
         String title;
         String contentText;
+        String subText;
+        String bigText;
+        String shortChip;
 
         if (isResting && restRemainingSeconds > 0) {
             int mins = restRemainingSeconds / 60;
             int secs = restRemainingSeconds % 60;
             String timeFormatted = String.format("%02d:%02d", mins, secs);
-            title = "⏱️ Recupero: " + timeFormatted;
+
+            subText = "Recupero";
+            title = "⏱️ " + timeFormatted + " • Recupero";
             contentText = "Prossimo: " + currentExercise + " (" + currentSetInfo + ")";
-        } else if (!isResting && restRemainingSeconds == 0) {
-            title = "LiftLab • " + currentExercise;
-            contentText = currentSetInfo;
+            bigText = "⏱️ Tempo di Recupero: " + timeFormatted + "\n"
+                    + "Prossimo: " + currentExercise + "\n"
+                    + "Obiettivo: " + currentSetInfo;
+            shortChip = timeFormatted;
+        } else if (isRestFinished) {
+            subText = "Inizia Ora";
+            title = "⚡ Recupero Terminato! Inizia la Serie";
+            contentText = currentExercise + " • " + currentSetInfo;
+            bigText = "⚡ Recupero Terminato! È il momento di spingere.\n"
+                    + "Esercizio: " + currentExercise + "\n"
+                    + "Serie: " + currentSetInfo;
+            shortChip = "VAI!";
         } else {
-            title = "🔔 Recupero Concluso!";
-            contentText = "Tocca a: " + currentExercise + " (" + currentSetInfo + ")";
+            subText = "Serie Attiva";
+            title = "🏋️ " + currentExercise;
+            contentText = currentSetInfo;
+            bigText = "Esercizio: " + currentExercise + "\n"
+                    + "Progresso: " + currentSetInfo;
+            shortChip = "SET";
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.splash_icon)
+                .setColor(0xFF30D158) // Apple Emerald Green
                 .setContentTitle(title)
                 .setContentText(contentText)
+                .setSubText(subText)
                 .setContentIntent(contentIntent)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(bigText));
 
         // Android 16/17 Live Updates & Promoted Ongoing Notification
         builder.getExtras().putBoolean("android.requestPromotedOngoing", true);
@@ -239,26 +375,17 @@ public class LiveWorkoutService extends Service {
         } catch (Exception ignored) {}
 
         // Android 16/17 Status Bar Chip critical text & Chronometer
-        if (isResting && restRemainingSeconds > 0) {
-            int mins = restRemainingSeconds / 60;
-            int secs = restRemainingSeconds % 60;
-            String chipText = String.format("%02d:%02d", mins, secs);
-            builder.getExtras().putCharSequence("android.shortCriticalText", chipText);
-            try {
-                java.lang.reflect.Method setShortText = builder.getClass().getMethod("setShortCriticalText", CharSequence.class);
-                setShortText.invoke(builder, chipText);
-            } catch (Exception ignored) {}
+        builder.getExtras().putCharSequence("android.shortCriticalText", shortChip);
+        try {
+            java.lang.reflect.Method setShortText = builder.getClass().getMethod("setShortCriticalText", CharSequence.class);
+            setShortText.invoke(builder, shortChip);
+        } catch (Exception ignored) {}
 
-            builder.setUsesChronometer(true);
-            builder.setChronometerCountDown(true);
-            builder.setWhen(System.currentTimeMillis() + (restRemainingSeconds * 1000L));
-            builder.setShowWhen(true);
-        } else {
-            builder.getExtras().putCharSequence("android.shortCriticalText", "LIFT");
-            builder.setShowWhen(false);
-            builder.setUsesChronometer(false);
-        }
+        // Single clean timer display in Title - disable OS header chronometer to prevent duplicate timers
+        builder.setShowWhen(false);
+        builder.setUsesChronometer(false);
 
+        // Action Buttons
         if (isResting && restRemainingSeconds > 0) {
             // Action +30s
             Intent add30sIntent = new Intent(this, LiveWorkoutReceiver.class);
@@ -269,7 +396,7 @@ public class LiveWorkoutService extends Service {
                     add30sIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
-            builder.addAction(0, "+30s", add30sPending);
+            builder.addAction(0, "⏱️ +30s", add30sPending);
 
             // Action Skip Rest
             Intent skipIntent = new Intent(this, LiveWorkoutReceiver.class);
@@ -280,9 +407,9 @@ public class LiveWorkoutService extends Service {
                     skipIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
-            builder.addAction(0, "Salta", skipPending);
+            builder.addAction(0, "⏩ Salta", skipPending);
         } else {
-            // Action Complete Set
+            // Action Complete Set (for active set or rest finished)
             Intent completeIntent = new Intent(this, LiveWorkoutReceiver.class);
             completeIntent.setAction(LiveWorkoutReceiver.ACTION_COMPLETE_SET);
             PendingIntent completePending = PendingIntent.getBroadcast(
@@ -304,6 +431,11 @@ public class LiveWorkoutService extends Service {
         editor.putString(LiveWorkoutPlugin.KEY_SET_INFO, currentSetInfo);
         editor.putInt(LiveWorkoutPlugin.KEY_REST_SECONDS, restRemainingSeconds);
         editor.putBoolean(LiveWorkoutPlugin.KEY_IS_RESTING, isResting);
+        editor.putBoolean(LiveWorkoutPlugin.KEY_IS_REST_FINISHED, isRestFinished);
+        editor.putInt(LiveWorkoutPlugin.KEY_SET_NUMBER, currentSetNumber);
+        editor.putInt(LiveWorkoutPlugin.KEY_TOTAL_SETS, totalSets);
+        editor.putInt(LiveWorkoutPlugin.KEY_DEFAULT_REST, defaultRestSeconds);
+        editor.putString(LiveWorkoutPlugin.KEY_TARGET_WEIGHT_REPS, targetWeightReps);
         if (isResting && restRemainingSeconds > 0) {
             editor.putLong(LiveWorkoutPlugin.KEY_REST_END_AT, System.currentTimeMillis() + restRemainingSeconds * 1000L);
         } else {
@@ -319,15 +451,23 @@ public class LiveWorkoutService extends Service {
         }
         currentExercise = prefs.getString(LiveWorkoutPlugin.KEY_EXERCISE, currentExercise);
         currentSetInfo = prefs.getString(LiveWorkoutPlugin.KEY_SET_INFO, currentSetInfo);
+        isRestFinished = prefs.getBoolean(LiveWorkoutPlugin.KEY_IS_REST_FINISHED, false);
+        currentSetNumber = prefs.getInt(LiveWorkoutPlugin.KEY_SET_NUMBER, currentSetNumber);
+        totalSets = prefs.getInt(LiveWorkoutPlugin.KEY_TOTAL_SETS, totalSets);
+        defaultRestSeconds = prefs.getInt(LiveWorkoutPlugin.KEY_DEFAULT_REST, defaultRestSeconds);
+        targetWeightReps = prefs.getString(LiveWorkoutPlugin.KEY_TARGET_WEIGHT_REPS, targetWeightReps);
+
         long restEndAt = prefs.getLong(LiveWorkoutPlugin.KEY_REST_END_AT, 0);
         if (restEndAt > System.currentTimeMillis()) {
             restRemainingSeconds = (int) Math.ceil((restEndAt - System.currentTimeMillis()) / 1000.0);
             isResting = true;
+            isRestFinished = false;
         } else {
             restRemainingSeconds = prefs.getInt(LiveWorkoutPlugin.KEY_REST_SECONDS, 0);
             isResting = false;
             if (restEndAt > 0) {
                 restRemainingSeconds = 0;
+                isRestFinished = true;
             }
         }
         return true;
@@ -375,6 +515,16 @@ public class LiveWorkoutService extends Service {
         clearPersistedState();
         stopSelf();
         super.onTaskRemoved(rootIntent);
+    }
+
+    // Android 15+ (API 35) FGS Timeout Handling
+    @Override
+    public void onTimeout(int startId, int fgsType) {
+        try {
+            super.onTimeout(startId, fgsType);
+        } catch (Throwable ignored) {}
+        stopRestCountdown();
+        stopSelf();
     }
 
     @Override

@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bumperUrethaneG" cx="256" cy="256" r="230" gradientUnits="userSpaceOnUse">
+      <stop offset="70%" stop-color="#181B24"/>
+      <stop offset="88%" stop-color="#12141B"/>
+      <stop offset="100%" stop-color="#0A0B0F"/>
+    </radialGradient>
+
+    <radialGradient id="innerHubG" cx="256" cy="250" r="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#141720"/>
+      <stop offset="75%" stop-color="#0A0B0E"/>
+      <stop offset="100%" stop-color="#050608"/>
+    </radialGradient>
+
+    <radialGradient id="emeraldAuraG" cx="256" cy="256" r="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgba(48,209,88,0.25)"/>
+      <stop offset="60%" stop-color="rgba(48,209,88,0.06)"/>
+      <stop offset="100%" stop-color="rgba(48,209,88,0)"/>
+    </radialGradient>
+
+    <linearGradient id="lFaceLightG" x1="170" y1="130" x2="350" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3DF574"/>
+      <stop offset="45%" stop-color="#30D158"/>
+      <stop offset="100%" stop-color="#22B847"/>
+    </linearGradient>
+
+    <linearGradient id="lBevelShadowG" x1="180" y1="140" x2="330" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#209E40"/>
+      <stop offset="100%" stop-color="#126B29"/>
+    </linearGradient>
+
+    <linearGradient id="specularTopG" x1="170" y1="130" x2="250" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A6FFBE"/>
+      <stop offset="100%" stop-color="#30D158"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Olympic Calibrated Plate: Outer Flange & Recessed Channel -->
+  <circle cx="256" cy="256" r="198" fill="none" stroke="#252A36" stroke-width="2"/>
+  <circle cx="256" cy="256" r="194" fill="url(#bumperUrethaneG)"/>
+  <circle cx="256" cy="256" r="176" fill="none" stroke="#2D3342" stroke-width="3"/>
+  <circle cx="256" cy="256" r="173" fill="none" stroke="#0D0E13" stroke-width="2"/>
+
+  <!-- Recessed Inner Steel Hub Bowl -->
+  <circle cx="256" cy="256" r="170" fill="url(#innerHubG)"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+
+  <!-- Ambient Emerald Energy Aura -->
+  <circle cx="256" cy="256" r="150" fill="url(#emeraldAuraG)"/>
+
+  <!-- Olympic Calibrated Grip Arcs -->
+  <path d="M 120 220 A 150 150 0 0 1 120 180" fill="none" stroke="#20242F" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 392 220 A 150 150 0 0 0 392 180" fill="none" stroke="#20242F" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 120 292 A 150 150 0 0 0 120 332" fill="none" stroke="#20242F" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 392 292 A 150 150 0 0 1 392 332" fill="none" stroke="#20242F" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Sculpted Master 'L' -->
+  <g>
+    <!-- Base 3D Extrusion Shadow Bevel -->
+    <path d="
+      M 172 144
+      C 172 136 178 130 186 130
+      L 242 130
+      C 250 130 256 136 256 144
+      L 256 308
+      C 256 314 261 319 267 319
+      L 348 319
+      C 356 319 362 325 362 333
+      L 362 366
+      C 362 374 356 380 348 380
+      L 186 380
+      C 178 380 172 374 172 366
+      Z"
+      fill="url(#lBevelShadowG)"
+    />
+
+    <!-- Main Chiseled Face -->
+    <path d="
+      M 168 138
+      C 168 130 174 124 182 124
+      L 238 124
+      C 246 124 252 130 252 138
+      L 252 304
+      C 252 310 257 315 263 315
+      L 344 315
+      C 352 315 358 321 358 329
+      L 358 360
+      C 358 368 352 374 344 374
+      L 182 374
+      C 174 374 168 368 168 360
+      Z"
+      fill="url(#lFaceLightG)"
+    />
+
+    <!-- Specular Titanium Highlight on Top Crest -->
+    <path d="
+      M 182 124
+      L 238 124
+      C 246 124 252 130 252 138
+      L 252 144
+      L 178 144
+      L 168 138
+      C 168 130 174 124 182 124
+      Z"
+      fill="url(#specularTopG)"
+    />
+
+    <!-- Kinetic Inset Energy Channel -->
+    <path d="
+      M 194 156
+      L 218 156
+      L 218 326
+      C 218 333 223 338 230 338
+      L 332 338
+      L 332 352
+      L 220 352
+      C 206 352 194 340 194 326
+      Z"
+      fill="#FFFFFF"
+      opacity="0.38"
+    />
+  </g>
+</svg>

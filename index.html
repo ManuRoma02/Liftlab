@@ -1,18 +1,104 @@
 <!doctype html>
-<html lang="en">
+<html lang="it">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>LiftLab</title>
-    <link rel="icon" href="/logo.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/logo.svg">
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="description" content="LiftLab is a fast, offline-first workout tracker for routines, live sets and progress.">
     <meta name="color-scheme" content="dark">
-    <meta name="theme-color" content="#0c0a09" />
+    <meta name="theme-color" content="#090A0B" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #090A0B;
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      .liftlab-splash-wrap {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #090A0B;
+        z-index: 99999;
+        user-select: none;
+      }
+      .liftlab-splash-glow {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(48, 209, 88, 0.22) 0%, rgba(48, 209, 88, 0) 70%);
+        pointer-events: none;
+        animation: splashGlowPulse 2.4s ease-in-out infinite alternate;
+      }
+      .liftlab-splash-badge {
+        position: relative;
+        width: 84px;
+        height: 84px;
+        border-radius: 20px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(48, 209, 88, 0.2);
+        animation: splashBadgePulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+      }
+      .liftlab-splash-title {
+        margin-top: 22px;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.28em;
+        text-indent: 0.28em;
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .liftlab-splash-bar-track {
+        margin-top: 26px;
+        width: 100px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+      }
+      .liftlab-splash-bar-indicator {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -40%;
+        width: 40%;
+        background: linear-gradient(90deg, transparent, #30D158, #30D158, transparent);
+        border-radius: 9999px;
+        animation: splashBarSlide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      @keyframes splashGlowPulse {
+        0% { transform: scale(0.9); opacity: 0.4; }
+        100% { transform: scale(1.25); opacity: 0.85; }
+      }
+      @keyframes splashBadgePulse {
+        0% { transform: scale(0.97); }
+        100% { transform: scale(1.03); }
+      }
+      @keyframes splashBarSlide {
+        0% { left: -40%; }
+        100% { left: 100%; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="liftlab-splash-wrap">
+        <div class="liftlab-splash-glow"></div>
+        <img class="liftlab-splash-badge" src="./app-logo.png" alt="LiftLab" />
+        <div class="liftlab-splash-title">LIFTLAB</div>
+        <div class="liftlab-splash-bar-track">
+          <div class="liftlab-splash-bar-indicator"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

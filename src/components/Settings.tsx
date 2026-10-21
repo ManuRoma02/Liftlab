@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   ChevronLeft,
   Languages,
@@ -16,9 +16,29 @@ import {
   Trash2,
   ChevronRight,
   Sparkles,
+  CloudDownload,
+  RefreshCw,
+  CheckCircle2,
+  Radio,
+  Sliders,
 } from "lucide-react";
-import logoInAppImg from "../assets/images/logo_in_app.png";
 import { triggerHaptic } from "../lib/haptics";
+import { motion, AnimatePresence } from "motion/react";
+import { CARTOON_SPRINGS } from "../lib/motion";
+import { OtaNotesView } from "./common/OtaNotesView";
+import {
+  getCurrentOtaVersion,
+  checkForOtaUpdate,
+  downloadAndApplyOta,
+  reloadOtaApp,
+  isOtaAutoCheckEnabled,
+  setOtaAutoCheckEnabled,
+  getOtaManifestUrl,
+  setOtaManifestUrl,
+  DEFAULT_MANIFEST_URL,
+  type OtaManifest,
+  type OtaStatus,
+} from "../lib/otaUpdate";
 
 function AppleSwitch({
   checked,
@@ -96,6 +116,52 @@ export function Settings({
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
+  // OTA Updates state
+  const [otaStatus, setOtaStatus] = useState<OtaStatus | null>(null);
+  const [isCheckingOta, setIsCheckingOta] = useState(false);
+  const [isDownloadingOta, setIsDownloadingOta] = useState(false);
+  const [otaUpdate, setOtaUpdate] = useState<OtaManifest | null>(null);
+  const [otaReady, setOtaReady] = useState(false);
+  const [autoCheckOta, setAutoCheckOta] = useState<boolean>(() => isOtaAutoCheckEnabled());
+  const [showAdvancedOta, setShowAdvancedOta] = useState(false);
+  const [manifestUrlInput, setManifestUrlInput] = useState<string>(() => getOtaManifestUrl());
+
+  useEffect(() => {
+    getCurrentOtaVersion().then(setOtaStatus).catch(() => {});
+  }, []);
+
+  const handleCheckOta = async () => {
+    triggerHaptic("light");
+    setIsCheckingOta(true);
+    setOtaUpdate(null);
+    try {
+      const res = await checkForOtaUpdate({ silent: false, customUrl: manifestUrlInput });
+      if (res.available && res.manifest) {
+        setOtaUpdate(res.manifest);
+      }
+    } finally {
+      setIsCheckingOta(false);
+    }
+  };
+
+  const handleDownloadOta = async () => {
+    if (!otaUpdate) return;
+    setIsDownloadingOta(true);
+    try {
+      const res = await downloadAndApplyOta(otaUpdate);
+      if (res.success) {
+        setOtaReady(true);
+      }
+    } finally {
+      setIsDownloadingOta(false);
+    }
+  };
+
+  const handleRestartApp = async () => {
+    triggerHaptic("success");
+    await reloadOtaApp();
+  };
+
   return (
     <div className="bg-black text-white min-h-[100dvh] antialiased flex flex-col w-full pb-24">
       {/* iOS Top Navigation Bar with Safe Area Inset */}
@@ -115,12 +181,8 @@ export function Settings({
           <span>{t("go_back") || "Back"}</span>
         </button>
 
-        <div className="h-7 overflow-hidden flex items-center">
-          <img
-            src={logoInAppImg}
-            alt="LIFTLAB"
-            className="h-full w-auto object-contain"
-          />
+        <div className="h-7 flex items-center">
+          <h2 className="text-base font-semibold text-white tracking-tight">{t("settings")}</h2>
         </div>
 
         <div className="w-14" />
@@ -482,6 +544,180 @@ export function Settings({
                 <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Section: IN-APP LIVE UPDATES (OTA) */}
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] ml-4 mb-2">
+            {t("ota_updates") || "Aggiornamenti In-App (OTA)"}
+          </div>
+
+          <div className="bg-[#1C1C1E] border border-white/8 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-sm">
+            {/* Version & Status */}
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-[#30D158]/20 flex items-center justify-center text-[#30D158] shrink-0 border border-[#30D158]/30">
+                  <Radio className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-white">
+                    {t("ota_current_version") || "Versione Corrente"}
+                  </span>
+                  <span className="text-xs text-[#8E8E93]">
+                    {otaStatus?.isBuiltin ? "APK Base (Builtin)" : `Bundle Live (${otaStatus?.bundleId?.slice(0, 8)})`}
+                  </span>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-black bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 tabular-nums">
+                v{otaStatus?.version || "1.0.0"}
+              </span>
+            </div>
+
+            {/* Auto-check switch */}
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
+                  <CloudDownload className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-white">
+                    {t("ota_autocheck") || "Controllo automatico all'avvio"}
+                  </span>
+                  <span className="text-xs text-[#8E8E93]">
+                    Cerca aggiornamenti OTA in background
+                  </span>
+                </div>
+              </div>
+              <AppleSwitch
+                checked={autoCheckOta}
+                onChange={(enabled) => {
+                  setAutoCheckOta(enabled);
+                  setOtaAutoCheckEnabled(enabled);
+                }}
+              />
+            </div>
+
+            {/* Check for updates CTA */}
+            <div className="p-4 flex flex-col gap-3">
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.01 }}
+                transition={CARTOON_SPRINGS.bouncy}
+                disabled={isCheckingOta || isDownloadingOta}
+                onClick={handleCheckOta}
+                className="w-full bg-white/10 hover:bg-white/15 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isCheckingOta ? "animate-spin text-[#30D158]" : "text-[#30D158]"}`} />
+                <span>
+                  {isCheckingOta
+                    ? (t("ota_checking") || "Verifica in corso...")
+                    : (t("ota_check_updates") || "Verifica Aggiornamenti")}
+                </span>
+              </motion.button>
+
+              {/* Update available banner */}
+              <AnimatePresence>
+                {otaUpdate && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={CARTOON_SPRINGS.bouncy}
+                    className="p-3.5 bg-[#30D158]/10 border border-[#30D158]/30 rounded-xl flex flex-col gap-2.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[#30D158]">
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                        <span className="text-xs font-bold">
+                          {t("ota_update_available") || "Nuovo aggiornamento disponibile!"}
+                        </span>
+                      </div>
+                      <span className="text-xs font-black px-2 py-0.5 rounded-full bg-[#30D158] text-black">
+                        v{otaUpdate.version}
+                      </span>
+                    </div>
+
+                    {otaUpdate.notes && (
+                      <div className="p-3 bg-black/40 rounded-xl border border-white/5">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8E93] mb-1.5 block">
+                          Novità della Versione
+                        </span>
+                        <OtaNotesView notes={otaUpdate.notes} />
+                      </div>
+                    )}
+
+                    {!otaReady ? (
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.01 }}
+                        transition={CARTOON_SPRINGS.bouncy}
+                        disabled={isDownloadingOta}
+                        onClick={handleDownloadOta}
+                        className="bg-[#30D158] text-black font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.3)] disabled:opacity-50"
+                      >
+                        <CloudDownload className={`w-4 h-4 ${isDownloadingOta ? "animate-bounce" : ""}`} />
+                        <span>
+                          {isDownloadingOta
+                            ? (t("ota_downloading") || "Download in corso...")
+                            : (t("ota_download_install") || "Scarica e Installa")}
+                        </span>
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.01 }}
+                        transition={CARTOON_SPRINGS.bouncy}
+                        onClick={handleRestartApp}
+                        className="bg-[#0A84FF] text-white font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(10,132,255,0.3)]"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>{t("ota_restart_now") || "Riavvia Ora"}</span>
+                      </motion.button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Advanced Server Configuration toggle */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedOta(!showAdvancedOta)}
+                className="text-[11px] text-[#8E8E93] hover:text-white flex items-center gap-1.5 self-center cursor-pointer transition-colors"
+              >
+                <Sliders className="w-3 h-3" />
+                <span>{showAdvancedOta ? "Nascondi impostazioni avanzate" : "Server OTA avanzato"}</span>
+              </button>
+
+              {showAdvancedOta && (
+                <div className="flex flex-col gap-2 p-3 bg-black/40 rounded-xl border border-white/5 text-xs">
+                  <label className="text-[10px] uppercase font-bold text-[#8E8E93]">
+                    {t("ota_manifest_url") || "URL Manifest OTA"}
+                  </label>
+                  <input
+                    type="url"
+                    value={manifestUrlInput}
+                    onChange={(e) => setManifestUrlInput(e.target.value)}
+                    onBlur={() => setOtaManifestUrl(manifestUrlInput)}
+                    placeholder={DEFAULT_MANIFEST_URL}
+                    className="bg-black/60 border border-white/10 rounded-lg px-2.5 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#30D158]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManifestUrlInput(DEFAULT_MANIFEST_URL);
+                      setOtaManifestUrl(null);
+                    }}
+                    className="text-[10px] text-[#30D158] hover:underline self-end cursor-pointer"
+                  >
+                    Ripristina default GitHub
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

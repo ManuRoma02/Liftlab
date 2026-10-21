@@ -82,22 +82,12 @@ runEmpiricalTest("1.1 Motion Engine Simulation of APPLE_SPRINGS.criticallyDamped
   const overshootPercent = maxVal - 100;
   console.log(`    -> Peak value: ${maxVal.toFixed(2)} (+${overshootPercent.toFixed(1)}% overshoot) at t=${maxT}ms`);
 
-  // EMPIRICAL CHALLENGE ASSERTION:
+  // EMPIRICAL VALIDATION:
   // HIG critically damped specification requires damping ratio 1.0 (zero overshoot: peak <= 100.0).
-  // In Motion 12, passing 'damping: 1.0' triggers physicsKeys mode where damping is raw friction c=1.0,
-  // causing damping ratio zeta = 1 / (2*sqrt(100*1)) = 0.05, producing an 85.4% overshoot!
-  const hasSevereOvershoot = overshootPercent > 50;
-  if (hasSevereOvershoot) {
-    console.warn(
-      `    [DEFECT REPRODUCED] APPLE_SPRINGS.criticallyDamped causes ${overshootPercent.toFixed(1)}% overshoot in Motion ` +
-      `due to 'damping: 1.0' overriding duration/bounce into underdamped physics mode (zeta = 0.05)!`
-    );
-  }
-  // Record this empirical finding
   assert.equal(
-    hasSevereOvershoot,
+    overshootPercent <= 0.01,
     true,
-    "Expected empirical reproduction of Motion underdamped 85.4% overshoot bug"
+    "Critically damped spring must have zero overshoot (100% critically damped)"
   );
 });
 

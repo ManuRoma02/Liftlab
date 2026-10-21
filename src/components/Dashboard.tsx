@@ -20,16 +20,11 @@ import {
   Plus,
   Play,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
+import { AreaChart, Area, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { motion, AnimatePresence } from "motion/react";
+import { CARTOON_SPRINGS } from "../lib/motion";
 
-import consoleLogoImg from "../assets/images/liftlab_console_logo.png";
-import consoleIconImg from "../assets/images/liftlab_console_icon.png";
+import { LiftLabBrand, LiftLabMark } from "./common/LiftLabBrand";
 import { triggerHaptic } from "../lib/haptics";
 
 import { PRListModal } from "./common/PRListModal";
@@ -410,47 +405,47 @@ export const Dashboard = React.memo(
               : "Unstoppable!";
 
     return (
-      <main className="px-margin-mobile py-stack-lg flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
-        <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.1),transparent_18rem)]" />
-          </div>
-          <div className="p-4 sm:p-5 flex items-center gap-4 border-b border-white/8 relative z-10">
-            <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shrink-0 shadow-sm">
-              <img
-                src={consoleIconImg}
-                alt="LiftLab"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158]">
-                {t("dashboard")}
-              </p>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.025em] leading-none">
-                LiftLab
-              </h1>
-              <p className="text-xs text-[#8E8E93] mt-0.5">
+      <main className="px-margin-mobile py-stack-lg pb-32 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
+        {/* Top Header Bar: Clean Apple Fitness+ aesthetic */}
+        <header className="flex items-center justify-between px-1 pt-1 pb-1">
+          <div className="flex items-center gap-3">
+            <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md" />
+            <div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black tracking-tight text-white leading-none">LIFT</span>
+                <span className="text-xl font-black tracking-tight text-[#30D158] leading-none">LAB</span>
+              </div>
+              <p className="text-xs text-[#8E8E93] font-medium mt-1">
                 {(t("training_calendar_day") || "Calendario: {day}").replace("{day}", days[selectedDayIndex].full)}
               </p>
             </div>
-            <button
-              onClick={() => {
-                triggerHaptic("light");
-                navigateTo("settings");
-              }}
-              aria-label="Settings"
-              className="ml-auto w-10 h-10 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </button>
+          </div>
+          <button
+            onClick={() => {
+              triggerHaptic("light");
+              navigateTo("settings");
+            }}
+            aria-label="Settings"
+            className="w-11 h-11 rounded-full bg-white/6 hover:bg-white/10 border border-white/10 text-[#8E8E93] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+          >
+            <SettingsIcon className="w-5 h-5" />
+          </button>
+        </header>
+
+        {/* Weekly Training Calendar Card */}
+        <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)] p-4 sm:p-5">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.1),transparent_18rem)]" />
           </div>
 
-          <div className="p-3 sm:p-4 relative z-10">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-[12px] font-bold text-[#8E8E93] uppercase tracking-[0.06em]">
-                {t("this_week")}
-              </h2>
+          <div className="relative z-10">
+            <div className="flex justify-between items-center mb-3.5">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#30D158]" />
+                <h2 className="text-[13px] font-bold text-white tracking-wide">
+                  {t("this_week")}
+                </h2>
+              </div>
               <span className="text-xs font-semibold text-[#30D158]">
                 {selectedActivities.length > 0
                   ? (t("logged_count") || "{count} completati").replace("{count}", String(selectedActivities.length))
@@ -467,13 +462,16 @@ export const Dashboard = React.memo(
                 const isSelected = idx === selectedDayIndex;
 
                 return (
-                  <button
+                  <motion.button
                     key={idx}
+                    whileTap={{ scale: 0.86, rotate: -2 }}
+                    whileHover={{ scale: 1.04 }}
+                    transition={CARTOON_SPRINGS.bouncy}
                     onClick={() => {
                       triggerHaptic("light");
                       setSelectedDayIndex(idx);
                     }}
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-200 flex-1 py-2.5 rounded-2xl relative cursor-pointer active:scale-95 ${
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-200 flex-1 py-2.5 rounded-2xl relative cursor-pointer ${
                       isSelected
                         ? "bg-[#30D158] text-black shadow-[0_4px_16px_rgba(48,209,88,0.35)] scale-105 z-10 font-bold"
                         : isToday
@@ -508,7 +506,7 @@ export const Dashboard = React.memo(
                         {t("today")}
                       </span>
                     )}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -520,14 +518,17 @@ export const Dashboard = React.memo(
           className="grid grid-cols-2 gap-3"
         >
           {/* Streak card */}
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.95, rotate: -1 }}
+            whileHover={{ scale: 1.015 }}
+            transition={CARTOON_SPRINGS.bouncy}
             onClick={() => {
               triggerHaptic("light");
               setIsStreakModalOpen(true);
             }}
             data-testid="streak-card"
-            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-all select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#30D158]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
@@ -553,18 +554,21 @@ export const Dashboard = React.memo(
             <p className="text-[11px] text-[#8E8E93] leading-tight z-10">
               {t("history_saved_local") || "Storico salvato sul dispositivo"}
             </p>
-          </button>
+          </motion.button>
 
           {/* Weekly goal card */}
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.95, rotate: 1 }}
+            whileHover={{ scale: 1.015 }}
+            transition={CARTOON_SPRINGS.bouncy}
             onClick={() => {
               triggerHaptic("light");
               setEditableGoal(weeklyGoal);
               setIsGoalModalOpen(true);
             }}
             data-testid="weekly-goal-card"
-            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer active:scale-[0.97] transition-all select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#0A84FF]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
@@ -613,7 +617,7 @@ export const Dashboard = React.memo(
                 </span>
               </div>
             </div>
-          </button>
+          </motion.button>
         </div>
 
         {/* ── Streak History Modal ─────────────────────────────────────────── */}
@@ -884,7 +888,7 @@ export const Dashboard = React.memo(
                         {t(ex.title) || ex.title}
                       </h4>
                       <span className="text-xs text-[#8E8E93] font-medium tabular-nums">
-                        {ex.sets?.filter((s: any) => s.completed).length || 0} sets
+                        {ex.sets?.filter((s: any, idx: number) => s.completed && !(idx > 0 && s.technique === "dropset")).length || 0} sets
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -894,7 +898,7 @@ export const Dashboard = React.memo(
                           className="bg-white/5 p-2 rounded-xl border border-white/8 text-center"
                         >
                           <p className="text-[10px] text-[#8E8E93] uppercase font-bold">
-                            {t("set")} {setIdx + 1}
+                            {set.technique === "dropset" ? "↳ DROP" : `${t("set")} ${setIdx + 1}`}
                           </p>
                           <p className="text-sm font-extrabold text-[#30D158] tabular-nums tracking-tight">
                             {set.weight}{" "}
@@ -982,9 +986,9 @@ export const Dashboard = React.memo(
                       triggerHaptic("medium");
                       onStartLiveWorkout(nextRoutine.id);
                     }}
-                    className="w-full bg-[#30D158] text-black font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_14px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#30D158] text-black font-extrabold text-sm py-3.5 rounded-2xl hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_14px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Play className="w-3.5 h-3.5 fill-black" />
+                    <Play className="w-4 h-4 fill-black" />
                     <span>{t("start_today_routine") || "Avvia Scheda di Oggi"}</span>
                   </button>
                 </div>
@@ -1008,9 +1012,9 @@ export const Dashboard = React.memo(
                     triggerHaptic("medium");
                     onStartLiveWorkout("empty");
                   }}
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-sm py-3.5 rounded-2xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>{t("start_empty") || "Allenamento Libero"}</span>
                 </button>
               </div>
@@ -1102,26 +1106,32 @@ export const Dashboard = React.memo(
               </p>
             </div>
             <div className="relative z-10 flex flex-col sm:flex-row gap-3 pt-2">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9, rotate: -2 }}
+                whileHover={{ scale: 1.03 }}
+                transition={CARTOON_SPRINGS.bouncy}
                 onClick={() => {
                   triggerHaptic("medium");
                   onStartLiveWorkout("empty");
                 }}
-                className="bg-[#30D158] text-black font-extrabold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
+                className="bg-[#30D158] text-black font-extrabold text-xs px-6 py-3.5 rounded-full hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" strokeWidth={2.5} />
                 <span>{t("start_empty") || "Inizia Allenamento Libero"}</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.92, rotate: 1.5 }}
+                whileHover={{ scale: 1.02 }}
+                transition={CARTOON_SPRINGS.bouncy}
                 onClick={() => {
                   triggerHaptic("light");
                   navigateTo("workout");
                 }}
-                className="bg-white/6 hover:bg-white/12 border border-white/10 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="bg-white/6 hover:bg-white/12 border border-white/10 text-white font-semibold text-xs px-6 py-3.5 rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Dumbbell className="w-4 h-4 text-[#8E8E93]" />
                 <span>{t("view_routines") || "Sfoglia Schede"}</span>
-              </button>
+              </motion.button>
             </div>
           </section>
         )}

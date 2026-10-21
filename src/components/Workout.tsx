@@ -13,6 +13,8 @@ import {
   Search,
   X,
   Sparkles,
+  Play,
+  Pencil,
 } from "lucide-react";
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
@@ -20,19 +22,7 @@ import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { RoutineData } from "../types/workout";
 import { motion } from "motion/react";
 import { triggerHaptic } from "../lib/haptics";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.04 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
-};
+import { CARTOON_SPRINGS, CARTOON_KEYFRAMES, appleSpringDefault } from "../lib/motion";
 
 export function Workout({
   t,
@@ -141,26 +131,29 @@ export function Workout({
           </span>
         }
         action={
-          <div className="flex gap-2 w-full justify-end relative flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 w-full justify-end relative flex-wrap sm:flex-nowrap">
             <motion.button
+              data-testid="start-freestyle-workout-btn"
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 triggerHaptic("medium");
                 onStartLiveWorkout("empty");
               }}
-              className="bg-[#30D158] text-black text-xs font-extrabold px-4 py-3 rounded-full hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_4px_14px_rgba(48,209,88,0.3)] shrink-0"
+              className="bg-[#30D158] text-black text-xs font-bold h-10 px-4 rounded-full hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.25)] shrink-0"
             >
-              <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+              <Plus className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
               <span className="truncate">{t("start_empty") || "Allenamento Libero"}</span>
             </motion.button>
             <motion.button
+              data-testid="create-routine-btn"
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 triggerHaptic("light");
                 onCreate();
               }}
-              className="bg-white/8 text-white border border-white/10 text-xs font-bold px-4 py-3 rounded-full hover:bg-white/12 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              className="bg-white/8 text-white border border-white/10 text-xs font-semibold h-10 px-3.5 rounded-full hover:bg-white/12 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
+              <Plus className="w-3.5 h-3.5 shrink-0 text-[#8E8E93]" strokeWidth={2} />
               <span className="truncate">{t("create_new") || "Nuova Scheda"}</span>
             </motion.button>
             <div className="relative shrink-0">
@@ -264,8 +257,11 @@ export function Workout({
       {/* Routine library */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 overflow-visible">
         {routines.length === 0 ? (
-          <div className="md:col-span-3 flex flex-col items-center justify-center gap-6 py-20 border-2 border-dashed border-white/10 rounded-3xl bg-[#1C1C1E]/50">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-[#30D158]">
+          <div
+            data-testid="workout-empty-state"
+            className="md:col-span-3 flex flex-col items-center justify-center gap-6 py-20 px-6 border border-white/10 rounded-3xl bg-[#121418]/90 shadow-[0_16px_40px_rgba(0,0,0,0.4)]"
+          >
+            <div className="w-16 h-16 bg-[#30D158]/12 border border-[#30D158]/25 rounded-2xl flex items-center justify-center text-[#30D158] shadow-[0_0_28px_rgba(48,209,88,0.2)]">
               <ClipboardList className="w-8 h-8" />
             </div>
             <div className="text-center max-w-sm px-4">
@@ -314,8 +310,13 @@ export function Workout({
             </div>
           </div>
         ) : filteredRoutines.length === 0 ? (
-          <div className="md:col-span-3 flex flex-col items-center justify-center gap-4 py-16 border border-dashed border-white/10 rounded-3xl bg-[#1C1C1E]/50">
-            <Search className="w-8 h-8 text-[#8E8E93]" />
+          <div
+            data-testid="workout-search-empty-state"
+            className="md:col-span-3 flex flex-col items-center justify-center gap-4 py-16 px-6 border border-white/10 rounded-3xl bg-[#121418]/90 shadow-[0_16px_40px_rgba(0,0,0,0.4)]"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8E8E93]">
+              <Search className="w-7 h-7" />
+            </div>
             <div className="text-center max-w-sm px-4">
               <h3 className="text-lg font-bold text-white mb-1">
                 {t("no_routines_search") || "Nessuna scheda trovata"}
@@ -333,9 +334,11 @@ export function Workout({
           </div>
         ) : (
           filteredRoutines.map((routine) => (
-            <article
+            <motion.article
               key={routine.id}
-              className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 active:scale-[0.98] transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
+              whileHover={{ scale: 1.015 }}
+              transition={CARTOON_SPRINGS.bouncy}
+              className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
                 activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
               }`}
             >
@@ -366,13 +369,16 @@ export function Workout({
 
                   {/* Options Menu & Favorite */}
                   <div className="relative flex items-center gap-0.5 shrink-0">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.72, rotate: 20 }}
+                      animate={routine.favorite ? { scale: [0.8, 1.35, 0.95, 1], rotate: [0, -12, 12, 0] } : { scale: 1, rotate: 0 }}
+                      transition={routine.favorite ? CARTOON_KEYFRAMES.wobble : appleSpringDefault}
                       onClick={(e) => {
                         e.stopPropagation();
                         triggerHaptic("light");
                         onToggleFavoriteRoutine(routine.id);
                       }}
-                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors cursor-pointer active:scale-90 ${
+                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors cursor-pointer ${
                         routine.favorite
                           ? "text-[#30D158] bg-[#30D158]/15"
                           : "text-[#8E8E93] hover:text-[#30D158] hover:bg-white/5"
@@ -380,7 +386,7 @@ export function Workout({
                       aria-label={routine.favorite ? "Remove favorite" : "Favorite routine"}
                     >
                       <Star className="w-4 h-4" fill={routine.favorite ? "currentColor" : "none"} />
-                    </button>
+                    </motion.button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -451,29 +457,37 @@ export function Workout({
 
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5">
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.88, rotate: -2 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={CARTOON_SPRINGS.bouncy}
                   onClick={(e) => {
                     e.stopPropagation();
                     triggerHaptic("light");
                     onSelectRoutine(routine.id);
                     navigateTo("routine_editor");
                   }}
-                  className="min-h-[44px] border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full active:scale-95 transition-all cursor-pointer text-center"
+                  className="min-h-[44px] border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  EDIT
-                </button>
-                <button
+                  <Pencil className="w-3.5 h-3.5 text-[#8E8E93]" />
+                  <span>{t("edit") || "Modifica"}</span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.88, rotate: -2 }}
+                  whileHover={{ scale: 1.04 }}
+                  transition={CARTOON_SPRINGS.bouncy}
                   onClick={(e) => {
                     e.stopPropagation();
                     triggerHaptic("medium");
                     onStartLiveWorkout(routine.id);
                   }}
-                  className="min-h-[44px] bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 active:scale-95 transition-all cursor-pointer text-center shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
+                  className="min-h-[44px] bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(48,209,88,0.25)]"
                 >
-                  START
-                </button>
+                  <Play className="w-3.5 h-3.5 fill-black" />
+                  <span>{t("start") || "Inizia"}</span>
+                </motion.button>
               </div>
-            </article>
+            </motion.article>
           ))
         )}
       </div>

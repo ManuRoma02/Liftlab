@@ -20,6 +20,11 @@ public class LiveWorkoutPlugin extends Plugin {
     public static final String KEY_REST_SECONDS = "rest_seconds";
     public static final String KEY_IS_RESTING = "is_resting";
     public static final String KEY_REST_END_AT = "rest_end_at";
+    public static final String KEY_SET_NUMBER = "set_number";
+    public static final String KEY_TOTAL_SETS = "total_sets";
+    public static final String KEY_DEFAULT_REST = "default_rest";
+    public static final String KEY_TARGET_WEIGHT_REPS = "target_weight_reps";
+    public static final String KEY_IS_REST_FINISHED = "is_rest_finished";
 
     private static LiveWorkoutPlugin instance;
 
@@ -44,7 +49,9 @@ public class LiveWorkoutPlugin extends Plugin {
 
         LiveWorkoutService service = LiveWorkoutService.getInstance();
         if (service != null) {
-            if ("add_30s".equals(action)) {
+            if ("complete_set".equals(action)) {
+                service.completeSet();
+            } else if ("add_30s".equals(action)) {
                 service.addRestSeconds(30);
             } else if ("skip_rest".equals(action)) {
                 service.skipRest();
@@ -73,12 +80,22 @@ public class LiveWorkoutPlugin extends Plugin {
         String setInfo = call.getString("currentSetInfo", "In corso");
         int restSeconds = call.getInt("restRemainingSeconds", 0);
         boolean isResting = call.getBoolean("isResting", false);
+        int setNum = call.getInt("setNumber", 1);
+        int totalSets = call.getInt("totalSets", 3);
+        int defaultRest = call.getInt("defaultRestSeconds", 90);
+        String weightReps = call.getString("weightRepsInfo", "");
+        boolean isRestFinished = call.getBoolean("isRestFinished", false);
 
         Intent serviceIntent = new Intent(context, LiveWorkoutService.class);
         serviceIntent.putExtra(LiveWorkoutService.EXTRA_EXERCISE_NAME, exercise);
         serviceIntent.putExtra(LiveWorkoutService.EXTRA_SET_INFO, setInfo);
         serviceIntent.putExtra(LiveWorkoutService.EXTRA_REST_SECONDS, restSeconds);
         serviceIntent.putExtra(LiveWorkoutService.EXTRA_IS_RESTING, isResting);
+        serviceIntent.putExtra(LiveWorkoutService.EXTRA_SET_NUMBER, setNum);
+        serviceIntent.putExtra(LiveWorkoutService.EXTRA_TOTAL_SETS, totalSets);
+        serviceIntent.putExtra(LiveWorkoutService.EXTRA_DEFAULT_REST, defaultRest);
+        serviceIntent.putExtra(LiveWorkoutService.EXTRA_TARGET_WEIGHT_REPS, weightReps);
+        serviceIntent.putExtra(LiveWorkoutService.EXTRA_IS_REST_FINISHED, isRestFinished);
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -98,10 +115,15 @@ public class LiveWorkoutPlugin extends Plugin {
         String setInfo = call.getString("currentSetInfo", "In corso");
         int restSeconds = call.getInt("restRemainingSeconds", 0);
         boolean isResting = call.getBoolean("isResting", false);
+        int setNum = call.getInt("setNumber", 0);
+        int totalSets = call.getInt("totalSets", 0);
+        int defaultRest = call.getInt("defaultRestSeconds", 0);
+        String weightReps = call.getString("weightRepsInfo", null);
+        boolean isRestFinished = call.getBoolean("isRestFinished", false);
 
         LiveWorkoutService service = LiveWorkoutService.getInstance();
         if (service != null) {
-            service.updateState(exercise, setInfo, restSeconds, isResting);
+            service.updateState(exercise, setInfo, restSeconds, isResting, setNum, totalSets, defaultRest, weightReps, isRestFinished);
             call.resolve();
         } else {
             startLiveService(call);

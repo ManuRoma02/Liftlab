@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <group
+        android:scaleX="0.66"
+        android:scaleY="0.66"
+        android:pivotX="256"
+        android:pivotY="256">
+
+        <!-- Calibrated Olympic Bumper Rim -->
+        <path
+            android:pathData="M 256,70 a 186,186 0 1,0 0.001,0 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeAlpha="0.3"
+            android:strokeWidth="10" />
+
+        <path
+            android:pathData="M 256,102 a 154,154 0 1,0 0.001,0 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeAlpha="0.15"
+            android:strokeWidth="4" />
+
+        <!-- 4 Cardinal Olympic Notches -->
+        <path
+            android:pathData="M 253,58 h 6 v 24 h -6 Z M 253,430 h 6 v 24 h -6 Z M 58,253 h 24 v 6 h -24 Z M 430,253 h 24 v 6 h -24 Z"
+            android:fillColor="#FFFFFF" />
+
+        <!-- Centered Architectural Olympic 'L' -->
+        <path
+            android:pathData="M 196,136 L 236,136 L 236,316 L 336,316 L 336,356 L 316,376 L 176,376 L 176,156 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+</vector>

@@ -112,15 +112,18 @@ export function filterLiftLabStorage(storage: Storage = localStorage) {
 }
 
 const EXCLUDED_RESTORE_SUFFIXES = ["_bak", "_tmp"];
+const SAFE_LIFTLAB_KEY_REGEX = /^liftlab_[a-zA-Z0-9_]+$/;
 
 export function restoreRawLocalStorageEntries(
   entries: Record<string, unknown>,
   storage: Storage = localStorage,
   extraExcludeKeys: string[] = ["liftlab_backup_pre_import"],
 ) {
+  if (!entries || typeof entries !== "object") return;
   const excluded = new Set(extraExcludeKeys);
   Object.entries(entries).forEach(([key, value]) => {
-    if (!key.startsWith(LIFTLAB_PREFIX)) return;
+    if (!key.startsWith(LIFTLAB_PREFIX) || !SAFE_LIFTLAB_KEY_REGEX.test(key)) return;
+    if (key.includes("__proto__") || key.includes("prototype") || key.includes("constructor")) return;
     if (excluded.has(key)) return;
     if (EXCLUDED_RESTORE_SUFFIXES.some((suffix) => key.endsWith(suffix))) return;
     if (typeof value === "string") storage.setItem(key, value);
@@ -132,7 +135,13 @@ export function parseGuestObject(raw: string | null): Record<string, unknown> {
   try {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Record<string, unknown>;
+      const sanitized: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (k !== "__proto__" && k !== "prototype" && k !== "constructor") {
+          sanitized[k] = v;
+        }
+      }
+      return sanitized;
     }
   } catch {
     // ignore corrupt guest payload

@@ -1,0 +1,104 @@
+{
+  "images": [
+    {
+      "size": "20x20",
+      "idiom": "universal",
+      "filename": "icon_20x20@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "20x20",
+      "idiom": "universal",
+      "filename": "icon_20x20@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "29x29",
+      "idiom": "universal",
+      "filename": "icon_29x29@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "29x29",
+      "idiom": "universal",
+      "filename": "icon_29x29@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "38x38",
+      "idiom": "universal",
+      "filename": "icon_38x38@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "38x38",
+      "idiom": "universal",
+      "filename": "icon_38x38@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "40x40",
+      "idiom": "universal",
+      "filename": "icon_40x40@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "40x40",
+      "idiom": "universal",
+      "filename": "icon_40x40@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "60x60",
+      "idiom": "universal",
+      "filename": "icon_60x60@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "60x60",
+      "idiom": "universal",
+      "filename": "icon_60x60@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "64x64",
+      "idiom": "universal",
+      "filename": "icon_64x64@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "64x64",
+      "idiom": "universal",
+      "filename": "icon_64x64@3x.png",
+      "scale": "3x"
+    },
+    {
+      "size": "68x68",
+      "idiom": "universal",
+      "filename": "icon_68x68@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "76x76",
+      "idiom": "universal",
+      "filename": "icon_76x76@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "83.5x83.5",
+      "idiom": "universal",
+      "filename": "icon_83.5x83.5@2x.png",
+      "scale": "2x"
+    },
+    {
+      "size": "1024x1024",
+      "idiom": "universal",
+      "filename": "icon_1024x1024@1x.png",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "version": 1,
+    "author": "antigravity"
+  }
+}

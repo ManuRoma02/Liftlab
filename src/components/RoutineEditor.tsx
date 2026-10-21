@@ -27,11 +27,12 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { App as CapacitorApp } from "@capacitor/app";
-import logoInAppImg from "../assets/images/logo_in_app.png";
 import consoleIconImg from "../assets/images/liftlab_console_icon.png";
 
 import { ConfirmModal, useBackDismiss } from "./common/ConfirmModal";
 import { ExerciseMuscleVisual } from "./common/ExerciseMuscleVisual";
+import { ExerciseMedia } from "./common/ExerciseMedia";
+import { ExerciseFilterBar } from "./common/ExerciseFilterBar";
 import { AddExercise } from "./common/AddExercise";
 import { PlateCalculatorModal } from "./common/PlateCalculatorModal";
 import {
@@ -58,9 +59,11 @@ import {
   stopLiveWorkoutNotification,
   addLiveWorkoutActionListener,
   drainPendingLiveWorkoutActions,
+  isNativeAndroid,
 } from "../lib/liveWorkoutBridge";
 import type { RoutineData, ExerciseData, SetData } from "../types/workout";
 import { triggerHaptic } from "../lib/haptics";
+import { appleSpringDefault, appleSpringBouncy, CARTOON_SPRINGS, CARTOON_KEYFRAMES } from "../lib/motion";
 
 export function RoutineEditor({
   t,
@@ -178,32 +181,63 @@ export function RoutineEditor({
   const pushNativeLiveState = (
     currentRoutine?: RoutineData | null,
     restLeft?: number | null,
+    isRestFinishedOverride?: boolean,
   ) => {
     if (mode !== "live") return;
     const source = currentRoutine || routineRef.current;
     if (!source) return;
     let activeExTitle = source.name || "Live Workout";
     let activeSetInfo = "In corso";
+    let setNumber = 1;
+    let totalSets = 1;
+    let defaultRest = restTimer || 90;
+    let weightRepsInfo = "";
+
     for (const ex of source.exercises || []) {
+      const isDrop = (s: SetData, idx: number) => idx > 0 && s.technique === "dropset";
       const incompleteIdx = (ex.sets || []).findIndex((s) => !s.completed);
       if (incompleteIdx !== -1) {
         const targetSet = ex.sets[incompleteIdx];
         activeExTitle = ex.title;
+
+        // Count main sets only so drop sets are not counted as independent sets
+        const mainSets = (ex.sets || []).filter((s, idx) => !isDrop(s, idx));
+        totalSets = Math.max(1, mainSets.length);
+
+        let mainSetNum = 1;
+        for (let i = 0; i <= incompleteIdx; i++) {
+          if (!isDrop(ex.sets[i], i)) {
+            mainSetNum = (ex.sets || []).slice(0, i + 1).filter((s, idx) => !isDrop(s, idx)).length;
+          }
+        }
+        setNumber = Math.max(1, mainSetNum);
+        defaultRest = getExerciseRestPreset(ex, exerciseRestPresets, restTimer) || 90;
         const weightText =
           targetSet.weight !== "" && targetSet.weight !== undefined
-            ? `${targetSet.weight} ${unitLabel} × `
+            ? `${targetSet.weight} ${unitLabel}`
             : "";
         const repsText = targetSet.reps ? `${targetSet.reps} ${isTimedExercise(ex) ? "secs" : "reps"}` : "";
-        activeSetInfo = `Serie ${incompleteIdx + 1} di ${ex.sets.length}${weightText || repsText ? ` (${weightText}${repsText})` : ""}`;
+        weightRepsInfo = weightText && repsText ? `${weightText} × ${repsText}` : (weightText || repsText);
+        activeSetInfo = `Serie ${setNumber} di ${totalSets}${weightRepsInfo ? ` (${weightRepsInfo})` : ""}`;
         break;
       }
     }
     const remaining = restLeft !== undefined ? restLeft : readWallClockRestLeft();
+    const isResting = Boolean(remaining && remaining > 0);
+    const isRestFinished = isRestFinishedOverride !== undefined
+      ? isRestFinishedOverride
+      : Boolean(!isResting && (remaining === 0 || remaining === null) && activeRestLeft === 0);
+
     void updateLiveWorkoutNotification({
       currentExercise: activeExTitle,
       currentSetInfo: activeSetInfo,
-      restRemainingSeconds: remaining && remaining > 0 ? remaining : 0,
-      isResting: Boolean(remaining && remaining > 0),
+      restRemainingSeconds: isResting && remaining ? remaining : 0,
+      isResting,
+      setNumber,
+      totalSets,
+      defaultRestSeconds: defaultRest,
+      weightRepsInfo,
+      isRestFinished,
     });
   };
 
@@ -278,14 +312,16 @@ export function RoutineEditor({
     if (duration <= 0) {
       localStorage.removeItem(LIVE_REST_TIMER_KEY);
       setActiveRestLeft(null);
-      pushNativeLiveState(routineRef.current, 0);
+      pushNativeLiveState(routineRef.current, 0, false);
       if (activeNotificationRef.current) {
         activeNotificationRef.current.close();
         activeNotificationRef.current = null;
       }
-      try {
-        await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
-      } catch (e) {}
+      if (!isNativeAndroid()) {
+        try {
+          await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+        } catch (e) {}
+      }
       return;
     }
     if (activeRestLeft === null || duration > initialRestDuration) {
@@ -294,22 +330,24 @@ export function RoutineEditor({
     const state = { duration, startedAt: Date.now() };
     localStorage.setItem(LIVE_REST_TIMER_KEY, JSON.stringify(state));
     setActiveRestLeft(duration);
-    pushNativeLiveState(routineRef.current, duration);
+    pushNativeLiveState(routineRef.current, duration, false);
 
-    try {
-      await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            id: 1001,
-            title: "Rest Over!",
-            body: "Time for your next set. Tap to resume workout.",
-            schedule: { at: new Date(Date.now() + duration * 1000) },
-            sound: "beep.wav",
-          },
-        ],
-      });
-    } catch (e) {}
+    if (!isNativeAndroid()) {
+      try {
+        await LocalNotifications.cancel({ notifications: [{ id: 1001 }] });
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: 1001,
+              title: "Rest Over!",
+              body: "Time for your next set. Tap to resume workout.",
+              schedule: { at: new Date(Date.now() + duration * 1000) },
+              sound: "beep.wav",
+            },
+          ],
+        });
+      } catch (e) {}
+    }
   };
 
   const showTimerNotification = (seconds: number) => {
@@ -384,7 +422,7 @@ export function RoutineEditor({
         }
       }
       if (next === null || next === 0) {
-        pushNativeLiveState(routineRef.current, 0);
+        pushNativeLiveState(routineRef.current, 0, true);
       }
       setActiveRestLeft(next);
     };
@@ -451,17 +489,97 @@ export function RoutineEditor({
         let foundExId: string | null = null;
         let foundSetId: string | null = null;
         let foundExercise: ExerciseData | undefined;
+        let foundSet: SetData | undefined;
+        let incSetIdx = -1;
         for (const ex of currentRoutine.exercises || []) {
-          const incSet = (ex.sets || []).find((s) => !s.completed);
-          if (incSet) {
+          const idx = (ex.sets || []).findIndex((s) => !s.completed);
+          if (idx !== -1) {
             foundExId = ex.id;
-            foundSetId = incSet.id;
+            foundSetId = ex.sets[idx].id;
             foundExercise = ex;
-            if (!canCompleteSet(incSet, ex)) return;
+            foundSet = ex.sets[idx];
+            incSetIdx = idx;
             break;
           }
         }
-        if (!foundExId || !foundSetId) return;
+        if (!foundExId || !foundSetId || !foundExercise || !foundSet) return;
+
+        // Auto-fill fallback weight & reps if missing so completing from notification always succeeds
+        let completedWeight = finalizeLiveNumericInput(foundSet.weight);
+        let completedReps = finalizeLiveNumericInput(foundSet.reps);
+
+        if (completedReps === "" || completedReps === 0) {
+          const prevCompleted = foundExercise.sets.find((s) => s.completed && s.reps);
+          const hist = prevSetsMap[normalizeExerciseTitle(foundExercise.title)]?.[0];
+          completedReps = prevCompleted?.reps
+            ? finalizeLiveNumericInput(prevCompleted.reps)
+            : (hist?.reps ? finalizeLiveNumericInput(hist.reps) : 8);
+        }
+        if (completedWeight === "") {
+          if (isBodyweightExercise(foundExercise)) {
+            completedWeight = 0;
+          } else {
+            const prevCompleted = foundExercise.sets.find((s) => s.completed && s.weight !== "");
+            const hist = prevSetsMap[normalizeExerciseTitle(foundExercise.title)]?.[0];
+            completedWeight = prevCompleted?.weight !== undefined && prevCompleted?.weight !== ""
+              ? finalizeLiveNumericInput(prevCompleted.weight)
+              : (hist?.weight !== undefined && hist?.weight !== "" ? finalizeLiveNumericInput(hist.weight) : 20);
+          }
+        }
+
+        // Find all attached drop sets belonging to this set
+        const attachedDropIndices: number[] = [];
+        for (let i = incSetIdx + 1; i < foundExercise.sets.length; i++) {
+          if (foundExercise.sets[i]?.technique === "dropset") {
+            attachedDropIndices.push(i);
+          } else {
+            break;
+          }
+        }
+        const setIdsToComplete = new Set([
+          foundSetId,
+          ...attachedDropIndices.map((i) => foundExercise!.sets[i].id),
+        ]);
+
+        const updatedSets = foundExercise.sets.map((s) => {
+          if (setIdsToComplete.has(s.id)) {
+            let sWeight = finalizeLiveNumericInput(s.weight);
+            let sReps = finalizeLiveNumericInput(s.reps);
+            if (s.id === foundSetId) {
+              sWeight = completedWeight;
+              sReps = completedReps;
+            } else {
+              if (sReps === "" || sReps === 0) sReps = completedReps;
+              if (sWeight === "") {
+                sWeight = typeof completedWeight === "number" && completedWeight > 0
+                  ? Math.max(1, Math.round(completedWeight * 0.75))
+                  : completedWeight;
+              }
+            }
+            return {
+              ...s,
+              completed: true,
+              weight: sWeight,
+              reps: sReps,
+            };
+          }
+          return s;
+        });
+
+        // Auto-carry forward weight and reps to next main set if next set is empty
+        const nextMainSetIdx = incSetIdx + attachedDropIndices.length + 1;
+        if (nextMainSetIdx < updatedSets.length) {
+          const nextSet = updatedSets[nextMainSetIdx];
+          const nextHasNoWeight = nextSet.weight === "" || nextSet.weight === undefined || nextSet.weight === null;
+          const nextHasNoReps = nextSet.reps === "" || nextSet.reps === undefined || nextSet.reps === null;
+          if (nextHasNoWeight && nextHasNoReps) {
+            updatedSets[nextMainSetIdx] = {
+              ...nextSet,
+              weight: completedWeight,
+              reps: completedReps,
+            };
+          }
+        }
 
         const updatedRoutine: RoutineData = {
           ...currentRoutine,
@@ -469,16 +587,7 @@ export function RoutineEditor({
             ex.id === foundExId
               ? {
                   ...ex,
-                  sets: ex.sets.map((s) =>
-                    s.id === foundSetId
-                      ? {
-                          ...s,
-                          completed: true,
-                          weight: finalizeLiveNumericInput(s.weight),
-                          reps: finalizeLiveNumericInput(s.reps),
-                        }
-                      : s,
-                  ),
+                  sets: updatedSets,
                 }
               : ex,
           ),
@@ -487,13 +596,22 @@ export function RoutineEditor({
         setRoutine(updatedRoutine);
         writeJsonAtomic(LIVE_PROGRESS_KEY, updatedRoutine);
 
-        const timer = foundExercise
-          ? getExerciseRestPreset(foundExercise, exerciseRestPresets, restTimer)
-          : restTimer;
-        if (timer > 0) {
-          startRestTimer(timer);
+        const allWorkoutSetsCompleted = updatedRoutine.exercises.every((ex) =>
+          ex.sets.every((s) => s.completed),
+        );
+
+        if (!allWorkoutSetsCompleted) {
+          const timer = foundExercise
+            ? getExerciseRestPreset(foundExercise, exerciseRestPresets, restTimer)
+            : restTimer;
+          if (timer > 0) {
+            startRestTimer(timer);
+          } else {
+            pushNativeLiveState(updatedRoutine, 0, false);
+          }
         } else {
-          pushNativeLiveState(updatedRoutine, 0);
+          startRestTimer(0);
+          pushNativeLiveState(updatedRoutine, 0, false);
         }
       } else if (action === "add_30s") {
         const current = readWallClockRestLeft() || 0;
@@ -614,7 +732,6 @@ export function RoutineEditor({
   const [debouncedExerciseSearch, setDebouncedExerciseSearch] = useState("");
   const [filterMuscle, setFilterMuscle] = useState<string>("All");
   const [filterEquipment, setFilterEquipment] = useState<string>("All");
-  const [isMuscleFilterOpen, setIsMuscleFilterOpen] = useState(false);
   const [isEquipmentFilterOpen, setIsEquipmentFilterOpen] = useState(false);
   const [makingSupersetForId, setMakingSupersetForId] = useState<string | null>(
     null,
@@ -678,7 +795,6 @@ export function RoutineEditor({
       setFilterMuscle("All");
     }
     setFilterEquipment("All");
-    setIsMuscleFilterOpen(false);
     setIsEquipmentFilterOpen(false);
     if (supersetId) setMakingSupersetForId(supersetId);
     setIsExerciseModalOpen(true);
@@ -698,7 +814,6 @@ export function RoutineEditor({
   useBackDismiss(isFinishConfirmOpen, () => setIsFinishConfirmOpen(false));
   useBackDismiss(isCustomExerciseOpen, () => setIsCustomExerciseOpen(false));
   useBackDismiss(isExerciseModalOpen, closeExerciseModal);
-  useBackDismiss(isMuscleFilterOpen, () => setIsMuscleFilterOpen(false));
   useBackDismiss(isEquipmentFilterOpen, () => setIsEquipmentFilterOpen(false));
   useBackDismiss(isPlateCalcOpen, () => setIsPlateCalcOpen(false));
 
@@ -950,37 +1065,41 @@ export function RoutineEditor({
     });
   };
 
-  const adjustSetWeight = (exId: string, setId: string, delta: number) => {
-    const ex = (routine?.exercises ?? []).find((e) => e.id === exId);
-    const s = ex?.sets.find((set) => set.id === setId);
-    if (!s) return;
-    const currentWeight = parseGymNumber(s.weight) ?? (isBodyweightExercise(ex) ? 0 : 20);
-    const newWeight = Math.max(0, Math.round((currentWeight + delta) * 10) / 10);
-    triggerHaptic("light");
-    updateSet(exId, setId, { weight: newWeight });
-  };
-
-  const adjustSetReps = (exId: string, setId: string, delta: number) => {
-    const ex = (routine?.exercises ?? []).find((e) => e.id === exId);
-    const s = ex?.sets.find((set) => set.id === setId);
-    if (!s) return;
-    const currentReps = parseGymNumber(s.reps) ?? 8;
-    const newReps = Math.max(1, currentReps + delta);
-    triggerHaptic("light");
-    updateSet(exId, setId, { reps: newReps });
-  };
-
   const toggleSetCompletion = (
     exId: string,
     setId: string,
     currentCompleted: boolean,
   ) => {
     const activeExercise = (routine?.exercises ?? []).find((ex) => ex.id === exId);
-    const targetSet = activeExercise?.sets.find((s) => s.id === setId);
-    if (!currentCompleted && (!activeExercise || !canCompleteSet(targetSet, activeExercise))) {
-      showToast(t("complete_set_needs_values") || "Enter weight and reps before completing the set.", "error");
-      return;
+    if (!activeExercise) return;
+    const targetSetIdx = activeExercise.sets.findIndex((s) => s.id === setId);
+    if (targetSetIdx === -1) return;
+    const targetSet = activeExercise.sets[targetSetIdx];
+
+    // Find all attached drop sets immediately following this set
+    const attachedDropIndices: number[] = [];
+    for (let i = targetSetIdx + 1; i < activeExercise.sets.length; i++) {
+      if (activeExercise.sets[i]?.technique === "dropset") {
+        attachedDropIndices.push(i);
+      } else {
+        break;
+      }
     }
+
+    if (!currentCompleted) {
+      if (!canCompleteSet(targetSet, activeExercise)) {
+        showToast(t("complete_set_needs_values") || "Enter weight and reps before completing the set.", "error");
+        return;
+      }
+      for (const dropIdx of attachedDropIndices) {
+        const dropSet = activeExercise.sets[dropIdx];
+        if (!canCompleteSet(dropSet, activeExercise)) {
+          showToast(t("complete_dropset_needs_values") || "Inserisci peso e ripetizioni anche per il drop set prima di completare.", "error");
+          return;
+        }
+      }
+    }
+
     const updatedCompleted = !currentCompleted;
     if (updatedCompleted) {
       triggerHaptic("success");
@@ -988,8 +1107,14 @@ export function RoutineEditor({
       triggerHaptic("light");
     }
 
+    // Set IDs to update together: main set + all attached drops
+    const setIdsToUpdate = new Set([
+      setId,
+      ...attachedDropIndices.map((i) => activeExercise.sets[i].id),
+    ]);
+
     const updatedSets = (activeExercise?.sets ?? []).map((s) => {
-      if (s.id === setId) {
+      if (setIdsToUpdate.has(s.id)) {
         return {
           ...s,
           completed: updatedCompleted,
@@ -1000,16 +1125,16 @@ export function RoutineEditor({
       return s;
     });
 
-    // Auto-carry forward weight and reps to next set if next set is empty
+    // Auto-carry forward weight and reps to next main set if next set is empty
     if (updatedCompleted) {
-      const setIdx = updatedSets.findIndex((s) => s.id === setId);
-      if (setIdx >= 0 && setIdx + 1 < updatedSets.length) {
-        const nextSet = updatedSets[setIdx + 1];
-        const currentSet = updatedSets[setIdx];
+      const nextMainSetIdx = targetSetIdx + attachedDropIndices.length + 1;
+      if (nextMainSetIdx < updatedSets.length) {
+        const nextSet = updatedSets[nextMainSetIdx];
+        const currentSet = updatedSets[targetSetIdx];
         const nextHasNoWeight = nextSet.weight === "" || nextSet.weight === undefined || nextSet.weight === null;
         const nextHasNoReps = nextSet.reps === "" || nextSet.reps === undefined || nextSet.reps === null;
         if (nextHasNoWeight && nextHasNoReps) {
-          updatedSets[setIdx + 1] = {
+          updatedSets[nextMainSetIdx] = {
             ...nextSet,
             weight: currentSet.weight,
             reps: currentSet.reps,
@@ -1053,17 +1178,26 @@ export function RoutineEditor({
   };
 
   const totalWorkoutSets = routine.exercises.reduce(
-    (sum, ex) => sum + (ex.sets?.length || 0),
+    (sum, ex) => sum + (ex.sets || []).filter((s, idx) => !(idx > 0 && s.technique === "dropset")).length,
     0,
   );
   const completedWorkoutSets = routine.exercises.reduce(
-    (sum, ex) => sum + (ex.sets || []).filter((set) => set.completed).length,
+    (sum, ex) => sum + (ex.sets || []).filter((s, idx) => !(idx > 0 && s.technique === "dropset") && s.completed).length,
     0,
   );
   const workoutProgress =
     totalWorkoutSets > 0
       ? Math.round((completedWorkoutSets / totalWorkoutSets) * 100)
       : 0;
+
+  const exerciseCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: exercises.length };
+    for (const ex of exercises) {
+      const cat = ex.category || "Other";
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return counts;
+  }, [exercises]);
 
   const modalExerciseResults = useMemo(() => {
     const queryStr = debouncedExerciseSearch.trim();
@@ -1097,12 +1231,13 @@ export function RoutineEditor({
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <div className="h-10 flex items-center justify-center overflow-hidden">
-            <img
-              src={logoInAppImg}
-              alt="LIFTLAB"
-              className="h-full w-auto object-contain"
-            />
+          <div className="flex flex-col justify-center min-w-0 max-w-[180px] sm:max-w-xs truncate">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-primary truncate">
+              {mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")}
+            </span>
+            <span className="text-sm font-semibold text-on-surface truncate">
+              {routine.title || (mode === "live" ? t("live_workout") : t("edit_routine"))}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-stack-md">
@@ -1116,15 +1251,22 @@ export function RoutineEditor({
               {t("exit_workout") || "Abbandona"}
             </button>
           )}
-          <button
+          <motion.button
             ref={mode === "live" ? headerFinishButtonRef : undefined}
+            data-testid={mode === "live" ? "finish-workout-btn" : "save-routine-btn"}
             onClick={handleRoutineSave}
             disabled={isSaving}
-            className={`premium-cta font-black rounded-full uppercase hover:brightness-110 active:scale-95 transition-all tracking-wider ${mode === "live" ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-sm"} ${isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            whileTap={{ scale: 0.91, rotate: -1.5 }}
+            whileHover={{ scale: 1.03 }}
+            transition={CARTOON_SPRINGS.bouncy}
+            className={`premium-cta font-black rounded-full uppercase hover:brightness-110 transition-all tracking-wider ${mode === "live" ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-sm"} ${isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             {isSaving ? (
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 border-2 border-on-primary-container border-t-transparent rounded-full animate-spin"></span>
+              <div className="flex items-center gap-2" role="status" aria-label={t("saving") || "Saving..."}>
+                <span className="relative flex h-3 w-3 items-center justify-center" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-on-primary-container opacity-40" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-on-primary-container" />
+                </span>
                 {t("saving") || "Saving..."}
               </div>
             ) : mode === "live" ? (
@@ -1132,7 +1274,7 @@ export function RoutineEditor({
             ) : (
               t("save_routine")
             )}
-          </button>
+          </motion.button>
         </div>
       </header>
 
@@ -1352,9 +1494,18 @@ export function RoutineEditor({
                       {/* Header */}
                       <div className="flex justify-between items-start mb-stack-md">
                         <div className="flex items-center gap-stack-md">
-                          <div className="w-16 h-16 bg-black/35 flex items-center justify-center rounded-2xl border border-white/10 flex-shrink-0 shadow-inner">
-                            <Dumbbell className="text-primary-fixed w-8 h-8" />
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic("light");
+                              onOpenDetail?.(ex);
+                            }}
+                            className="w-16 h-16 bg-black/35 flex items-center justify-center rounded-2xl border border-white/10 flex-shrink-0 shadow-inner overflow-hidden cursor-pointer hover:border-primary-fixed/40 transition-colors active:scale-95"
+                            title={t("view_exercise_details") || "Dettagli esercizio"}
+                            aria-label={`Visualizza dettagli per ${ex.title}`}
+                          >
+                            <ExerciseMedia exercise={ex} className="w-full h-full" />
+                          </button>
                           <div>
                             <div className="flex items-center gap-1.5">
                               <input
@@ -1529,14 +1680,14 @@ export function RoutineEditor({
                       </div>
 
                       {/* Sets Header */}
-                      <div className="grid grid-cols-12 gap-3 mb-2 text-on-surface-variant text-[11px] uppercase tracking-wider px-2">
+                      <div className="grid grid-cols-12 gap-2 mb-2 text-on-surface-variant text-[11px] uppercase tracking-wider px-2">
                         <div className="col-span-2 text-center font-bold">
                           {t("set")}
                         </div>
-                        <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center font-bold`}>
+                        <div className="col-span-2 text-center font-bold">
                           {t("previous")}
                         </div>
-                        <div className="col-span-3 text-center font-bold">
+                        <div className={`${showRpe ? "col-span-3" : "col-span-4"} text-center font-bold`}>
                           {unit}
                         </div>
                         <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center font-bold`}>
@@ -1552,69 +1703,132 @@ export function RoutineEditor({
 
                       {/* Set Rows */}
                       <div className="space-y-2 relative">
-                        {ex.sets.map((set: any, sIdx: number) => {
-                          const isDropSet = set.technique === "dropset";
-                          const isCluster = set.technique === "cluster";
-                          const isAttachedChild = sIdx > 0 && isDropSet;
-                          const nextIsAttachedChild = (sIdx + 1 < ex.sets.length) && ex.sets[sIdx + 1]?.technique === "dropset";
+                        {(() => {
+                          let mainSetCounter = 0;
+                          const setNumberMap = ex.sets.map((s: any, idx: number) => {
+                            const isAttached = idx > 0 && s.technique === "dropset";
+                            if (!isAttached) {
+                              mainSetCounter += 1;
+                            }
+                            return mainSetCounter;
+                          });
 
-                          return (
-                            <div key={set.id} className="relative">
-                              {isAttachedChild && (
-                                <div className="absolute -top-3 left-6 z-10 flex flex-col items-center opacity-80 pointer-events-none">
-                                  <div className="w-0.5 h-3 bg-primary-fixed" />
-                                  <div className="w-2 h-2 border-r-2 border-b-2 border-primary-fixed rotate-45 -translate-y-1" />
-                                </div>
-                              )}
-                              <div
-                                className={`grid grid-cols-12 gap-3 items-center p-2.5 transition-all duration-150 border gpu-accelerated ${
-                                  set.completed
-                                    ? "bg-[#30D158]/10 border-[#30D158]/40 shadow-sm"
-                                    : `bg-black/30 border-white/8 ${isAttachedChild ? "bg-white/[0.02] border-t-[#30D158]/20" : ""}`
-                                } ${isAttachedChild ? "-mt-2 rounded-t-none rounded-b-2xl border-t-0" : nextIsAttachedChild ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
-                              >
-                                <div className="col-span-2 flex flex-col items-center justify-center relative">
-                                  {mode === "live" ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleSetCompletion(ex.id, set.id, set.completed)}
-                                      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl flex items-center justify-center transition-all duration-150 relative overflow-hidden shadow-sm cursor-pointer active:scale-90 ${
-                                        set.completed
-                                          ? "bg-[#30D158] text-black font-extrabold shadow-[0_2px_12px_rgba(48,209,88,0.4)] scale-100"
-                                          : "bg-white/6 border border-white/10 text-[#8E8E93] hover:bg-white/10 hover:text-white hover:border-[#30D158]/40"
-                                      }`}
-                                      aria-label={`Toggle set ${sIdx + 1} completion`}
-                                    >
-                                      {set.completed ? (
-                                        <Check className="w-5 h-5 relative z-10 text-black stroke-[2.5]" />
-                                      ) : (
-                                        <span className="text-sm font-extrabold text-white/90 tabular-nums">
-                                          {sIdx + 1}
+                          return ex.sets.map((set: any, sIdx: number) => {
+                            const isDropSet = set.technique === "dropset";
+                            const isCluster = set.technique === "cluster";
+                            const isAttachedChild = sIdx > 0 && isDropSet;
+                            const nextIsAttachedChild = (sIdx + 1 < ex.sets.length) && ex.sets[sIdx + 1]?.technique === "dropset";
+                            const displaySetNumber = setNumberMap[sIdx];
+
+                            return (
+                              <div key={set.id} className="relative">
+                                {isAttachedChild && (
+                                  <div className="absolute -top-3 left-6 z-10 flex flex-col items-center opacity-80 pointer-events-none">
+                                    <div className="w-0.5 h-3 bg-primary-fixed" />
+                                    <div className="w-2 h-2 border-r-2 border-b-2 border-primary-fixed rotate-45 -translate-y-1" />
+                                  </div>
+                                )}
+                                <div
+                                  className={`grid grid-cols-12 gap-2 items-center p-2.5 transition-all duration-150 border gpu-accelerated ${
+                                    set.completed
+                                      ? "bg-[#30D158]/10 border-[#30D158]/40 shadow-sm"
+                                      : `bg-black/30 border-white/8 ${isAttachedChild ? "bg-white/[0.02] border-t-[#30D158]/20" : ""}`
+                                  } ${isAttachedChild ? "-mt-2 rounded-t-none rounded-b-2xl border-t-0" : nextIsAttachedChild ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
+                                >
+                                  <div className="col-span-2 flex flex-col items-center justify-center relative">
+                                    {isAttachedChild ? (
+                                      <motion.div
+                                        initial={false}
+                                        animate={{
+                                          scale: set.completed ? [1, 1.2, 0.94, 1.05, 1] : 1,
+                                          rotate: set.completed ? [0, -5, 5, 0] : 0,
+                                        }}
+                                        transition={
+                                          set.completed
+                                            ? { ...CARTOON_KEYFRAMES.elastic, delay: 0.08 }
+                                            : appleSpringDefault
+                                        }
+                                        className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl flex flex-col items-center justify-center relative transition-all duration-150 select-none ${
+                                          set.completed
+                                            ? "bg-[#30D158]/20 border border-[#30D158]/50 text-[#30D158] shadow-[0_0_12px_rgba(48,209,88,0.25)]"
+                                            : "bg-white/4 border border-dashed border-primary-fixed/30 text-primary-fixed"
+                                        }`}
+                                        title="Drop set collegato alla serie principale"
+                                      >
+                                        {set.completed ? (
+                                          <Check className="w-4 h-4 text-[#30D158] stroke-[2.5]" />
+                                        ) : (
+                                          <span className="text-xs font-black text-primary-fixed leading-none">↳</span>
+                                        )}
+                                        <span className="text-[7.5px] font-black uppercase tracking-wider leading-none mt-0.5">
+                                          DROP
                                         </span>
-                                      )}
-                                    </button>
-                                  ) : (
-                                    <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl bg-white/5 border border-white/10 text-white text-xs font-bold flex items-center justify-center tabular-nums">
-                                      {sIdx + 1}
-                                    </div>
-                                  )}
-                                  {isDropSet && (
-                                    <span className="text-[7.5px] font-black uppercase tracking-wider text-primary-fixed text-center leading-none mt-1">
-                                      DROP
-                                    </span>
-                                  )}
-                                  {isCluster && (
-                                    <span className="text-[7.5px] font-black uppercase tracking-wider text-amber-400 text-center leading-none mt-1">
-                                      CLUSTER
-                                    </span>
-                                  )}
-                                  {set.technique && !isDropSet && !isCluster && (
-                                    <span className="text-[7.5px] font-black uppercase tracking-wider text-on-surface-variant text-center leading-none mt-1">
-                                      {set.technique}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className={`${showRpe ? "col-span-2" : "col-span-3"} text-center flex flex-col items-center justify-center gap-0.5`}>
+                                      </motion.div>
+                                    ) : mode === "live" ? (
+                                      <motion.button
+                                        type="button"
+                                        onClick={() => toggleSetCompletion(ex.id, set.id, set.completed)}
+                                        whileTap={{ scale: 0.8, rotate: -3 }}
+                                        initial={false}
+                                        animate={{
+                                          scale: set.completed ? [1, 1.26, 0.92, 1.06, 1] : 1,
+                                          rotate: set.completed ? [0, -7, 7, -2, 0] : 0,
+                                        }}
+                                        transition={set.completed ? CARTOON_KEYFRAMES.elastic : appleSpringDefault}
+                                        className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl flex items-center justify-center relative overflow-hidden shadow-sm cursor-pointer select-none ${
+                                          set.completed
+                                            ? "bg-[#30D158] text-black font-extrabold shadow-[0_2px_14px_rgba(48,209,88,0.45)]"
+                                            : "bg-white/6 border border-white/10 text-[#8E8E93] hover:bg-white/10 hover:text-white hover:border-[#30D158]/40"
+                                        }`}
+                                        aria-label={`Toggle set ${displaySetNumber} completion`}
+                                      >
+                                        {set.completed && (
+                                          <motion.span
+                                            key={`ripple-${set.id}`}
+                                            initial={{ scale: 0.7, opacity: 0.85 }}
+                                            animate={{ scale: 1.9, opacity: 0 }}
+                                            transition={CARTOON_KEYFRAMES.ripple}
+                                            className="absolute inset-0 rounded-2xl border-2 border-white pointer-events-none"
+                                          />
+                                        )}
+                                        {set.completed ? (
+                                          <motion.span
+                                            key="completed"
+                                            initial={{ scale: 0.5, opacity: 0, rotate: -25 }}
+                                            animate={{ scale: [0.5, 1.32, 0.94, 1], opacity: 1, rotate: [-20, 8, -4, 0] }}
+                                            transition={CARTOON_KEYFRAMES.pop}
+                                            className="flex items-center justify-center"
+                                          >
+                                            <Check className="w-5 h-5 relative z-10 text-black stroke-[2.8]" />
+                                          </motion.span>
+                                        ) : (
+                                          <span className="text-sm font-extrabold text-white/90 tabular-nums">
+                                            {displaySetNumber}
+                                          </span>
+                                        )}
+                                      </motion.button>
+                                    ) : (
+                                      <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl bg-white/5 border border-white/10 text-white text-xs font-bold flex items-center justify-center tabular-nums">
+                                        {displaySetNumber}
+                                      </div>
+                                    )}
+                                    {isDropSet && !isAttachedChild && (
+                                      <span className="text-[7.5px] font-black uppercase tracking-wider text-primary-fixed text-center leading-none mt-1">
+                                        DROP
+                                      </span>
+                                    )}
+                                    {isCluster && (
+                                      <span className="text-[7.5px] font-black uppercase tracking-wider text-amber-400 text-center leading-none mt-1">
+                                        CLUSTER
+                                      </span>
+                                    )}
+                                    {set.technique && !isDropSet && !isCluster && (
+                                      <span className="text-[7.5px] font-black uppercase tracking-wider text-on-surface-variant text-center leading-none mt-1">
+                                        {set.technique}
+                                      </span>
+                                    )}
+                                  </div>
+                                <div className="col-span-2 text-center flex flex-col items-center justify-center gap-0.5">
                                   {(() => {
                                     const prev = prevSetsMap[ex.id]?.[sIdx];
                                     if (prev?.weight && prev?.reps) {
@@ -1643,19 +1857,22 @@ export function RoutineEditor({
 
                                       return (
                                         <div className="flex flex-col items-center gap-0.5">
-                                          <button
+                                          <motion.button
                                             type="button"
+                                            whileTap={{ scale: 0.86, rotate: -2 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={CARTOON_SPRINGS.bouncy}
                                             onClick={() => {
                                               updateSet(ex.id, set.id, {
                                                 weight: set.weight !== "" ? set.weight : prevW,
                                                 reps: set.reps !== "" ? set.reps : targetR,
                                               });
                                             }}
-                                            className="group inline-flex items-center gap-0.5 bg-surface-variant/40 hover:bg-primary-fixed/20 text-on-surface px-1.5 py-0.5 rounded text-[11px] font-bold font-sans tabular-nums border border-white/5 hover:border-primary-fixed/40 transition-colors cursor-pointer active:scale-95 shadow-inner"
+                                            className="group inline-flex items-center gap-0.5 bg-surface-variant/40 hover:bg-primary-fixed/20 text-on-surface px-1.5 py-0.5 rounded text-[11px] font-bold font-sans tabular-nums border border-white/5 hover:border-primary-fixed/40 transition-colors cursor-pointer shadow-inner"
                                             title={`Scorsa volta: ${prevW}×${prevR}. Tocca per compilare target (${targetW}×${targetR})`}
                                           >
                                             <span>{prevW}<span className="text-primary-fixed/80 mx-0.5">×</span>{prevR}</span>
-                                          </button>
+                                          </motion.button>
                                           {deltaBadge && (
                                             <span
                                               className={`text-[8px] font-black uppercase tracking-wider px-1 rounded leading-tight ${
@@ -1677,104 +1894,54 @@ export function RoutineEditor({
                                     );
                                   })()}
                                 </div>
-                                <div className="col-span-3 relative flex items-center">
-                                  {mode === "live" && !isBodyweightExercise(ex) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        triggerHaptic("light");
-                                        adjustSetWeight(ex.id, set.id, -2.5);
-                                      }}
-                                      className="absolute left-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
-                                      title="-2.5"
-                                      aria-label="Decrease weight"
-                                    >
-                                      -
-                                    </button>
-                                  )}
+                                <div className={`${showRpe ? "col-span-3" : "col-span-4"} relative flex items-center`}>
                                   <input
-                                    className={`w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 ${mode === "live" && !isBodyweightExercise(ex) ? "px-6" : "px-2"} text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
+                                    className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isBodyweightExercise(ex) ? "BW" : unit}
                                     type="text"
                                     inputMode="decimal"
                                     value={set.weight === "" || set.weight === undefined ? "" : String(set.weight)}
+                                    onFocus={(e) => {
+                                      e.target.select();
+                                    }}
                                     onChange={(e) =>
                                       updateSet(ex.id, set.id, {
                                         weight: e.target.value,
                                       })
                                     }
-                                    onBlur={(e) =>
+                                    onBlur={(e) => {
                                       updateSet(ex.id, set.id, {
                                         weight: finalizeLiveNumericInput(e.target.value),
-                                      })
-                                    }
+                                      });
+                                    }}
                                   />
-                                  {mode === "live" && !isBodyweightExercise(ex) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        triggerHaptic("light");
-                                        adjustSetWeight(ex.id, set.id, 2.5);
-                                      }}
-                                      className="absolute right-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
-                                      title="+2.5"
-                                      aria-label="Increase weight"
-                                    >
-                                      +
-                                    </button>
-                                  )}
                                 </div>
                                 <div className={`${showRpe ? "col-span-2" : "col-span-3"} relative flex items-center`}>
-                                  {mode === "live" && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        triggerHaptic("light");
-                                        adjustSetReps(ex.id, set.id, -1);
-                                      }}
-                                      className="absolute left-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
-                                      title="-1"
-                                      aria-label="Decrease reps"
-                                    >
-                                      -
-                                    </button>
-                                  )}
                                   <input
-                                    className={`w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 ${mode === "live" ? "px-6" : "px-2"} text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner`}
+                                    className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isTimedExercise(ex) ? "Secs" : (t("reps_upper") || "Ripet.")}
                                     type="text"
-                                    inputMode="decimal"
+                                    inputMode="numeric"
                                     value={set.reps === "" || set.reps === undefined ? "" : String(set.reps)}
+                                    onFocus={(e) => {
+                                      e.target.select();
+                                    }}
                                     onChange={(e) =>
                                       updateSet(ex.id, set.id, {
                                         reps: e.target.value,
                                       })
                                     }
-                                    onBlur={(e) =>
+                                    onBlur={(e) => {
                                       updateSet(ex.id, set.id, {
                                         reps: finalizeLiveNumericInput(e.target.value),
-                                      })
-                                    }
+                                      });
+                                    }}
                                   />
-                                  {mode === "live" && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        triggerHaptic("light");
-                                        adjustSetReps(ex.id, set.id, 1);
-                                      }}
-                                      className="absolute right-0 z-10 min-w-[32px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 text-xs font-bold active:scale-90 transition-all cursor-pointer select-none"
-                                      title="+1"
-                                      aria-label="Increase reps"
-                                    >
-                                      +
-                                    </button>
-                                  )}
                                 </div>
                                 {showRpe && (
                                   <div className="col-span-2">
                                     <input
-                                      className="w-full bg-black/40 border border-white/10 rounded-xl text-on-surface text-center py-2.5 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-primary-fixed focus:bg-black/60 focus:outline-none transition-all shadow-inner"
+                                      className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:outline-none transition-all shadow-inner"
                                       placeholder="RPE"
                                       type="text"
                                       inputMode="decimal"
@@ -1804,8 +1971,9 @@ export function RoutineEditor({
                               </div>
                             </div>
                           );
-                        })}
-                      </div>
+                        });
+                      })()}
+                    </div>
 
                       {/* Notes */}
                       {idx === group.length - 1 && (
@@ -1840,7 +2008,10 @@ export function RoutineEditor({
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.8, rotate: -4 }}
+                            whileHover={{ scale: 1.1 }}
+                            transition={CARTOON_SPRINGS.bouncy}
                             onClick={() => {
                               const next = Math.max(0, getExerciseRestPreset(ex, exerciseRestPresets, restTimer) - 15);
                               updateExercise(ex.id, { restTimer: next });
@@ -1849,11 +2020,14 @@ export function RoutineEditor({
                             className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-on-surface-variant cursor-pointer"
                           >
                             <Minus className="w-4 h-4" />
-                          </button>
+                          </motion.button>
                           <span className="w-12 text-center text-primary font-black tabular-nums">
                             {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s
                           </span>
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.8, rotate: 4 }}
+                            whileHover={{ scale: 1.1 }}
+                            transition={CARTOON_SPRINGS.bouncy}
                             onClick={() => {
                               const next = getExerciseRestPreset(ex, exerciseRestPresets, restTimer) + 15;
                               updateExercise(ex.id, { restTimer: next });
@@ -1862,30 +2036,39 @@ export function RoutineEditor({
                             className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-on-surface-variant cursor-pointer"
                           >
                             <Plus className="w-4 h-4" />
-                          </button>
+                          </motion.button>
                         </div>
                       </div>
 
                       {/* Actions */}
                       <div className="mt-stack-md flex gap-stack-sm items-center flex-wrap">
-                        <button
+                        <motion.button
+                          whileTap={{ scale: 0.88, rotate: -1.5 }}
+                          whileHover={{ scale: 1.05 }}
+                          transition={CARTOON_SPRINGS.bouncy}
                           onClick={() => addSet(ex.id)}
                           className="text-sm font-bold text-on-surface-variant hover:text-primary-fixed flex items-center gap-1 transition-colors bg-white/5 px-3 py-2 rounded-full hover:bg-white/10 cursor-pointer"
                         >
                           <Plus className="w-4 h-4" /> {t("add_set")}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.88, rotate: -1.5 }}
+                          whileHover={{ scale: 1.05 }}
+                          transition={CARTOON_SPRINGS.bouncy}
                           onClick={() => handleGenerateWarmup(ex.id)}
                           className="text-sm font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-full hover:bg-amber-500/20 cursor-pointer"
                         >
                           <Flame className="w-4 h-4 text-amber-400" /> {t("warmup") || "Warmup"}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.88, rotate: -1.5 }}
+                          whileHover={{ scale: 1.05 }}
+                          transition={CARTOON_SPRINGS.bouncy}
                           onClick={() => addSet(ex.id, "dropset")}
                           className="text-sm font-bold text-on-surface-variant hover:text-primary-fixed flex items-center gap-1 transition-colors bg-white/5 px-3 py-2 rounded-full hover:bg-white/10 cursor-pointer"
                         >
                           <Zap className="w-4 h-4" /> {t("add_drop_cluster")}
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   </motion.div>
@@ -1896,7 +2079,10 @@ export function RoutineEditor({
 
           {/* Add Exercise Button */}
           <div className="md:col-span-12 mt-stack-md">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.01 }}
+              transition={CARTOON_SPRINGS.bouncy}
               onClick={() => openExerciseModal()}
               className="w-full border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
             >
@@ -1907,7 +2093,7 @@ export function RoutineEditor({
               <span className="font-bold text-[14px] uppercase tracking-widest">
                 {t("add_exercise")}
               </span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </main>
@@ -1971,83 +2157,51 @@ export function RoutineEditor({
                       setFilterEquipment("All");
                     }
                   }}
-                  className="w-full bg-surface-container border border-surface-variant rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:border-primary-fixed transition-colors"
+                  className="w-full bg-surface-container border border-surface-variant rounded-lg pl-10 pr-10 py-2 text-sm outline-none focus:border-primary-fixed transition-colors"
                 />
+                {exerciseSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setExerciseSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-on-surface-variant hover:text-white transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
-              {/* Filters */}
-              <div className="flex gap-4">
-                <div className="relative flex-1">
-                  <button
-                    onClick={() => {
-                      setIsMuscleFilterOpen(!isMuscleFilterOpen);
-                      setIsEquipmentFilterOpen(false);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-surface-container border border-surface-variant rounded-lg text-sm transition-colors hover:border-primary-fixed"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-on-surface-variant uppercase">
-                        {t("muscle")}
-                      </span>
-                      <span className="font-bold text-primary">
-                        {t(filterMuscle.toLowerCase())}
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-on-surface-variant transition-transform ${isMuscleFilterOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {isMuscleFilterOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-surface-variant rounded-lg shadow-xl z-[110] py-1 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                      {[
-                        "All",
-                        "Chest",
-                        "Back",
-                        "Legs",
-                        "Arms",
-                        "Core",
-                        "Shoulders",
-                        "Cardio",
-                        "Functional",
-                      ].map((m) => (
-                        <button
-                          key={m}
-                          onClick={() => {
-                            setFilterMuscle(m);
-                            setIsMuscleFilterOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-surface-variant transition-colors ${filterMuscle === m ? "text-primary font-bold" : "text-on-surface"}`}
-                        >
-                          {t(m.toLowerCase())}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {/* Category Filter Pills */}
+              <ExerciseFilterBar
+                selectedCategory={filterMuscle}
+                onSelectCategory={setFilterMuscle}
+                counts={exerciseCategoryCounts}
+                t={t}
+              />
 
-                <div className="relative flex-1">
+              {/* Equipment Filter & Reset Bar */}
+              <div className="flex items-center justify-between gap-3 pt-0.5">
+                <div className="relative flex-1 max-w-[200px]">
                   <button
                     onClick={() => {
                       setIsEquipmentFilterOpen(!isEquipmentFilterOpen);
-                      setIsMuscleFilterOpen(false);
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-surface-container border border-surface-variant rounded-lg text-sm transition-colors hover:border-primary-fixed"
+                    className="w-full flex items-center justify-between px-3 py-1.5 bg-surface-container border border-surface-variant rounded-lg text-xs transition-colors hover:border-primary-fixed"
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 truncate">
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase">
-                        {t("equip")}
+                        {t("equip")}:
                       </span>
-                      <span className="font-bold text-primary">
+                      <span className="font-bold text-primary truncate">
                         {t(filterEquipment.toLowerCase())}
                       </span>
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-on-surface-variant transition-transform ${isEquipmentFilterOpen ? "rotate-180" : ""}`}
+                      className={`w-3.5 h-3.5 text-on-surface-variant transition-transform shrink-0 ${isEquipmentFilterOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                   {isEquipmentFilterOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-surface-variant rounded-lg shadow-xl z-[110] py-1 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                       {[
+                      {[
                         "All",
                         "Barbell",
                         "Dumbbell",
@@ -2064,7 +2218,7 @@ export function RoutineEditor({
                             setFilterEquipment(e);
                             setIsEquipmentFilterOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-surface-variant transition-colors ${filterEquipment === e ? "text-primary font-bold" : "text-on-surface"}`}
+                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-surface-variant transition-colors ${filterEquipment === e ? "text-primary font-bold" : "text-on-surface"}`}
                         >
                           {t(e.toLowerCase())}
                         </button>
@@ -2072,6 +2226,20 @@ export function RoutineEditor({
                     </div>
                   )}
                 </div>
+
+                {(filterMuscle !== "All" || filterEquipment !== "All" || exerciseSearch) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterMuscle("All");
+                      setFilterEquipment("All");
+                      setExerciseSearch("");
+                    }}
+                    className="text-xs text-primary hover:underline font-semibold px-2 py-1"
+                  >
+                    {t("clear_filters") || "Azzera filtri"}
+                  </button>
+                )}
               </div>
             </div>
             <div className="p-4 overflow-y-auto flex flex-col gap-4">
@@ -2090,9 +2258,9 @@ export function RoutineEditor({
                         onClick={() => addExercise(ex)}
                         className="w-full flex items-center gap-4 p-3 rounded-lg border border-surface-variant hover:border-primary-container hover:bg-surface-container transition-all text-left"
                       >
-                        <ExerciseMuscleVisual
+                        <ExerciseMedia
                           exercise={ex}
-                          className="w-16 h-16 shrink-0"
+                          className="w-16 h-16 shrink-0 rounded-lg"
                         />
                         <div className="flex flex-col">
                           <span className="font-bold text-on-surface group-hover:text-primary transition-colors">
@@ -2115,6 +2283,29 @@ export function RoutineEditor({
                     </div>
                   ))}
               </div>
+              {modalExerciseResults.length === 0 && (
+                <div className="py-12 text-center flex flex-col items-center gap-2">
+                  <Search className="w-8 h-8 text-on-surface-variant opacity-30" />
+                  <p className="text-on-surface-variant text-sm">
+                    {exerciseSearch
+                      ? `No exercises found for "${exerciseSearch}"`
+                      : "No exercises in this category"}
+                  </p>
+                  {(filterMuscle !== "All" || filterEquipment !== "All" || exerciseSearch) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilterMuscle("All");
+                        setFilterEquipment("All");
+                        setExerciseSearch("");
+                      }}
+                      className="text-xs text-primary hover:underline font-semibold pt-1"
+                    >
+                      {t("clear_filters") || "Azzera filtri"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2140,85 +2331,117 @@ export function RoutineEditor({
       />
 
       {/* Floating Rest Timer */}
-      {activeRestLeft !== null && (
-        <div className="fixed bottom-0 left-0 w-full z-[150] px-margin-mobile py-3 animate-in slide-in-from-bottom-full duration-300" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
-          <div className="bg-[#1C1C1E]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25 flex items-center justify-center relative shadow-sm">
-                <Clock className="w-5 h-5 absolute" />
-                <svg className="w-8 h-8 -rotate-90">
-                  <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.5" className="text-white/10" fill="none" />
-                  <circle
-                    cx="16" cy="16" r="13"
-                    stroke="currentColor" strokeWidth="2.5"
-                    className="text-[#30D158] transition-all duration-1000"
-                    fill="none"
-                    strokeDasharray={81.68}
-                    strokeDashoffset={81.68 - (81.68 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
-                  />
-                </svg>
+      <AnimatePresence>
+        {activeRestLeft !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 32, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={appleSpringDefault}
+            className="fixed bottom-0 left-0 w-full z-[150] px-margin-mobile py-3 pointer-events-auto"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+          >
+            <div className="bg-[#1C1C1E]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25 flex items-center justify-center relative shadow-sm">
+                  <Clock className="w-5 h-5 absolute" />
+                  <svg className="w-8 h-8 -rotate-90">
+                    <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.5" className="text-white/10" fill="none" />
+                    <circle
+                      cx="16" cy="16" r="13"
+                      stroke="currentColor" strokeWidth="2.5"
+                      className="text-[#30D158] transition-all duration-1000"
+                      fill="none"
+                      strokeDasharray={81.68}
+                      strokeDashoffset={81.68 - (81.68 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
+                    />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#8E8E93]">
+                    {t("rest_timer") || "Rest Timer"}
+                  </span>
+                  <span className="text-3xl font-extrabold tracking-tight tabular-nums text-white leading-none">
+                    {formatTime(activeRestLeft)}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#8E8E93]">
-                  {t("rest_timer") || "Rest Timer"}
-                </span>
-                <span className="text-3xl font-extrabold tracking-tight tabular-nums text-white leading-none">
-                  {formatTime(activeRestLeft)}
-                </span>
+              <div className="flex items-center justify-between sm:justify-end gap-2 font-bold text-sm">
+                <motion.button
+                  whileTap={{ scale: 0.9, rotate: -1.5 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    setIsFinishConfirmOpen(true);
+                  }}
+                  className="h-10 px-4 bg-[#30D158] text-black rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {t("finish_workout")}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.88, rotate: -2 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    startRestTimer(Math.max(0, activeRestLeft - 15));
+                  }}
+                  className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer"
+                >
+                  -15s
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.88, rotate: 2 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    startRestTimer(activeRestLeft + 15);
+                  }}
+                  className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer"
+                >
+                  +15s
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.82, rotate: 10 }}
+                  whileHover={{ scale: 1.08 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    startRestTimer(0);
+                  }}
+                  className="ml-1 w-10 h-10 bg-white/8 hover:bg-white/14 text-[#8E8E93] hover:text-white rounded-full flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
               </div>
             </div>
-            <div className="flex items-center justify-between sm:justify-end gap-2 font-bold text-sm">
-              <button
-                onClick={() => {
-                  triggerHaptic("medium");
-                  setIsFinishConfirmOpen(true);
-                }}
-                className="h-10 px-4 bg-[#30D158] text-black rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                {t("finish_workout")}
-              </button>
-              <button
-                onClick={() => {
-                  triggerHaptic("light");
-                  startRestTimer(Math.max(0, activeRestLeft - 15));
-                }}
-                className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer active:scale-95"
-              >
-                -15s
-              </button>
-              <button
-                onClick={() => {
-                  triggerHaptic("light");
-                  startRestTimer(activeRestLeft + 15);
-                }}
-                className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer active:scale-95"
-              >
-                +15s
-              </button>
-              <button
-                onClick={() => {
-                  triggerHaptic("light");
-                  startRestTimer(0);
-                }}
-                className="ml-1 w-10 h-10 bg-white/8 hover:bg-white/14 text-[#8E8E93] hover:text-white rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {mode !== "live" && (
         <div className="max-w-[1280px] mx-auto w-full px-margin-mobile md:px-margin-desktop pb-8">
           <button
             type="button"
+            data-testid="bottom-save-routine-btn"
             onClick={handleRoutineSave}
             disabled={isSaving}
-            className={`w-full bg-surface-variant hover:bg-white/10 border border-white/10 text-on-surface font-black rounded-2xl uppercase tracking-widest active:scale-[0.98] transition-all px-5 py-4 text-sm ${isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            className={`w-full bg-surface-variant hover:bg-white/10 border border-white/10 text-on-surface font-black rounded-2xl uppercase tracking-widest active:scale-[0.98] transition-all px-5 py-4 text-sm flex items-center justify-center gap-2 ${isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
-            {isSaving ? t("saving") || "Saving..." : t("save_routine") || "Save Routine"}
+            {isSaving ? (
+              <div className="flex items-center gap-2" role="status" aria-label={t("saving") || "Saving..."}>
+                <span className="relative flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-35" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-current" />
+                </span>
+                {t("saving") || "Saving..."}
+              </div>
+            ) : (
+              t("save_routine") || "Save Routine"
+            )}
           </button>
         </div>
       )}
@@ -2230,17 +2453,21 @@ export function RoutineEditor({
             initial={{ opacity: 0, y: 18, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={CARTOON_SPRINGS.bouncy}
             className="fixed bottom-6 right-6 z-[140] pointer-events-auto"
           >
-            <button
+            <motion.button
               type="button"
+              data-testid="floating-finish-workout-btn"
               onClick={handleRoutineSave}
-              className="premium-cta font-black text-sm px-5 py-3.5 rounded-full active:scale-95 transition-all uppercase tracking-widest flex items-center gap-2 hover:brightness-110 shadow-xl cursor-pointer"
+              whileTap={{ scale: 0.9, rotate: -1.5 }}
+              whileHover={{ scale: 1.04 }}
+              transition={CARTOON_SPRINGS.bouncy}
+              className="premium-cta font-black text-sm px-5 py-3.5 rounded-full transition-all uppercase tracking-widest flex items-center gap-2 hover:brightness-110 shadow-xl cursor-pointer"
             >
               <Check className="w-5 h-5" strokeWidth={2.5} />
               {t("finish_workout") || "Finish Workout"}
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -28,8 +28,14 @@ function loadEnv() {
 
 loadEnv();
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "your_telegram_bot_token_here";
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || "your_telegram_chat_id_here";
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+if (!BOT_TOKEN || !CHAT_ID) {
+  console.error("❌ Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID. Please set them in your .env file.");
+  process.exit(1);
+}
+
 const apkPath = path.join(rootDir, "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
 
 async function sendApk() {
@@ -50,7 +56,17 @@ async function sendApk() {
   formData.append("chat_id", CHAT_ID);
   formData.append(
     "caption",
-    `🏋️‍♂️ *LiftLab v2.2 — Onboarding, FTUE & 100% Localizzazione Italiana*\n📅 Data: ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })}\n📦 Dimensione: ${sizeMb} MB\n\n✨ *Novità e Migliorie di questa versione:*\n• 🛡️ *Dialogo Annulla Disambiguato*: Top bar con "Abbandona", modale esplicito con pulsante rosso "Elimina allenamento" e grigio "Continua allenamento"\n• 🇮🇹 *Localizzazione Italiana 100%*: Rimossi tutti i testi inglesi sparsi (DASHBOARD, WORKOUT, HISTORY, No log, Library, Search exercises...). Esercizi base tradotti (Squat con Bilanciere, Panca Piana con Bilanciere, Stacco da Terra con Bilanciere, Croci ai Cavi)\n• 📋 *Guida Primo Allenamento*: RPE disattivato di default per i nuovi utenti (tabella pulita a 4 colonne), banner informativo dismissibile con istruzioni chiare e badge "Nuovo"\n• 🏠 *Welcome Hub Dashboard*: Dashboard calorosa per il Day One con CTA doppie (Scheda del giorno consigliata / Allenamento libero) e card di anteprima progressi al posto del muro di zeri desolati\n• 🧪 *Test & Qualità*: 100% test unitari passati, TypeScript 0 errori`,
+    `🏋️‍♂️ *LiftLab v1.0.3 — OTA & Animazioni Cartoon*
+📅 ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })} | 📦 ${sizeMb} MB
+
+🎯 *Migliorie della versione:*
+• 🚀 *Aggiornamenti In-App (OTA)*: Nuova versione v1.0.3 con aggiornamenti automatici dal web senza dover riscaricare l'APK.
+• 🎬 *Animazioni Cartoon Esche & Tattili*:
+  - *Completamento Serie*: Elastic bounce da 460ms con overshoot visibile a occhio umano e ripple verde smeraldo.
+  - *Drop-Set a Cascata*: Serie drop collegata animata a cascata (80ms delay) per dare conferma visiva dell'azione combinata.
+  - *Timer di Recupero*: Tasti -15s/+15s/Stop elastici con fisica cartoon.
+  - *Preferiti*: Stella con rimbalzo e wobble cartoon (480ms).
+• 🏋️ *Drop-Set Unificati*: Segnati con un unico tocco.`,
   );
   formData.append("parse_mode", "Markdown");
   formData.append("document", blob, "LiftLab.apk");

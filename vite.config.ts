@@ -16,7 +16,7 @@ export default defineConfig({
         enabled: true,
         suppressWarnings: true,
       },
-      includeAssets: ['logo.svg'],
+      includeAssets: ['logo.svg', 'apple-touch-icon.png', 'favicon.ico', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'LiftLab',
         short_name: 'LiftLab',
@@ -26,14 +26,14 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'logo.svg',
+            src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
           },
           {
-            src: 'logo.svg',
+            src: 'icon-512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
           },
           {
             src: 'logo.svg',
