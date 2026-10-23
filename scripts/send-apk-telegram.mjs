@@ -17,7 +17,8 @@ function loadEnv() {
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx !== -1) {
         const key = trimmed.slice(0, eqIdx).trim();
-        const val = trimmed.slice(eqIdx + 1).trim();
+        const rawVal = trimmed.slice(eqIdx + 1).trim();
+        const val = rawVal.replace(/^["']|["']$/g, "").trim();
         if (!process.env[key]) {
           process.env[key] = val;
         }

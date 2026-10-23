@@ -6,6 +6,7 @@
 import {
   isVersionNewer,
   DEFAULT_MANIFEST_URL,
+  isValidManifestUrl,
   getOtaManifestUrl,
   setOtaManifestUrl,
   isOtaAutoCheckEnabled,
@@ -47,9 +48,15 @@ assert(!isVersionNewer("", "1.0.0"), "Empty remote should return false");
 assert(!isVersionNewer("1.0.0", ""), "Empty current should return false");
 assert(!isVersionNewer("invalid", "invalid"), "Invalid vs invalid should return false");
 
-// 5. Default manifest url
+// 5. Default manifest url and URL validation
 assert(DEFAULT_MANIFEST_URL.startsWith("https://"), "Manifest URL must be HTTPS");
 assert(DEFAULT_MANIFEST_URL.includes("update-manifest.json"), "Manifest URL must end with update-manifest.json");
+assert(isValidManifestUrl("https://example.com/manifest.json"), "HTTPS URL must be valid");
+assert(!isValidManifestUrl("http://attacker.com/manifest.json"), "Insecure HTTP URL must be rejected");
+assert(!isValidManifestUrl("javascript:alert(1)"), "JavaScript URI must be rejected");
+assert(!isValidManifestUrl("file:///etc/passwd"), "File URI must be rejected");
+assert(isValidManifestUrl("http://localhost:3000/manifest.json"), "Localhost dev URL must be permitted");
+assert(isValidManifestUrl("http://127.0.0.1:8080/manifest.json"), "127.0.0.1 dev URL must be permitted");
 
 // 6. Mock localStorage for storage helpers test
 const memoryStore = new Map<string, string>();

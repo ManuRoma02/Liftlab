@@ -7,7 +7,7 @@ import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { APPLE_SPRINGS } from "../../lib/motion";
-import { triggerHaptic, hapticPress } from "../../lib/haptics";
+import { triggerHaptic } from "../../lib/haptics";
 import { useBackDismiss } from "./ConfirmModal";
 
 export interface AppleBottomSheetProps {

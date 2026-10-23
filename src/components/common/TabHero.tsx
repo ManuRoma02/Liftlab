@@ -1,6 +1,6 @@
 import React from "react";
 import { Settings as SettingsIcon } from "lucide-react";
-import { triggerHaptic, hapticPress } from "../../lib/haptics";
+import { triggerHaptic } from "../../lib/haptics";
 
 export function TabHero({
   eyebrow,

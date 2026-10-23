@@ -314,6 +314,14 @@ export async function checkForOtaUpdate(
         return { available: false, currentVersion, error: err };
       }
 
+      if (!isValidManifestUrl(manifest.url)) {
+        const err = "L'URL del bundle OTA nel manifest non utilizza HTTPS.";
+        if (!options.silent) {
+          showToast(err, "error");
+        }
+        return { available: false, currentVersion, error: err };
+      }
+
       // Safety guard: if bundle requires a newer native APK than installed
       if (manifest.minNativeVersion && isVersionNewer(manifest.minNativeVersion, currentInfo.nativeVersion)) {
         const err = `Questa versione richiede un nuovo APK nativo (richiesta v${manifest.minNativeVersion}, installata v${currentInfo.nativeVersion}).`;
@@ -375,6 +383,14 @@ export async function downloadAndApplyOta(
 
   if (!manifest.checksum) {
     const err = "Checksum SHA-256 mancante: aggiornamento rifiutato per sicurezza.";
+    if (!options.silent) {
+      showToast(err, "error");
+    }
+    return { success: false, error: err };
+  }
+
+  if (!manifest.url || !isValidManifestUrl(manifest.url)) {
+    const err = "URL del bundle OTA non valido o non protetto da HTTPS.";
     if (!options.silent) {
       showToast(err, "error");
     }
