@@ -13,7 +13,7 @@ export const DEFAULT_MANIFEST_URL =
   "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/update-manifest.json";
 
 export const FALLBACK_MANIFEST_URLS: string[] = [
-  "https://raw.githubusercontent.com/ManuRoma02/Liftlab/feat/ftue-and-italian-localization/update-manifest.json",
+  "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/update-manifest.json",
 ];
 
 export const OTA_MANIFEST_URL_STORAGE_KEY = "liftlab_ota_manifest_url";
@@ -104,10 +104,20 @@ export function isVersionNewer(remoteVersion: string, currentVersion: string): b
   return false;
 }
 
+export function isValidManifestUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (trimmed.startsWith("https://")) return true;
+  // Allow loopback or local LAN addresses for development/testing
+  if (/^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.\d+\.\d+)(:\d+)?\//i.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
 export function getOtaManifestUrl(): string {
   try {
     const custom = localStorage.getItem(OTA_MANIFEST_URL_STORAGE_KEY);
-    if (custom && custom.trim().startsWith("http")) {
+    if (custom && isValidManifestUrl(custom)) {
       return custom.trim();
     }
   } catch {}
@@ -118,8 +128,10 @@ export function setOtaManifestUrl(url: string | null): void {
   try {
     if (!url || url.trim() === "" || url.trim() === DEFAULT_MANIFEST_URL) {
       localStorage.removeItem(OTA_MANIFEST_URL_STORAGE_KEY);
-    } else {
+    } else if (isValidManifestUrl(url)) {
       localStorage.setItem(OTA_MANIFEST_URL_STORAGE_KEY, url.trim());
+    } else {
+      showToast("L'URL del manifest deve utilizzare il protocollo sicuro HTTPS.", "error");
     }
   } catch {}
 }

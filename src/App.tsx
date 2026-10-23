@@ -720,6 +720,8 @@ export default function App() {
         {pendingOtaUpdate && (
           <motion.div
             key="ota-ready-banner"
+            role="status"
+            aria-live="polite"
             initial={{ y: -60, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -60, opacity: 0, scale: 0.95 }}

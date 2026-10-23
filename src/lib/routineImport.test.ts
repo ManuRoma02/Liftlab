@@ -230,6 +230,17 @@ assert.equal(parsedRepRange[0].exercises[1].sets.length, 3);
 assert.equal(parsedRepRange[0].exercises[1].sets[0].reps, 6);
 assert.equal(parsedRepRange[0].exercises[1].notes, "Target: 6-8 reps");
 
+// Test CWE-400 resource exhaustion protection (ceiling at 100 exercises)
+const massiveRoutine = {
+  name: "Stress Routine",
+  exercises: Array.from({ length: 150 }).map((_, i) => ({
+    title: `Exercise ${i + 1}`,
+    sets: [{ reps: 10, weight: 50 }],
+  })),
+};
+const parsedMassive = parseLiftLabRoutineText(JSON.stringify(massiveRoutine), [], nextId);
+assert.equal(parsedMassive[0].exercises.length, 100, "Must clamp exercises to 100 to prevent DoS");
+
 console.log("routineImport tests passed");
 
 

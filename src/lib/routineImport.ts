@@ -213,10 +213,12 @@ function parseSingleRoutine(
   idFactory: () => string,
 ): ImportedRoutine {
   const routine = payload.routine ?? payload;
-  const exercisesInput = routine.exercises;
-  if (!Array.isArray(exercisesInput) || exercisesInput.length === 0) {
+  const rawExercises = routine.exercises;
+  if (!Array.isArray(rawExercises) || rawExercises.length === 0) {
     throw new Error("Import failed. JSON needs routine.exercises with at least one exercise.");
   }
+  // Enforce safe upper ceiling on exercises per routine (CWE-400 resource exhaustion protection)
+  const exercisesInput = rawExercises.slice(0, 100);
 
   const groupCounts = new Map<string, number>();
   for (const exercise of exercisesInput) {
@@ -477,7 +479,7 @@ export function parseLiftLabRoutineText(
   }
 
   if (Array.isArray(parsed)) {
-    return parsed.map((item, index) => {
+    return parsed.slice(0, 50).map((item, index) => {
       try {
         return parseSingleRoutine(item as ImportedRoutinePayload, catalog, idFactory);
       } catch (err) {
@@ -493,7 +495,7 @@ export function parseLiftLabRoutineText(
       if (obj.routines.length === 0) {
         throw new Error("Import failed. routines array is empty.");
       }
-      return obj.routines.map((item, index) => {
+      return obj.routines.slice(0, 50).map((item, index) => {
         try {
           return parseSingleRoutine(item as ImportedRoutinePayload, catalog, idFactory);
         } catch (err) {

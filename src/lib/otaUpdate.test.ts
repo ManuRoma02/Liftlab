@@ -65,6 +65,9 @@ globalThis.localStorage = mockLocalStorage;
 assert(getOtaManifestUrl() === DEFAULT_MANIFEST_URL, "Should return default URL initially");
 setOtaManifestUrl("https://example.com/custom-manifest.json");
 assert(getOtaManifestUrl() === "https://example.com/custom-manifest.json", "Should return custom URL");
+// Test rejecting insecure cleartext HTTP
+setOtaManifestUrl("http://insecure-domain.com/manifest.json");
+assert(getOtaManifestUrl() === "https://example.com/custom-manifest.json", "Insecure HTTP URL must be rejected");
 setOtaManifestUrl(null);
 assert(getOtaManifestUrl() === DEFAULT_MANIFEST_URL, "Resetting should return default URL");
 
