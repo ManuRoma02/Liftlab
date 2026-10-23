@@ -1,7 +1,7 @@
 import os
 import resvg_py
 
-SCRATCH_DIR = r"scripts/scratch"
+SCRATCH_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 
 # -------------------------------------------------------------
 # Concept V2: Frontal Olympic Bumper Plate with Chiseled Athletic "L"

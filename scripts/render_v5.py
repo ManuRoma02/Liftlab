@@ -1,7 +1,7 @@
 import os
 import resvg_py
 
-SCRATCH_DIR = r"scripts/scratch"
+SCRATCH_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 
 # Concept V5: Optically Centered Olympic Bumper Plate with Precision Athletic 'L'
 # No competing second hole! The plate is the calibrated Olympic frame,

@@ -2,7 +2,7 @@ import os
 import resvg_py
 from PIL import Image
 
-OUT_DIR = r"scripts/scratch"
+OUT_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # -------------------------------------------------------------

@@ -43,6 +43,26 @@ loadEnv();
 
 // Parse CLI args
 const args = process.argv.slice(2);
+
+if (args.includes("-h") || args.includes("--help")) {
+  console.log(`
+LiftLab OTA Build & Release CLI
+
+Usage:
+  npm run ota:release -- [options]
+  node scripts/release-ota.mjs [options]
+
+Options:
+  --version <semver>   Specify explicit release version (default: patch bump)
+  --notes <text>       Custom release notes in Markdown
+  --telegram           Send announcement to configured Telegram bot
+  --dry-run            Simulate release process without writing files
+  -h, --help           Show this help message
+`);
+  process.exit(0);
+}
+
+const isDryRun = args.includes("--dry-run");
 let customVersion = null;
 let customNotes = null;
 let sendTelegram = args.includes("--telegram");
@@ -128,6 +148,7 @@ async function createZipBundle() {
       fs.copyFileSync(zipFilePath, distOtaZipPath);
       resolve();
     });
+    output.on("error", (err) => reject(err));
 
     archive.on("error", (err) => reject(err));
     archive.pipe(output);

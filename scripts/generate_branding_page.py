@@ -500,9 +500,4 @@ if __name__ == "__main__":
     html = create_branding_html()
     with open("public/branding.html", "w", encoding="utf-8") as f:
         f.write(html)
-    
-    # Also save as artifact
-    artifact_path = r"public/branding.html"
-    with open(artifact_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print("branding.html successfully generated in public/ and artifact directory!")
+    print("branding.html successfully generated in public/!")

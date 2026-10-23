@@ -2,8 +2,8 @@ import os
 import resvg_py
 from PIL import Image
 
-SCRATCH_DIR = r".\scripts"
-OUT_DIR = r"scripts/scratch"
+SCRATCH_DIR = os.path.dirname(__file__)
+OUT_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 
 svg_v7 = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>

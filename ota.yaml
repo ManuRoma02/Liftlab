@@ -1,0 +1,135 @@
+version: 1
+metadata:
+  ota:
+    minimum_version: 1.6.28
+project:
+  name: liftlab
+toolchains:
+  node:
+    version: '*'
+tools:
+  npm: '*'
+env:
+  sources:
+  - kind: dotenv
+    path: .env
+tasks:
+  build:
+    command:
+      exe: npm
+      args:
+      - run
+      - build
+    notes: |
+      Run `ota run build` to execute this task.
+  clean:
+    command:
+      exe: npm
+      args:
+      - run
+      - clean
+    notes: |
+      Run `ota run clean` to execute this task.
+  dev:
+    description: Start the local development loop.
+    command:
+      exe: npm
+      args:
+      - run
+      - dev
+    notes: |
+      Run `ota run dev` to execute this task.
+  lint:
+    description: Run the default lint checks.
+    command:
+      exe: npm
+      args:
+      - run
+      - lint
+    notes: |
+      Run `ota run lint` to execute this task.
+  ota:build:
+    command:
+      exe: npm
+      args:
+      - run
+      - ota:build
+    notes: |
+      Run `ota run ota:build` to execute this task.
+  ota:release:
+    command:
+      exe: npm
+      args:
+      - run
+      - ota:release
+    notes: |
+      Run `ota run ota:release` to execute this task.
+  preview:
+    command:
+      exe: npm
+      args:
+      - run
+      - preview
+    notes: |
+      Run `ota run preview` to execute this task.
+  send:apk:
+    command:
+      exe: npm
+      args:
+      - run
+      - send:apk
+    notes: |
+      Run `ota run send:apk` to execute this task.
+  setup:
+    description: Hydrate Node dependencies through npm.
+    prepare:
+      kind: dependency_hydration
+      medium: package_dependencies
+      source:
+        kind: node_package_manager
+        cwd: .
+        manager: npm
+        mode: install
+    requirements:
+      runtimes: {}
+      tools: {}
+      toolchains:
+      - node
+      native: []
+      env: []
+      checks: []
+      any_of: []
+    effects:
+      writes:
+      - node_modules
+      network: true
+      network_kind: dependency_hydration
+    notes: |-
+      Run `ota run setup` to execute this task.
+      Hydrate Node dependencies through npm.
+    internal: true
+  test:
+    description: Run the default automated test command.
+    command:
+      exe: npm
+      args:
+      - run
+      - test
+    notes: |
+      Run `ota run test` to execute this task.
+agent:
+  safe_tasks:
+  - test
+  - lint
+  - build
+  writable_paths:
+  - docs
+  - public
+  - scripts
+  - src
+  - test_logos
+  - tests
+  protected_paths:
+  - ota.yaml
+  - package-lock.json
+  - package.json

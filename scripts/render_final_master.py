@@ -2,7 +2,7 @@ import os
 import resvg_py
 from PIL import Image
 
-SCRATCH_DIR = r"scripts/scratch"
+SCRATCH_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 
 # Master Full-Color Logo SVG (assets/logo.svg & public/logo.svg)
 svg_master = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">

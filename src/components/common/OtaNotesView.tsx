@@ -24,7 +24,9 @@ export function OtaNotesView({ notes, className = "" }: OtaNotesViewProps) {
 
   return (
     <div className={`flex flex-col gap-1 text-[11px] leading-relaxed ${className}`}>
-      {lines.map((line, lineIdx) => {
+      {lines.map((rawLine, lineIdx) => {
+        // Strip leading bullet if already typed by user
+        const line = rawLine.replace(/^[•\-\*]\s*/, "");
         // Split by **text** or <b>text</b>
         const parts = line.split(/(\*\*.*?\*\*|<b>.*?<\/b>)/g);
         return (
@@ -46,9 +48,7 @@ export function OtaNotesView({ notes, className = "" }: OtaNotesViewProps) {
                     </strong>
                   );
                 }
-                // Strip leading bullet if already typed by user
-                const cleaned = part.replace(/^[•\-\*]\s*/, "");
-                return <span key={partIdx}>{cleaned}</span>;
+                return <span key={partIdx}>{part}</span>;
               })}
             </div>
           </div>

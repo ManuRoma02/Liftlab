@@ -3,7 +3,7 @@ import io
 import resvg_py
 from PIL import Image
 
-BASE_DIR = r"."
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SVG_PATH = os.path.join(BASE_DIR, "assets", "logo.svg")
 GLYPH_SVG_PATH = os.path.join(BASE_DIR, "assets", "logo-glyph.svg")
 

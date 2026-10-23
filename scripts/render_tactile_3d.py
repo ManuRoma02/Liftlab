@@ -3,7 +3,7 @@ from PIL import Image, ImageFilter
 import math
 import os
 
-OUT_DIR = r"scripts/scratch"
+OUT_DIR = os.path.join(os.path.dirname(__file__), "scratch")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 WIDTH, HEIGHT = 1024, 1024
