@@ -1,8 +1,8 @@
 {
-  "version": "1.0.5",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.5.zip",
-  "checksum": "68677c1e4feab809bde989fad53788bfe6c75c751d7ca82440aa69a2bb455988",
-  "releaseDate": "2026-11-02T23:05:47.060Z",
-  "notes": "• Nuovo logo e icona AI luxury su tutta l'app e splash screen\n• Risolto bug sovrapposizione menu routine ed importazione\n• Nuova griglia statistiche Apple Fitness+ con toggle Volume/Peso\n• Transizioni sezioni istantanee e fluide stile Emil Kowalski",
+  "version": "1.0.6",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.6.zip",
+  "checksum": "fb490ded2cc3ced7de12817be73ad11fab7b9493cc6db20cb81fcedc99b8846d",
+  "releaseDate": "2026-11-02T23:51:10.364Z",
+  "notes": "• Sezione Progressi completamente riprogettata secondo Apple HIG (mobile-ios-design)\n• Segmented Control iOS a 3 sezioni: Panoramica, Grafici e Storico\n• Analisi Grafici con selettore metrica (Forza 1RM, Volume, Muscoli, Peso) e timeframe funzionante (30G, 90G, 1A, Tutto)\n• Storico sessioni con ricerca istantanea e layout Inset Grouped pulito\n• Risolto padding inferiore pb-44 per visibilità dock",
   "bundleSizeMb": "1.60"
 }
