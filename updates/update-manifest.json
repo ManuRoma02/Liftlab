@@ -1,8 +1,8 @@
 {
-  "version": "1.0.4",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.4.zip",
-  "checksum": "d60a628d03a99b6fd0fd673c342872143f09e7bf5cea7c25f93a665474407748",
-  "releaseDate": "2026-11-02T19:06:22.463Z",
-  "notes": "• Apple Design & iOS HIG overhaul: transizioni elastiche, feedback aptico Taptic Engine nativo e bottoni touch >=44pt.\n• Stack modali LIFO con chiusura fluida su Escape/Back senza collisioni.\n• Correzione calcoli PR, 1RM ed eliminazione bug sui superset.\n• Ottimizzazioni di memoria e isolamento dello storage locale.",
-  "bundleSizeMb": "0.91"
+  "version": "1.0.5",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.5.zip",
+  "checksum": "68677c1e4feab809bde989fad53788bfe6c75c751d7ca82440aa69a2bb455988",
+  "releaseDate": "2026-11-02T23:05:47.060Z",
+  "notes": "• Nuovo logo e icona AI luxury su tutta l'app e splash screen\n• Risolto bug sovrapposizione menu routine ed importazione\n• Nuova griglia statistiche Apple Fitness+ con toggle Volume/Peso\n• Transizioni sezioni istantanee e fluide stile Emil Kowalski",
+  "bundleSizeMb": "1.60"
 }

@@ -174,18 +174,18 @@ export const cartoonPopInVariants = {
   transition: CARTOON_SPRINGS.bouncy,
 };
 
-export const cartoonTabVariants = {
-  initial: { opacity: 0, scale: 0.985 },
+export const appleTabVariants = {
+  initial: { opacity: 0.88 },
   animate: {
     opacity: 1,
-    scale: 1,
-    transition: { duration: 0.16, ease: "easeOut" },
+    transition: { duration: 0.12, ease: "easeOut" },
   },
   exit: {
-    opacity: 0,
-    scale: 0.99,
+    opacity: 0.88,
     transition: { duration: 0.08, ease: "easeIn" },
   },
 };
+
+export const cartoonTabVariants = appleTabVariants;
 
 

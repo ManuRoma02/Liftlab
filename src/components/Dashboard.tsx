@@ -102,6 +102,7 @@ export const Dashboard = React.memo(
     const [focusedActivity, setFocusedActivity] = useState<DetailedActivity | null>(null);
     const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
     const [isCustomizeStatsOpen, setIsCustomizeStatsOpen] = useState(false);
+    const [selectedChartTab, setSelectedChartTab] = useState<"volume" | "weight">("volume");
 
     const latestWeightFromLogs =
       weightLogs && weightLogs.length > 0
@@ -450,7 +451,7 @@ export const Dashboard = React.memo(
               : "Unstoppable!";
 
     return (
-      <main className="px-margin-mobile py-stack-lg pb-32 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
+      <main className="px-margin-mobile py-stack-lg pb-44 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
         {/* Top Header Bar: Clean Apple Fitness+ aesthetic */}
         <header className="flex items-center justify-between px-1 pt-1 pb-1">
           <div className="flex items-center gap-3">
@@ -1181,393 +1182,355 @@ export const Dashboard = React.memo(
           </section>
         )}
 
-        {/* Quick Stats Bento Grid */}
-        <section className="flex justify-between items-center">
-          <h2 className="text-headline-md font-bold font-[var(--font-headline-md)] text-primary uppercase tracking-widest">
-            {t("quick_stats")}
-          </h2>
-          {workoutLogs.length > 0 && (
-            <button
-              onClick={() => setIsCustomizeStatsOpen(true)}
-              className="min-h-11 rounded-xl px-3 text-primary hover:bg-white/5 text-xs flex items-center gap-1.5 font-bold uppercase tracking-wider transition-colors"
-            >
-              <SettingsIcon className="w-3 h-3" /> {t("customize")}
-            </button>
+        {/* Reorganized Apple Fitness+ Statistics Hub */}
+        <section className="flex flex-col gap-4">
+          <div className="flex justify-between items-center px-1">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-[#30D158]" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">
+                {t("quick_stats") || "Attività & Prestazioni"}
+              </h2>
+            </div>
+            {workoutLogs.length > 0 && (
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  setIsCustomizeStatsOpen(true);
+                }}
+                className="text-xs font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/6 hover:bg-white/10 border border-white/8 transition-colors active:scale-95 cursor-pointer"
+              >
+                <SettingsIcon className="w-3 h-3 text-[#30D158]" />
+                <span>{t("customize") || "Personalizza"}</span>
+              </button>
+            )}
+          </div>
+
+          {workoutLogs.length === 0 ? (
+            <section className="apple-glass-card rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+              <div className="w-14 h-14 rounded-2xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center shrink-0 text-[#30D158]">
+                <LucideLineChart className="w-7 h-7" />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  {t("progress_preview_title") || "I tuoi progressi appariranno qui"}
+                </h3>
+                <p className="text-xs sm:text-sm text-[#8E8E93] mt-1 max-w-xl">
+                  {t("progress_preview_desc") || "Volume totale, serie settimanali, massimali stimati e record personali si popoleranno automaticamente non appena completerai la tua prima sessione."}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  triggerHaptic("medium");
+                  onStartLiveWorkout(nextRoutine?.id || "empty");
+                }}
+                className="bg-white/10 hover:bg-white/15 text-white text-xs font-bold px-4 py-3 rounded-xl border border-white/10 shrink-0 cursor-pointer active:scale-95 transition-all"
+              >
+                {(t("start_first_workout_cta") !== "start_first_workout_cta" && t("start_first_workout_cta")) || "Inizia ora"}
+              </button>
+            </section>
+          ) : dashboardStats.length > 0 ? (
+            <>
+              {/* Core Metric Pods Bento */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-3.5">
+                {/* 1. Volume */}
+                {dashboardStats.includes("volume") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center text-[#30D158]">
+                        <Dumbbell className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("total_volume") || "Volume Totale"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {totalVolumeStr} <span className="text-xs text-[#8E8E93] font-medium">{unit.toLowerCase()}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Sets This Week */}
+                {dashboardStats.includes("total_sets_week") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center text-[#30D158]">
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("sets_done") || "Serie Settimanali"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {totalSetsThisWeek} <span className="text-xs text-[#8E8E93] font-medium">{t("this_week") || "settimana"}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Personal Records */}
+                {dashboardStats.includes("prs") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setIsPRModalOpen(true);
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#FFD60A]/12 border border-[#FFD60A]/25 flex items-center justify-center text-[#FFD60A]">
+                        <Trophy className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("personal_records") || "Record Personali"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-[#FFD60A] tabular-nums tracking-tight mt-0.5">
+                        {totalPRs} <span className="text-xs text-[#8E8E93] font-medium">PR</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Avg Duration */}
+                {dashboardStats.includes("avg_duration") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#0A84FF]/12 border border-[#0A84FF]/25 flex items-center justify-center text-[#0A84FF]">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("avg_duration") || "Durata Media"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {avgDurationMin} <span className="text-xs text-[#8E8E93] font-medium">min</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Best Session Volume */}
+                {dashboardStats.includes("best_volume") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center text-[#30D158]">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("best_session") || "Miglior Sessione"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {bestVolumeSession >= 1000 ? (bestVolumeSession / 1000).toFixed(1) + "k" : Math.round(bestVolumeSession)}{" "}
+                        <span className="text-xs text-[#8E8E93] font-medium">{unit.toLowerCase()}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Body Weight */}
+                {dashboardStats.includes("weight") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      onUpdateWeight();
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#FF9F0A]/12 border border-[#FF9F0A]/25 flex items-center justify-center text-[#FF9F0A]">
+                        <LucideLineChart className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("body_weight") || "Peso Corporeo"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-[#FF9F0A] tabular-nums tracking-tight mt-0.5">
+                        {displayWeight} <span className="text-xs text-[#8E8E93] font-medium">{unit.toLowerCase()}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. Workouts This Week */}
+                {dashboardStats.includes("workouts_week") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center text-[#30D158]">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("workouts") || "Allenamenti"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {workoutsThisWeek} <span className="text-xs text-[#8E8E93] font-medium">{t("this_week") || "settimana"}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 8. Total Time This Week */}
+                {dashboardStats.includes("time_week") && (
+                  <div
+                    onClick={() => {
+                      triggerHaptic("light");
+                      navigateTo("progress");
+                    }}
+                    className="apple-glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-white/20 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex justify-between items-center text-[#8E8E93]">
+                      <div className="w-8 h-8 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center text-[#30D158]">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                        {t("duration") || "Tempo Allenamento"}
+                      </p>
+                      <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight mt-0.5">
+                        {Math.floor(durationThisWeek / 60)} <span className="text-xs text-[#8E8E93] font-medium">min</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive Trend Chart Card */}
+              {(dashboardStats.includes("volume_chart") || dashboardStats.includes("weight_chart")) && (
+                <div className="apple-glass-card rounded-3xl p-5 border border-white/8 relative overflow-hidden flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#30D158]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                        {selectedChartTab === "volume"
+                          ? (t("volume_trend") || "Andamento Volume")
+                          : (t("weight_trend") || "Andamento Peso")}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-full p-1 text-xs">
+                      {dashboardStats.includes("volume_chart") && (
+                        <button
+                          onClick={() => {
+                            triggerHaptic("light");
+                            setSelectedChartTab("volume");
+                          }}
+                          className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
+                            selectedChartTab === "volume"
+                              ? "bg-[#30D158] text-black shadow-sm"
+                              : "text-[#8E8E93] hover:text-white"
+                          }`}
+                        >
+                          Volume
+                        </button>
+                      )}
+                      {dashboardStats.includes("weight_chart") && (
+                        <button
+                          onClick={() => {
+                            triggerHaptic("light");
+                            setSelectedChartTab("weight");
+                          }}
+                          className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
+                            selectedChartTab === "weight"
+                              ? "bg-[#FF9F0A] text-black shadow-sm"
+                              : "text-[#8E8E93] hover:text-white"
+                          }`}
+                        >
+                          Peso
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-32 sm:h-36 w-full text-[10px] relative z-10 min-w-0 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                      {selectedChartTab === "volume" ? (
+                        <BarChart data={getVolumeChartData()} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                          <Bar dataKey="volume" fill="#30D158" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                        </BarChart>
+                      ) : (
+                        <AreaChart data={getWeightChartData()} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="dbWeightGradApple" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#FF9F0A" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="#FF9F0A" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="weight"
+                            stroke="#FF9F0A"
+                            strokeWidth={2.5}
+                            fill="url(#dbWeightGradApple)"
+                            isAnimationActive={false}
+                          />
+                        </AreaChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="apple-glass-card rounded-2xl p-6 flex flex-col items-center justify-center gap-2 text-center">
+              <p className="text-xs text-[#8E8E93]">
+                Nessuna metrica selezionata per la dashboard.
+              </p>
+              <button
+                onClick={() => setIsCustomizeStatsOpen(true)}
+                className="text-xs font-bold text-[#30D158] hover:underline cursor-pointer"
+              >
+                Personalizza Statistiche
+              </button>
+            </div>
           )}
         </section>
-        {workoutLogs.length === 0 ? (
-          <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-            <div className="w-14 h-14 rounded-2xl bg-[#30D158]/12 border border-[#30D158]/25 flex items-center justify-center shrink-0 text-[#30D158]">
-              <LucideLineChart className="w-7 h-7" />
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                {t("progress_preview_title") || "I tuoi progressi appariranno qui"}
-              </h3>
-              <p className="text-xs sm:text-sm text-[#8E8E93] mt-1 max-w-xl">
-                {t("progress_preview_desc") || "Volume totale, serie settimanali, massimali stimati e record personali si popoleranno automaticamente non appena completerai la tua prima sessione."}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                triggerHaptic("medium");
-                onStartLiveWorkout(nextRoutine?.id || "empty");
-              }}
-              className="bg-white/10 hover:bg-white/15 text-white text-xs font-bold px-4 py-3 rounded-xl border border-white/10 shrink-0 cursor-pointer active:scale-95 transition-all"
-            >
-              {(t("start_first_workout_cta") !== "start_first_workout_cta" && t("start_first_workout_cta")) || "Inizia ora"}
-            </button>
-          </section>
-        ) : dashboardStats.length > 0 ? (
-          (() => {
-            const activeSmallStatCards = [
-              "avg_duration",
-              "total_sets_week",
-              "best_volume",
-              "weight",
-              "volume",
-              "prs",
-              "workouts_week",
-              "time_week",
-            ].filter((id) => dashboardStats.includes(id));
-            const getCardSpanClass = (cardId: string) => {
-              const isOddCount = activeSmallStatCards.length % 2 !== 0;
-              const isLast =
-                activeSmallStatCards[activeSmallStatCards.length - 1] === cardId;
-              return isOddCount && isLast ? "col-span-2 md:col-span-1" : "";
-            };
-
-            return (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {/* Stat Card Avg Duration */}
-            {dashboardStats.includes("avg_duration") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("avg_duration")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <Clock className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <Clock className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("avg_duration") || "Avg Duration"}</p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {avgDurationMin}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">min</span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Total Sets Week */}
-            {dashboardStats.includes("total_sets_week") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("total_sets_week")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <Layers className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <Layers className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("sets_done") || "Sets Done"}</p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {totalSetsThisWeek}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">{t("this_week") || "this week"}</span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Best Volume */}
-            {dashboardStats.includes("best_volume") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("best_volume")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <TrendingUp className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <TrendingUp className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">{t("best_session") || "Best Session"}</p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {bestVolumeSession >= 1000 ? (bestVolumeSession / 1000).toFixed(1) + "k" : (Math.round(bestVolumeSession * 10) / 10)}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">{unit.toLowerCase()}</span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Weight */}
-            {dashboardStats.includes("weight") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  onUpdateWeight();
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("weight")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <LucideLineChart className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <LucideLineChart className="w-5 h-5 text-[#FF9F0A] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
-                    {t("body_weight") || "Body Weight"}
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-[#FF9F0A] tabular-nums tracking-tight">
-                    {displayWeight}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      {unit.toLowerCase()}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Volume */}
-            {dashboardStats.includes("volume") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("volume")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <Dumbbell className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <BarChart2 className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
-                    {t("total_volume") || "Total Volume"}
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {totalVolumeStr}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      {unit.toLowerCase()}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card PRs */}
-            {dashboardStats.includes("prs") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  setIsPRModalOpen(true);
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("prs")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <Trophy className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <Trophy className="w-5 h-5 text-[#FFD60A]" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
-                    {t("personal_records") || "Personal Records"}
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-[#FFD60A] tabular-nums tracking-tight">
-                    {totalPRs}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      Total
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Workouts */}
-            {dashboardStats.includes("workouts_week") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("workouts_week")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <CheckCircle2 className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <CheckCircle2 className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
-                    {t("workouts") || "Workouts"}
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {workoutsThisWeek}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      {t("this_week") || "This Week"}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Stat Card Time */}
-            {dashboardStats.includes("time_week") && (
-              <div
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("progress");
-                }}
-                className={`apple-glass-card p-4 sm:p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:border-white/20 group select-none ${getCardSpanClass("time_week")}`}
-              >
-                <div className="absolute -right-4 -top-4 text-white/5 pointer-events-none">
-                  <Clock className="w-20 h-20" fill="currentColor" />
-                </div>
-                <div className="flex justify-between items-center text-[#8E8E93] relative z-10">
-                  <Clock className="w-5 h-5 text-[#30D158] transition-colors" />
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
-                    {t("duration") || "Total Time"}
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
-                    {Math.floor(durationThisWeek / 60)}{" "}
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      Min
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Weight Context Chart */}
-            {dashboardStats.includes("weight_chart") && (
-              <div
-                onClick={() => navigateTo("progress")}
-                className="col-span-2 md:col-span-3 bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-2 relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
-              >
-                <div className="flex justify-between items-center text-secondary-container relative z-10 mb-2">
-                  <p className="text-label-bold text-on-surface-variant uppercase flex gap-2 items-center">
-                    <TrendingUp className="w-4 h-4" /> Body Weight Trend
-                  </p>
-                  <ChevronRight className="w-4 h-4 group-hover:text-secondary-fixed transition-colors" />
-                </div>
-                <div className="h-24 w-full text-[10px] relative z-10 min-w-0 min-h-0">
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={0}
-                    minHeight={0}
-                  >
-                    <AreaChart
-                      data={getWeightChartData()}
-                      margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="dbWeightGrad"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#adc6ff"
-                            stopOpacity={0.4}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#adc6ff"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <Area
-                        type="monotone"
-                        dataKey="weight"
-                        stroke="#adc6ff"
-                        strokeWidth={2}
-                        fill="url(#dbWeightGrad)"
-                        isAnimationActive={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {/* Volume Context Chart */}
-            {dashboardStats.includes("volume_chart") && (
-              <div
-                onClick={() => navigateTo("progress")}
-                className="col-span-2 md:col-span-3 bg-surface-container p-stack-md rounded-lg border border-surface-variant flex flex-col gap-2 relative overflow-hidden cursor-pointer hover:border-primary-container transition-colors group"
-              >
-                <div className="flex justify-between items-center text-primary-container relative z-10 mb-2">
-                  <p className="text-label-bold text-on-surface-variant uppercase flex gap-2 items-center">
-                    <BarChart2 className="w-4 h-4 text-primary" /> Volume Trend
-                  </p>
-                  <ChevronRight className="w-4 h-4 group-hover:text-primary-container transition-colors" />
-                </div>
-                <div className="h-24 w-full text-[10px] relative z-10 min-w-0 min-h-0">
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={0}
-                    minHeight={0}
-                  >
-                    <BarChart
-                      data={getVolumeChartData()}
-                      margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-                    >
-                      <Bar
-                        dataKey="volume"
-                        fill="#30D158"
-                        radius={[2, 2, 0, 0]}
-                        maxBarSize={30}
-                        isAnimationActive={false}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-          </div>
-            );
-          })()
-        ) : (
-          <div className="bg-surface-container border border-surface-variant border-dashed rounded-lg p-stack-md flex flex-col items-center justify-center gap-1">
-            <p className="text-body-md text-on-surface-variant text-center">
-              Your dashboard looks a bit empty.
-            </p>
-            <button
-              onClick={() => setIsCustomizeStatsOpen(true)}
-              className="text-label-bold text-primary-container text-xs cursor-pointer hover:underline"
-            >
-              Add Stats
-            </button>
-          </div>
-        )}
 
         {/* PR Modal */}
         <AnimatePresence>

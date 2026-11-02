@@ -118,7 +118,7 @@ export function Workout({
   }, [sortedRoutines, routineSearch, t]);
 
   return (
-    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg w-full">
+    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-36 flex flex-col gap-stack-lg w-full">
       <TabHero
         eyebrow={t("workout")}
         title={t("workout")}
@@ -173,10 +173,10 @@ export function Workout({
               {isImportMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-[100]"
+                    className="fixed inset-0 z-[999]"
                     onClick={() => setIsImportMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[101] overflow-hidden py-1.5">
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[1000] overflow-hidden py-1.5">
                     <button
                       onClick={() => {
                         triggerHaptic("light");
@@ -333,15 +333,19 @@ export function Workout({
             </div>
           </div>
         ) : (
-          filteredRoutines.map((routine) => (
-            <motion.article
-              key={routine.id}
-              whileHover={{ scale: 1.015 }}
-              transition={CARTOON_SPRINGS.bouncy}
-              className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] gpu-accelerated ${
-                activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
-              }`}
-            >
+          filteredRoutines.map((routine) => {
+            const isMenuActive = activeMenuId === routine.id;
+            return (
+              <motion.article
+                key={routine.id}
+                whileHover={{ scale: 1.01 }}
+                transition={appleSpringDefault}
+                className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] ${
+                  isMenuActive ? "z-40" : "z-10"
+                } ${
+                  activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
+                }`}
+              >
               <div className="flex flex-col gap-3">
                 {/* Header: Name, Day Badge, Actions */}
                 <div className="flex justify-between items-start gap-3">
@@ -403,16 +407,16 @@ export function Workout({
                       <MoreVertical className="w-4 h-4" />
                     </button>
 
-                    {activeMenuId === routine.id && (
+                    {isMenuActive && (
                       <>
                         <div
-                          className="fixed inset-0 z-[100]"
+                          className="fixed inset-0 z-[999]"
                           onClick={(e) => {
                             e.stopPropagation();
                             setActiveMenuId(null);
                           }}
                         />
-                        <div className="absolute right-0 top-full mt-1 w-44 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] z-[101] overflow-hidden py-1.5">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.95)] z-[1000] overflow-hidden py-1.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -488,7 +492,8 @@ export function Workout({
                 </motion.button>
               </div>
             </motion.article>
-          ))
+          );
+        })
         )}
       </div>
 

@@ -1,56 +1,70 @@
 import os
 import io
-import resvg_py
-from PIL import Image
+from PIL import Image, ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SVG_PATH = os.path.join(BASE_DIR, "assets", "logo.svg")
-GLYPH_SVG_PATH = os.path.join(BASE_DIR, "assets", "logo-glyph.svg")
+AI_ICON_PATH = os.path.join(BASE_DIR, "assets", "liftlab_ai_icon_master.jpg")
 
-with open(SVG_PATH, "r", encoding="utf-8") as f:
-    svg_content = f.read()
+if not os.path.exists(AI_ICON_PATH):
+    raise FileNotFoundError(f"Master AI icon not found at {AI_ICON_PATH}")
 
-with open(GLYPH_SVG_PATH, "r", encoding="utf-8") as f:
-    glyph_svg_content = f.read()
+print("Loading master AI icon from Nano Banana...")
+master_raw = Image.open(AI_ICON_PATH).convert("RGBA")
+if master_raw.size != (1024, 1024):
+    master_raw = master_raw.resize((1024, 1024), Image.Resampling.LANCZOS)
 
-def render_png(svg_str: str, width: int, height: int) -> Image.Image:
-    png_bytes = resvg_py.svg_to_bytes(svg_string=svg_str, width=width, height=height)
-    return Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+def get_squircle_mask(size: int, radius: int) -> Image.Image:
+    scale = 4
+    mask = Image.new("L", (size * scale, size * scale), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle((0, 0, size * scale, size * scale), radius=radius * scale, fill=255)
+    return mask.resize((size, size), Image.Resampling.LANCZOS)
 
-print("Rendering master 1024x1024...")
-img_1024 = render_png(svg_content, 1024, 1024)
-glyph_1024 = render_png(glyph_svg_content, 1024, 1024)
+def get_circle_mask(size: int) -> Image.Image:
+    scale = 4
+    mask = Image.new("L", (size * scale, size * scale), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, size * scale, size * scale), fill=255)
+    return mask.resize((size, size), Image.Resampling.LANCZOS)
 
-# 1. Public PWA & Web Assets
+# Create 1024x1024 versions
+squircle_mask_1024 = get_squircle_mask(1024, 225)
+squircle_1024 = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+squircle_1024.paste(master_raw, (0, 0), squircle_mask_1024)
+
+circle_mask_1024 = get_circle_mask(1024)
+circle_1024 = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+circle_1024.paste(master_raw, (0, 0), circle_mask_1024)
+
+# 1. Public Web & PWA Assets
 public_dir = os.path.join(BASE_DIR, "public")
 os.makedirs(public_dir, exist_ok=True)
 
 targets = [
-    (os.path.join(public_dir, "app-logo.png"), 512),
-    (os.path.join(public_dir, "icon-512.png"), 512),
-    (os.path.join(public_dir, "icon-192.png"), 192),
-    (os.path.join(public_dir, "apple-touch-icon.png"), 180),
-    (os.path.join(BASE_DIR, "src", "assets", "images", "logo_in_app.png"), 512),
-    (os.path.join(BASE_DIR, "src", "assets", "images", "liftlab_console_icon.png"), 512),
-    (os.path.join(BASE_DIR, "src", "assets", "images", "liftlab_console_logo.png"), 512),
+    (os.path.join(public_dir, "app-logo.png"), 512, squircle_1024),
+    (os.path.join(public_dir, "icon-512.png"), 512, squircle_1024),
+    (os.path.join(public_dir, "icon-192.png"), 192, squircle_1024),
+    (os.path.join(public_dir, "apple-touch-icon.png"), 180, squircle_1024),
+    (os.path.join(BASE_DIR, "src", "assets", "images", "logo_in_app.png"), 512, squircle_1024),
+    (os.path.join(BASE_DIR, "src", "assets", "images", "liftlab_console_icon.png"), 512, squircle_1024),
+    (os.path.join(BASE_DIR, "src", "assets", "images", "liftlab_console_logo.png"), 512, squircle_1024),
 ]
 
-for path, size in targets:
+for path, size, source_img in targets:
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    resized = img_1024.resize((size, size), Image.Resampling.LANCZOS)
+    resized = source_img.resize((size, size), Image.Resampling.LANCZOS)
     resized.save(path, format="PNG", optimize=True)
     print(f"Generated {path} ({size}x{size})")
 
 # 2. Multi-size Favicon.ico
 favicon_path = os.path.join(public_dir, "favicon.ico")
 ico_sizes = [(16, 16), (32, 32), (48, 48)]
-img_1024.save(favicon_path, format="ICO", sizes=ico_sizes)
+squircle_1024.save(favicon_path, format="ICO", sizes=ico_sizes)
 print(f"Generated {favicon_path} with sizes {ico_sizes}")
 
 # 3. Android App Launcher & Splash Icons
 android_res = os.path.join(BASE_DIR, "android", "app", "src", "main", "res")
 if os.path.exists(android_res):
-    # (folder, full_size, foreground_size)
     android_densities = [
         ("mipmap-mdpi", 48, 108),
         ("mipmap-hdpi", 72, 162),
@@ -61,15 +75,19 @@ if os.path.exists(android_res):
     for folder, full_size, fg_canvas_size in android_densities:
         folder_path = os.path.join(android_res, folder)
         if os.path.exists(folder_path):
-            # Legacy Full Launcher Icons
-            icon_img = img_1024.resize((full_size, full_size), Image.Resampling.LANCZOS)
+            # Squircle Launcher
+            icon_img = squircle_1024.resize((full_size, full_size), Image.Resampling.LANCZOS)
             icon_img.save(os.path.join(folder_path, "ic_launcher.png"), format="PNG")
-            icon_img.save(os.path.join(folder_path, "ic_launcher_round.png"), format="PNG")
 
-            # Adaptive Foreground Icon (108dp canvas with 66% safe-zone centered glyph)
+            # Round Launcher
+            icon_round = circle_1024.resize((full_size, full_size), Image.Resampling.LANCZOS)
+            icon_round.save(os.path.join(folder_path, "ic_launcher_round.png"), format="PNG")
+
+            # Adaptive Foreground Icon (108dp canvas with 72% safe-zone centered glyph)
             fg_canvas = Image.new("RGBA", (fg_canvas_size, fg_canvas_size), (0, 0, 0, 0))
-            glyph_target_size = int(fg_canvas_size * 0.66)
-            glyph_resized = glyph_1024.resize((glyph_target_size, glyph_target_size), Image.Resampling.LANCZOS)
+            glyph_target_size = int(fg_canvas_size * 0.72)
+            # Use squircle for adaptive foreground
+            glyph_resized = squircle_1024.resize((glyph_target_size, glyph_target_size), Image.Resampling.LANCZOS)
             offset = (fg_canvas_size - glyph_target_size) // 2
             fg_canvas.paste(glyph_resized, (offset, offset), glyph_resized)
             fg_canvas.save(os.path.join(folder_path, "ic_launcher_foreground.png"), format="PNG")
@@ -79,7 +97,7 @@ if os.path.exists(android_res):
     # Android Splash Logo (drawable/splash_logo.png)
     splash_logo = os.path.join(android_res, "drawable", "splash_logo.png")
     if os.path.exists(os.path.dirname(splash_logo)):
-        splash_img = img_1024.resize((480, 480), Image.Resampling.LANCZOS)
+        splash_img = squircle_1024.resize((480, 480), Image.Resampling.LANCZOS)
         splash_img.save(splash_logo, format="PNG")
         print(f"Updated {splash_logo}")
 
@@ -105,11 +123,10 @@ if os.path.exists(android_res):
         if os.path.exists(target_dir):
             splash_bg = Image.new("RGBA", (w, h), bg_color)
             min_dim = min(w, h)
-            # Logo dimension: 32% of min dimension
-            logo_size = int(min_dim * 0.34)
+            logo_size = int(min_dim * 0.36)
             if logo_size < 48:
                 logo_size = 48
-            logo_resized = img_1024.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+            logo_resized = squircle_1024.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
             offset_x = (w - logo_size) // 2
             offset_y = (h - logo_size) // 2
             splash_bg.paste(logo_resized, (offset_x, offset_y), logo_resized)
@@ -117,4 +134,4 @@ if os.path.exists(android_res):
             splash_bg.save(target_file, format="PNG", optimize=True)
             print(f"Generated Android splash: {target_file} ({w}x{h}, logo={logo_size}x{logo_size})")
 
-print("All brand assets successfully exported!")
+print("All brand assets from Nano Banana successfully exported!")

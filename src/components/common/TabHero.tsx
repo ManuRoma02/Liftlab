@@ -20,8 +20,8 @@ export function TabHero({
   onOpenSettings?: () => void;
 }) {
   return (
-    <section className="apple-glass-card rounded-3xl overflow-hidden relative">
-      <div className="absolute inset-0 pointer-events-none">
+    <section className="apple-glass-card rounded-3xl relative z-20">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.12),transparent_16rem),radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.03),transparent_14rem)]" />
       </div>
       <div className="p-5 sm:p-6 flex items-center gap-4 relative z-10">

@@ -286,7 +286,7 @@ export default function App() {
         <div id="main-content" tabIndex={-1}>
         {/* Main Content Area */}
         <div className="w-full">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false}>
             <motion.div
               key={effectiveTab}
               variants={cartoonTabVariants}
