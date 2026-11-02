@@ -26,6 +26,8 @@ import {
   calculateOneRepMax,
   convertWeight,
   roundToGymWeight,
+  getLogDate,
+  hasRoutineTemplateChanged,
   type OneRepMaxFormula,
 } from "../lib/workoutUtils";
 import {
@@ -50,11 +52,7 @@ import {
 } from "../lib/liveWorkoutBridge";
 import type { RoutineData, ExerciseData, SetData, WeightLog, UserData } from "../types/workout";
 
-export const getLogDate = (log: any) => {
-  if (!log || !log.date) return new Date();
-  if (typeof log.date.toDate === "function") return log.date.toDate();
-  return new Date(log.date);
-};
+export { getLogDate };
 
 export const getSystemDefaultLanguage = (): "it" | "en" | "es" => {
   if (typeof navigator !== "undefined" && navigator.language) {
@@ -300,6 +298,11 @@ export function useWorkoutData() {
   });
 
   const [isEmptyPromptOpen, setIsEmptyPromptOpen] = useState(false);
+  const [isUpdateTemplatePromptOpen, setIsUpdateTemplatePromptOpen] = useState(false);
+  const [pendingLiveWorkoutToFinish, setPendingLiveWorkoutToFinish] = useState<RoutineData | null>(null);
+  const [editingRoutineDraft, setEditingRoutineDraft] = useState<RoutineData | null>(() => {
+    return readJson<RoutineData | null>("liftlab_routine_edit_draft", null);
+  });
   const [userName, setUserName] = useState("User");
   const [restTimer, setRestTimer] = useState(90);
   const [showRpe, setShowRpe] = useState<boolean>(() => {
@@ -730,39 +733,17 @@ export function useWorkoutData() {
     updatedRoutine: RoutineData,
     isWorkout: boolean = true,
   ) => {
-    const exercisesChanged = () => {
-      const baseRoutine = routines.find(r => r.id === updatedRoutine.id);
-      if (!baseRoutine) return true;
-      if (baseRoutine.exercises.length !== updatedRoutine.exercises.length) return true;
-      for (let i = 0; i < baseRoutine.exercises.length; i++) {
-        const baseEx = baseRoutine.exercises[i];
-        const newEx = updatedRoutine.exercises[i];
-        if (baseEx.title !== newEx.title || baseEx.id !== newEx.id) return true;
-      }
-      return false;
-    };
-
-    if (isWorkout && !isEmptyPromptOpen && !updatedRoutine.sourceLogId && (activeRoutineId === "empty" || exercisesChanged())) {
-      setPendingWorkout(updatedRoutine);
-      setIsEmptyPromptOpen(true);
-      return;
-    }
-
-    if ((!updatedRoutine.sourceLogId && activeRoutineId !== "empty") || !isWorkout) {
-      const templateToSave: RoutineData = isWorkout
-        ? buildTemplateFromLiveWorkout(updatedRoutine)
-        : updatedRoutine;
+    if (!isWorkout) {
       setRoutines((prev) => {
-        const exists = prev.find((r) => r.id === templateToSave.id);
+        const exists = prev.find((r) => r.id === updatedRoutine.id);
         if (exists)
           return prev.map((r) =>
-            r.id === templateToSave.id ? templateToSave : r,
+            r.id === updatedRoutine.id ? updatedRoutine : r,
           );
-        return [templateToSave, ...prev];
+        return [updatedRoutine, ...prev];
       });
-    }
-
-    if (!isWorkout) {
+      setEditingRoutineDraft(null);
+      removeJsonAtomic("liftlab_routine_edit_draft");
       setActiveTab("workout");
       return;
     }
@@ -773,6 +754,24 @@ export function useWorkoutData() {
       return;
     }
 
+    // Freestyle / empty workout -> prompt to save as new routine or log only
+    if (activeRoutineId === "empty" || !activeRoutineId || updatedRoutine.id === "empty") {
+      setPendingWorkout(updatedRoutine);
+      setIsEmptyPromptOpen(true);
+      return;
+    }
+
+    // Routine-based workout: check if template modified
+    const baseRoutine = routines.find(
+      (r) => r.id === activeRoutineId || r.id === updatedRoutine.id,
+    );
+    if (baseRoutine && hasRoutineTemplateChanged(baseRoutine, updatedRoutine)) {
+      setPendingLiveWorkoutToFinish(updatedRoutine);
+      setIsUpdateTemplatePromptOpen(true);
+      return;
+    }
+
+    // Baseline template unchanged: log session directly without mutating routine template
     const newGuestLog = {
       id: crypto.randomUUID(),
       routineId: updatedRoutine.id,
@@ -789,6 +788,51 @@ export function useWorkoutData() {
     setIsEmptyPromptOpen(false);
     setLastWorkoutData(newGuestLog);
     setActiveTab("workout_summary");
+  };
+
+  const handleConfirmUpdateTemplate = async (updateTemplate: boolean) => {
+    if (!pendingLiveWorkoutToFinish || isConfirming) return;
+    setIsConfirming(true);
+
+    try {
+      const completedLog = buildCompletedWorkoutLog(pendingLiveWorkoutToFinish);
+      if (completedLog.exercises.length === 0) {
+        showToast("Complete at least one set before finishing.", "error");
+        return;
+      }
+
+      if (updateTemplate) {
+        const templateToSave = buildTemplateFromLiveWorkout(pendingLiveWorkoutToFinish);
+        setRoutines((prev) => {
+          const exists = prev.find((r) => r.id === templateToSave.id);
+          if (exists) {
+            return prev.map((r) =>
+              r.id === templateToSave.id ? templateToSave : r,
+            );
+          }
+          return [templateToSave, ...prev];
+        });
+      }
+
+      const newGuestLog = {
+        id: crypto.randomUUID(),
+        routineId: pendingLiveWorkoutToFinish.id,
+        routineName: pendingLiveWorkoutToFinish.name || "Workout",
+        exercises: completedLog.exercises,
+        duration: pendingLiveWorkoutToFinish.duration,
+        plannedSetCount: countPlannedSets(pendingLiveWorkoutToFinish),
+        date: new Date(),
+        userId: "guest",
+      };
+      setWorkoutLogs((prev) => [newGuestLog as any, ...prev]);
+      await teardownLiveSession();
+      setPendingLiveWorkoutToFinish(null);
+      setIsUpdateTemplatePromptOpen(false);
+      setLastWorkoutData(newGuestLog);
+      setActiveTab("workout_summary");
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   const handleConfirmEmptySave = async (saveAsRoutine: boolean) => {
@@ -1395,7 +1439,16 @@ export function useWorkoutData() {
   };
 
   const handleCreateRoutine = () => {
-    setActiveRoutineId(null);
+    const freshDraft: RoutineData = {
+      id: crypto.randomUUID(),
+      name: "",
+      duration: 60,
+      tags: [],
+      exercises: [],
+    };
+    setEditingRoutineDraft(freshDraft);
+    setActiveRoutineId(freshDraft.id);
+    writeJsonAtomic("liftlab_routine_edit_draft", freshDraft);
     navigateTo("routine_editor");
   };
 
@@ -1406,12 +1459,13 @@ export function useWorkoutData() {
 
   const handleDetailsAddExercise = (exDef: ExerciseData) => {
     const titleKey = String(exDef.title || "").trim().toLowerCase();
-    const newEx: any = {
+    const newEx: ExerciseData = {
       id: crypto.randomUUID(),
       title: exDef.title,
       category: exDef.category,
       type: exDef.type,
       image: exDef.image,
+      equipment: exDef.equipment,
       notes: savedExerciseNotes[titleKey] || "",
       restTimer: getExerciseRestPreset(exDef, exerciseRestPresets, restTimer),
       sets: [
@@ -1419,7 +1473,38 @@ export function useWorkoutData() {
       ],
     };
 
-    if (activeRoutineId) {
+    if (prevTab === "routine_editor") {
+      setEditingRoutineDraft((prev) => {
+        const base =
+          (prev && (!activeRoutineId || prev.id === activeRoutineId) ? prev : null) ||
+          readJson<RoutineData | null>("liftlab_routine_edit_draft", null) ||
+          routines.find((r) => r.id === activeRoutineId) || {
+            id: activeRoutineId || crypto.randomUUID(),
+            name: "",
+            duration: 60,
+            tags: [],
+            exercises: [],
+          };
+        const updated: RoutineData = {
+          ...base,
+          exercises: [...(base.exercises || []), newEx],
+        };
+        writeJsonAtomic("liftlab_routine_edit_draft", updated);
+        return updated;
+      });
+    } else if (prevTab === "live_editor") {
+      const live = readJson<RoutineData | null>("liftlab_live_progress", null);
+      if (live) {
+        const updatedLive = {
+          ...live,
+          exercises: [...(live.exercises || []), newEx],
+        };
+        writeJsonAtomic("liftlab_live_progress", updatedLive);
+        window.dispatchEvent(
+          new CustomEvent("liftlab:live-add-exercise", { detail: newEx })
+        );
+      }
+    } else if (activeRoutineId) {
       setRoutines((prev) =>
         prev.map((r) =>
           r.id === activeRoutineId
@@ -1551,6 +1636,12 @@ export function useWorkoutData() {
     handleCreateRoutine,
     handleOpenExerciseDetails,
     handleDetailsAddExercise,
+    isUpdateTemplatePromptOpen,
+    setIsUpdateTemplatePromptOpen,
+    handleConfirmUpdateTemplate,
+    pendingLiveWorkoutToFinish,
+    editingRoutineDraft,
+    setEditingRoutineDraft,
     restartTutorial,
     loadStarterRoutines: () => {
       setRoutines(DEFAULT_STARTER_ROUTINES);

@@ -1,6 +1,6 @@
 import React from "react";
 import { Settings as SettingsIcon } from "lucide-react";
-import { triggerHaptic } from "../../lib/haptics";
+import { hapticPress } from "../../lib/haptics";
 
 export function TabHero({
   eyebrow,
@@ -43,10 +43,8 @@ export function TabHero({
           {metric}
           {onOpenSettings && (
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onOpenSettings();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onOpenSettings}
               aria-label="Settings"
               className="w-11 h-11 rounded-full bg-white/6 border border-white/10 text-[#8E8E93] hover:text-white hover:bg-white/12 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             >

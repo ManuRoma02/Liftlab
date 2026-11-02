@@ -48,16 +48,12 @@ import {
   calculateOneRepMax,
   getWorkoutLogDurationMinutes,
   isTimedExercise,
+  calculateSetVolume,
+  getLogDate,
 } from "../lib/workoutUtils";
 import { ACHIEVEMENTS, type Achievement } from "../lib/achievements";
 import { writeJsonAtomic } from "../lib/storage";
 import type { ExerciseData } from "../types/workout";
-
-const getLogDate = (log: any) => {
-  if (!log || !log.date) return new Date();
-  if (typeof log.date.toDate === "function") return log.date.toDate();
-  return new Date(log.date);
-};
 
 export function Progress({
   t,
@@ -249,7 +245,7 @@ export function Progress({
       let volume = 0;
       log.exercises?.forEach((ex: any) => {
         ex.sets?.forEach((s: any) => {
-          if (s.completed && s.weight && s.reps) volume += s.weight * s.reps;
+          volume += calculateSetVolume(s);
         });
       });
       return { name: dateStr || `Workout ${i + 1}`, volume };
@@ -264,9 +260,7 @@ export function Progress({
         if (cat === "Cardio") return;
         let vol = 0;
         ex.sets?.forEach((s: any) => {
-          if (s.completed && s.weight && s.reps) {
-            vol += Number(s.weight) * Number(s.reps);
-          }
+          vol += calculateSetVolume(s);
         });
         if (vol > 0) {
           volumes[cat] = (volumes[cat] || 0) + vol;

@@ -50,9 +50,10 @@ import {
   parseGymNumber,
   formatWeightUnit,
   roundToGymWeight,
+  getEquipmentBarWeight,
 } from "../lib/workoutUtils";
 import { getExerciseSearchScore } from "../lib/searchUtils";
-import { readJson, removeJsonAtomic, writeJsonAtomic } from "../lib/storage";
+import { readJson, removeJsonAtomic, writeJsonAtomic, writeJsonSafe } from "../lib/storage";
 import { showToast } from "../lib/toast";
 import {
   updateLiveWorkoutNotification,
@@ -85,6 +86,7 @@ export function RoutineEditor({
   exerciseRestPresets = {},
   onSaveExerciseRestPreset,
   showRpe = false,
+  onDraftChange,
 }: {
   t: any;
   unit: string;
@@ -105,6 +107,7 @@ export function RoutineEditor({
   exerciseRestPresets?: Record<string, number>;
   onSaveExerciseRestPreset?: (title: string, seconds: number) => void;
   showRpe?: boolean;
+  onDraftChange?: (draft: RoutineData) => void;
 }) {
   const LIVE_PROGRESS_KEY = "liftlab_live_progress";
   const LIVE_ELAPSED_KEY  = "liftlab_live_elapsed";
@@ -307,12 +310,16 @@ export function RoutineEditor({
     } catch (e) {}
   };
 
-  const startRestTimer = async (duration: number) => {
+  const startRestTimer = async (duration: number, nextRoutine?: RoutineData) => {
     lastBeepSecondRef.current = null;
+    const routineToUse = nextRoutine || routineRef.current;
+    if (nextRoutine) {
+      routineRef.current = nextRoutine;
+    }
     if (duration <= 0) {
       localStorage.removeItem(LIVE_REST_TIMER_KEY);
       setActiveRestLeft(null);
-      pushNativeLiveState(routineRef.current, 0, false);
+      pushNativeLiveState(routineToUse, 0, false);
       if (activeNotificationRef.current) {
         activeNotificationRef.current.close();
         activeNotificationRef.current = null;
@@ -328,9 +335,9 @@ export function RoutineEditor({
       setInitialRestDuration(duration);
     }
     const state = { duration, startedAt: Date.now() };
-    localStorage.setItem(LIVE_REST_TIMER_KEY, JSON.stringify(state));
+    writeJsonSafe(LIVE_REST_TIMER_KEY, state);
     setActiveRestLeft(duration);
-    pushNativeLiveState(routineRef.current, duration, false);
+    pushNativeLiveState(routineToUse, duration, false);
 
     if (!isNativeAndroid()) {
       try {
@@ -594,6 +601,7 @@ export function RoutineEditor({
         };
 
         setRoutine(updatedRoutine);
+        routineRef.current = updatedRoutine;
         writeJsonAtomic(LIVE_PROGRESS_KEY, updatedRoutine);
 
         const allWorkoutSetsCompleted = updatedRoutine.exercises.every((ex) =>
@@ -605,12 +613,12 @@ export function RoutineEditor({
             ? getExerciseRestPreset(foundExercise, exerciseRestPresets, restTimer)
             : restTimer;
           if (timer > 0) {
-            startRestTimer(timer);
+            startRestTimer(timer, updatedRoutine);
           } else {
             pushNativeLiveState(updatedRoutine, 0, false);
           }
         } else {
-          startRestTimer(0);
+          startRestTimer(0, updatedRoutine);
           pushNativeLiveState(updatedRoutine, 0, false);
         }
       } else if (action === "add_30s") {
@@ -627,14 +635,80 @@ export function RoutineEditor({
     };
   }, [mode, exerciseRestPresets, restTimer]);
 
-  // ── Auto-save live workout progress reactively on every routine change ─────
+  // ── Listen for exercises added from ExerciseDetails in live workout mode ──
   useEffect(() => {
-    if (mode !== "live" || !routine) return;
-    const timer = setTimeout(() => {
-      writeJsonAtomic(LIVE_PROGRESS_KEY, routine);
+    if (mode !== "live") return;
+    const handleLiveAdd = (e: Event) => {
+      const customEvent = e as CustomEvent<ExerciseData>;
+      if (!customEvent.detail) return;
+      const added = customEvent.detail;
+      setRoutine((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          exercises: [...(current.exercises || []), added],
+        };
+      });
+    };
+    window.addEventListener("liftlab:live-add-exercise", handleLiveAdd);
+    return () => window.removeEventListener("liftlab:live-add-exercise", handleLiveAdd);
+  }, [mode]);
+
+  // ── Debounced auto-save & synchronous unmount flush ────────────────────────
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDirtyRef = useRef<boolean>(false);
+  const isInitialMount = useRef<boolean>(true);
+
+  const flushPendingSave = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (!isDirtyRef.current) return;
+    const current = routineRef.current;
+    if (!current) return;
+
+    if (mode === "live") {
+      writeJsonAtomic(LIVE_PROGRESS_KEY, current);
+      if (elapsedRef.current != null) {
+        writeJsonSafe(LIVE_ELAPSED_KEY, String(elapsedRef.current));
+      }
+    } else {
+      writeJsonAtomic("liftlab_routine_edit_draft", current);
+      onDraftChange?.(current);
+    }
+    isDirtyRef.current = false;
+  };
+
+  useEffect(() => {
+    routineRef.current = routine;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    isDirtyRef.current = true;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      flushPendingSave();
     }, 200);
-    return () => clearTimeout(timer);
-  }, [mode, routine]);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [routine, mode]);
+
+  // Synchronous unmount flush: guarantees any pending dirty state is flushed on unmount
+  useEffect(() => {
+    return () => {
+      flushPendingSave();
+    };
+  }, []);
 
   // Keep screen awake during live workout
   useEffect(() => {
@@ -674,7 +748,7 @@ export function RoutineEditor({
       if (routineRef.current) {
         writeJsonAtomic(LIVE_PROGRESS_KEY, routineRef.current);
       }
-      localStorage.setItem(LIVE_ELAPSED_KEY, String(elapsedRef.current));
+      writeJsonSafe(LIVE_ELAPSED_KEY, String(elapsedRef.current));
     };
 
     const handleVisibilityChange = () => {
@@ -714,7 +788,7 @@ export function RoutineEditor({
   useEffect(() => {
     if (mode !== "live") return;
     const interval = setInterval(() => {
-      localStorage.setItem(LIVE_ELAPSED_KEY, String(elapsed));
+      writeJsonSafe(LIVE_ELAPSED_KEY, String(elapsed));
     }, 5000);
     return () => clearInterval(interval);
   }, [mode, elapsed]);
@@ -755,9 +829,9 @@ export function RoutineEditor({
     if (!ex) return;
     const firstSetWeight = Number(ex.sets[0]?.weight);
     const workingWeight = Number.isFinite(firstSetWeight) && firstSetWeight > 0 ? firstSetWeight : 60;
-    const barWeight = unit.toUpperCase() === "LBS" ? 45 : 20;
+    const barWeight = getEquipmentBarWeight(ex.equipment, ex.title, unit);
 
-    const generated = generateWarmupSets(workingWeight, barWeight);
+    const generated = generateWarmupSets(workingWeight, barWeight, ex.equipment);
     const warmupSets: SetData[] = generated.map((wSet) => ({
       id: crypto.randomUUID(),
       weight: wSet.weight,
@@ -835,7 +909,7 @@ export function RoutineEditor({
       const tick = () => {
         const currentElapsed = Math.max(0, Math.floor((Date.now() - sessionStartedAt) / 1000));
         setElapsed(currentElapsed);
-        localStorage.setItem(LIVE_ELAPSED_KEY, String(currentElapsed));
+        writeJsonSafe(LIVE_ELAPSED_KEY, String(currentElapsed));
       };
       tick();
       const interval = setInterval(tick, 1000);
@@ -986,6 +1060,8 @@ export function RoutineEditor({
     const duplicated = {
       ...ex,
       id: crypto.randomUUID(),
+      technique: "",
+      supersetId: undefined,
       sets: ex.sets.map((s) => ({ ...s, id: crypto.randomUUID() })),
     };
     const newExercises = [...(routine?.exercises ?? [])];
@@ -996,9 +1072,13 @@ export function RoutineEditor({
   };
 
   const deleteExercise = (id: string) => {
+    triggerHaptic("warning");
+    const updatedExercises = dissolveSuperset(routine?.exercises ?? [], id).filter(
+      (e) => e.id !== id,
+    );
     setRoutine({
       ...routine,
-      exercises: (routine?.exercises ?? []).filter((e) => e.id !== id),
+      exercises: updatedExercises,
     });
     setActiveMenuId(null);
   };
@@ -1155,6 +1235,7 @@ export function RoutineEditor({
       ),
     };
     setRoutine(updatedRoutine);
+    routineRef.current = updatedRoutine;
     if (mode === "live") {
       writeJsonAtomic(LIVE_PROGRESS_KEY, updatedRoutine);
     }
@@ -1166,7 +1247,7 @@ export function RoutineEditor({
         ? getExerciseRestPreset(activeExercise, exerciseRestPresets, restTimer)
         : restTimer;
       if (timer > 0) {
-        startRestTimer(timer);
+        startRestTimer(timer, updatedRoutine);
       }
     }
   };

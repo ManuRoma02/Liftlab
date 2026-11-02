@@ -24,6 +24,8 @@ import {
   shouldRestoreLiveProgress,
   convertWeight,
   roundToGymWeight,
+  calculateSetVolume,
+  getLogDate,
   KG_TO_LBS,
 } from "./workoutUtils";
 
@@ -570,6 +572,17 @@ const skippedDayLogs = [
 ];
 assert.equal(calculateStreaks(skippedDayLogs, new Date("2026-06-03T14:00:00Z")).currentStreak, 1);
 assert.equal(calculateStreaks(skippedDayLogs, new Date("2026-06-03T14:00:00Z")).bestStreak, 1);
+
+// Set volume calculation with comma and string edge cases
+assert.equal(calculateSetVolume({ completed: true, weight: "60,5", reps: "10" }), 605);
+assert.equal(calculateSetVolume({ completed: true, weight: 100, reps: 5 }), 500);
+assert.equal(calculateSetVolume({ completed: true, weight: "BW", reps: 10 }), 0);
+assert.equal(calculateSetVolume({ completed: false, weight: 100, reps: 5 }), 0);
+
+// Log date parsing edge cases
+assert.equal(getLogDate({ date: "2026-06-01T12:00:00Z" }).toISOString(), "2026-06-01T12:00:00.000Z");
+assert.equal(getLogDate({ date: "invalid-date" }).getTime(), 0);
+assert.equal(getLogDate(null).getTime(), 0);
 
 console.log("workoutUtils tests passed");
 

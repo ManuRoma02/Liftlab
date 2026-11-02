@@ -1,8 +1,8 @@
 {
-  "version": "1.0.3",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.3.zip",
-  "checksum": "54daacafbdf0e800c1e74a6035f37c487135d3306c1805369b25595da4a34ee1",
-  "releaseDate": "2026-10-21T14:44:30.413Z",
-  "notes": "• **OTA In-App**: aggiornamenti live istantanei senza riscaricare l'APK.\n• **Fisica Cartoon**: rimbalzo elastico e ripple verde su serie e timer.\n• **Drop-Set**: unificati con tocco singolo.",
+  "version": "1.0.4",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.4.zip",
+  "checksum": "d60a628d03a99b6fd0fd673c342872143f09e7bf5cea7c25f93a665474407748",
+  "releaseDate": "2026-11-02T19:06:22.463Z",
+  "notes": "• Apple Design & iOS HIG overhaul: transizioni elastiche, feedback aptico Taptic Engine nativo e bottoni touch >=44pt.\n• Stack modali LIFO con chiusura fluida su Escape/Back senza collisioni.\n• Correzione calcoli PR, 1RM ed eliminazione bug sui superset.\n• Ottimizzazioni di memoria e isolamento dello storage locale.",
   "bundleSizeMb": "0.91"
 }

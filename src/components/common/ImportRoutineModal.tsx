@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { triggerHaptic } from "../../lib/haptics";
+import { motion } from "motion/react";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export function ImportRoutineModal({
   onImport,
@@ -17,21 +18,7 @@ export function ImportRoutineModal({
   const [error, setError] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    const handleBack = (event: Event) => {
-      event.preventDefault();
-      onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("liftlab:back", handleBack);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("liftlab:back", handleBack);
-    };
-  }, [onClose]);
+  useModalDismiss(true, onClose);
 
   const handleImport = async () => {
     const trimmed = codeText.trim();
@@ -51,14 +38,14 @@ export function ImportRoutineModal({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[500] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
+    <motion.div
+      key="import-routine-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[500] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -99,10 +86,8 @@ export function ImportRoutineModal({
           <div className="flex gap-2.5 pt-1">
             <button
               type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="flex-1 min-h-[44px] py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-semibold text-xs transition-all cursor-pointer active:scale-95 flex items-center justify-center"
             >
               Cancel
@@ -118,6 +103,5 @@ export function ImportRoutineModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

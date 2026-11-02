@@ -1,7 +1,7 @@
 {
   "name": "liftlab",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
     "lint": "tsc --noEmit",
-    "test": "tsx src/lib/workoutUtils.test.ts && tsx src/lib/routineImport.test.ts && tsx src/lib/storage.test.ts && tsx src/lib/achievements.test.ts && tsx src/lib/searchUtils.test.ts && tsx src/lib/translations.test.ts && tsx src/lib/otaUpdate.test.ts && tsx src/lib/motionAndHaptics.test.ts",
+    "test": "tsx src/lib/workoutUtils.test.ts && tsx src/lib/routineImport.test.ts && tsx src/lib/storage.test.ts && tsx src/lib/achievements.test.ts && tsx src/lib/searchUtils.test.ts && tsx src/lib/translations.test.ts && tsx src/lib/otaUpdate.test.ts && tsx src/lib/motionAndHaptics.test.ts && tsx src/lib/modalStack.test.ts",
     "send:apk": "node scripts/send-apk-telegram.mjs",
     "ota:release": "node scripts/release-ota.mjs",
     "ota:build": "node scripts/release-ota.mjs"
@@ -19,6 +19,7 @@
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
+    "@capacitor/haptics": "^8.0.0",
     "@capacitor/local-notifications": "^8.2.0",
     "@capgo/capacitor-updater": "^8.53.1",
     "@tailwindcss/vite": "^4.1.14",

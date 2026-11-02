@@ -147,6 +147,35 @@ if (typeof globalThis.localStorage === "undefined") {
   });
 }
 
+// Polyfill window for Node.js environment
+if (typeof (globalThis as any).window === "undefined") {
+  const listeners = new Map<string, Array<(e: any) => void>>();
+  const mockWindow = {
+    localStorage: globalThis.localStorage,
+    dispatchEvent: (event: any) => {
+      const type = event?.type;
+      if (type && listeners.has(type)) {
+        for (const cb of listeners.get(type)!) cb(event);
+      }
+      return true;
+    },
+    addEventListener: (type: string, cb: any) => {
+      if (!listeners.has(type)) listeners.set(type, []);
+      listeners.get(type)!.push(cb);
+    },
+    removeEventListener: (type: string, cb: any) => {
+      if (listeners.has(type)) {
+        listeners.set(type, listeners.get(type)!.filter(fn => fn !== cb));
+      }
+    },
+  };
+  Object.defineProperty(globalThis, "window", {
+    value: mockWindow,
+    configurable: true,
+    writable: true,
+  });
+}
+
 export function readProjectFile(relPath: string): string | null {
   const fullPath = path.resolve(ROOT_DIR, relPath);
   if (!fs.existsSync(fullPath)) return null;

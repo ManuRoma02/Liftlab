@@ -150,16 +150,17 @@ console.log("✓ Haptic vibration patterns and disabling verified successfully")
 lastVibration = null;
 const pressHandler = hapticPress("medium");
 assert.equal(typeof pressHandler, "function", "hapticPress with style string should return a function");
-assert.equal(lastVibration, 16, "hapticPress should trigger immediately on call");
+assert.equal(lastVibration, null, "hapticPress must NOT trigger haptic during render/invocation");
 
 lastVibration = null;
 if (typeof pressHandler === "function") {
   pressHandler();
-  assert.equal(lastVibration, 16, "Returned pressHandler should trigger medium haptic");
+  assert.equal(lastVibration, 16, "Returned pressHandler should trigger medium haptic on user touch");
 }
 
 lastVibration = null;
-hapticPress(undefined, "heavy");
+// Direct event handler test: simulates onPointerDown={hapticPress}
+hapticPress({ type: "pointerdown", target: {} }, "heavy");
 assert.equal(lastVibration, 28, "hapticPress with event fallback should trigger defaultStyle");
 
 console.log("✓ hapticPress helper verified successfully");

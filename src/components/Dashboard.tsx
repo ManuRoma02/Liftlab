@@ -36,6 +36,10 @@ import {
   isTimedExercise,
   getWorkoutLogDurationMinutes,
   calculateStreaks,
+  calculateSetVolume,
+  getLogDate,
+  buildPersonalRecords,
+  type PersonalRecord,
 } from "../lib/workoutUtils";
 import type { RoutineData, ExerciseData } from "../types/workout";
 
@@ -45,12 +49,6 @@ interface DetailedActivity {
   duration: number;
   exercises: any[];
 }
-
-const getLogDate = (log: any) => {
-  if (!log || !log.date) return new Date();
-  if (typeof log.date.toDate === "function") return log.date.toDate();
-  return new Date(log.date);
-};
 
 export const Dashboard = React.memo(
   ({
@@ -92,18 +90,10 @@ export const Dashboard = React.memo(
     onDeleteLog?: (id: string) => void;
     userName?: string;
   }) => {
-    const userName = userNameProp || (() => {
-      try {
-        const raw = localStorage.getItem("liftlab_guest_data");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed?.displayName && parsed.displayName !== "Guest" && parsed.displayName !== "User") {
-            return parsed.displayName;
-          }
-        }
-      } catch {}
-      return undefined;
-    })();
+    const userName =
+      userNameProp && userNameProp !== "Guest" && userNameProp !== "User"
+        ? userNameProp.trim()
+        : undefined;
     const welcomeBase = (t("welcome_title") || "Benvenuto su LiftLab").replace(/[!¡]/g, "").trim();
 
     const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
@@ -193,7 +183,7 @@ export const Dashboard = React.memo(
         let volume = 0;
         log.exercises?.forEach((ex: any) => {
           ex.sets?.forEach((s: any) => {
-            if (s.completed && s.weight && s.reps) volume += s.weight * s.reps;
+            volume += calculateSetVolume(s);
           });
         });
         return { name: dateStr || `Workout ${i + 1}`, volume };
@@ -249,35 +239,87 @@ export const Dashboard = React.memo(
     const selectedActivities = activityData[selectedDayIndex] || [];
     const hasWorkout = selectedActivities.length > 0;
 
-    let workoutsThisWeek = 0;
-    let durationThisWeek = 0; // accumulated in seconds
-    Object.values(activityData).forEach((activities: DetailedActivity[]) => {
-      activities.forEach((activity) => {
-        if (activity.duration > 0 || (activity.exercises && activity.exercises.length > 0)) {
-          workoutsThisWeek++;
-          durationThisWeek += (activity.duration || 0); // seconds
-        }
-      });
-    });
-
-    let totalVolume = 0;
-    workoutLogs.forEach((log) => {
-      log.exercises?.forEach((ex: any) => {
-        ex.sets?.forEach((s: any) => {
-          if (s.completed && s.weight && s.reps)
-            totalVolume += Number(s.weight) * Number(s.reps);
+    const { workoutsThisWeek, durationThisWeek } = useMemo(() => {
+      let workouts = 0;
+      let duration = 0;
+      Object.values(activityData).forEach((activities: DetailedActivity[]) => {
+        activities.forEach((activity) => {
+          if (activity.duration > 0 || (activity.exercises && activity.exercises.length > 0)) {
+            workouts++;
+            duration += (activity.duration || 0);
+          }
         });
       });
-    });
-    const totalVolumeStr =
-      totalVolume >= 1000
+      return { workoutsThisWeek: workouts, durationThisWeek: duration };
+    }, [activityData]);
+
+    const totalVolume = useMemo(() => {
+      let vol = 0;
+      workoutLogs.forEach((log) => {
+        log.exercises?.forEach((ex: any) => {
+          ex.sets?.forEach((s: any) => {
+            if (s.completed && s.weight && s.reps)
+              vol += Number(s.weight) * Number(s.reps);
+          });
+        });
+      });
+      return vol;
+    }, [workoutLogs]);
+
+    const totalVolumeStr = useMemo(() => {
+      return totalVolume >= 1000
         ? (totalVolume / 1000).toFixed(1) + "k"
         : (Math.round(totalVolume * 10) / 10).toString();
+    }, [totalVolume]);
 
-    // PR calculation
-    const totalPRs = exercises.filter(
-      (ex) => ex.prWeight || ex.oneRepMax,
-    ).length;
+    // PR calculation from real workoutLogs
+    const personalRecords = useMemo(
+      () => buildPersonalRecords(workoutLogs),
+      [workoutLogs]
+    );
+
+    const totalPRs = personalRecords.length;
+
+    const exercisesWithPRs = useMemo(() => {
+      const prMap = new Map<string, PersonalRecord>(
+        personalRecords.map((pr: PersonalRecord) => [pr.title.trim().toLowerCase(), pr])
+      );
+      const matchedKeys = new Set<string>();
+
+      const enriched: ExerciseData[] = exercises.map((ex) => {
+        const key = (ex.title || "").trim().toLowerCase();
+        const pr = prMap.get(key);
+        if (pr) {
+          matchedKeys.add(key);
+          return {
+            ...ex,
+            prWeight: pr.bestWeight,
+            prReps: pr.bestReps,
+            oneRepMax: pr.estimatedOneRepMax,
+          };
+        }
+        return ex;
+      });
+
+      for (const pr of personalRecords) {
+        const key = pr.title.trim().toLowerCase();
+        if (!matchedKeys.has(key)) {
+          enriched.push({
+            id: `pr-${key}`,
+            title: pr.title,
+            category: "Other",
+            type: "weight_reps",
+            sets: [],
+            notes: "",
+            prWeight: pr.bestWeight,
+            prReps: pr.bestReps,
+            oneRepMax: pr.estimatedOneRepMax,
+          });
+        }
+      }
+
+      return enriched;
+    }, [exercises, personalRecords]);
 
     const getWeightChartData = () => {
       return [...weightLogs]
@@ -364,9 +406,12 @@ export const Dashboard = React.memo(
       return count;
     }, [activityData]);
 
-    const avgDurationMin = workoutLogs.length > 0
-      ? Math.round(workoutLogs.reduce((sum, log) => sum + getWorkoutLogDurationMinutes(log.duration), 0) / workoutLogs.length)
-      : 0;
+    const avgDurationMin = useMemo(() => {
+      if (workoutLogs.length === 0) return 0;
+      return Math.round(
+        workoutLogs.reduce((sum, log) => sum + getWorkoutLogDurationMinutes(log.duration), 0) / workoutLogs.length
+      );
+    }, [workoutLogs]);
 
     const bestVolumeSession = useMemo(() => {
       let best = 0;
@@ -1525,14 +1570,16 @@ export const Dashboard = React.memo(
         )}
 
         {/* PR Modal */}
-        {isPRModalOpen && (
-          <PRListModal
-            exercises={exercises}
-            unit={unit}
-            onClose={() => setIsPRModalOpen(false)}
-            t={t}
-          />
-        )}
+        <AnimatePresence>
+          {isPRModalOpen && (
+            <PRListModal
+              exercises={exercisesWithPRs}
+              unit={unit}
+              onClose={() => setIsPRModalOpen(false)}
+              t={t}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Customize Stats Sheet */}
         <AppleBottomSheet
@@ -1647,22 +1694,24 @@ export const Dashboard = React.memo(
 
 
 
-        {pendingDeleteLogId && onDeleteLog && (
-          <ConfirmModal
-            title="Delete workout log?"
-            message="This removes the session from your history and progress calculations. This action cannot be undone."
-            confirmLabel={t("delete") || "Delete"}
-            cancelLabel={t("cancel") || "Cancel"}
-            destructive
-            onConfirm={() => {
-              onDeleteLog(pendingDeleteLogId);
-              setPendingDeleteLogId(null);
-              setIsSummaryModalOpen(false);
-              setFocusedActivity(null);
-            }}
-            onCancel={() => setPendingDeleteLogId(null)}
-          />
-        )}
+        <AnimatePresence>
+          {pendingDeleteLogId && onDeleteLog && (
+            <ConfirmModal
+              title="Delete workout log?"
+              message="This removes the session from your history and progress calculations. This action cannot be undone."
+              confirmLabel={t("delete") || "Delete"}
+              cancelLabel={t("cancel") || "Cancel"}
+              destructive
+              onConfirm={() => {
+                onDeleteLog(pendingDeleteLogId);
+                setPendingDeleteLogId(null);
+                setIsSummaryModalOpen(false);
+                setFocusedActivity(null);
+              }}
+              onCancel={() => setPendingDeleteLogId(null)}
+            />
+          )}
+        </AnimatePresence>
       </main>
     );
   }

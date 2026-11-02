@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { X, Disc, Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { calculatePlatesPerSide } from "../../lib/workoutUtils";
-import { triggerHaptic } from "../../lib/haptics";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export interface PlateCalculatorModalProps {
   isOpen: boolean;
@@ -61,25 +62,7 @@ export function PlateCalculatorModal({
     }
   }, [isOpen, initialWeight, isLbs]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleBack = (event: Event) => {
-      if (event.defaultPrevented) return;
-      event.preventDefault();
-      onClose();
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("liftlab:back", handleBack);
-    window.addEventListener("keydown", handleEscape);
-    return () => {
-      window.removeEventListener("liftlab:back", handleBack);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  useModalDismiss(isOpen, onClose);
 
   const plateResult = calculatePlatesPerSide(targetWeight, barWeight, unit);
 
@@ -100,13 +83,15 @@ export function PlateCalculatorModal({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
+      {isOpen && (
+        <motion.div
+          key="plate-calculator-scrim"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+          onClick={onClose}
+        >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -285,10 +270,8 @@ export function PlateCalculatorModal({
           {/* Footer */}
           <div className="p-4 border-t border-white/6 flex justify-end">
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="w-full sm:w-auto px-7 py-3 min-h-[44px] bg-[#30D158] text-black font-bold rounded-full hover:brightness-105 active:scale-95 transition-all text-sm cursor-pointer shadow-sm flex items-center justify-center"
             >
               {t("close") || "Close"}
@@ -296,6 +279,7 @@ export function PlateCalculatorModal({
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

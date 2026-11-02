@@ -1,8 +1,21 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Trash2, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { triggerHaptic } from "../../lib/haptics";
-import { APPLE_SPRINGS, CARTOON_SPRINGS } from "../../lib/motion";
+import { CARTOON_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
+
+export interface ConfirmModalProps {
+  key?: React.Key;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  destructive?: boolean;
+  title?: string;
+  icon?: "default" | "finish" | "warning";
+}
 
 export function ConfirmModal({
   message,
@@ -13,16 +26,7 @@ export function ConfirmModal({
   destructive = false,
   title,
   icon = "default",
-}: {
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  destructive?: boolean;
-  title?: string;
-  icon?: "default" | "finish" | "warning";
-}) {
+}: ConfirmModalProps) {
   const Icon = destructive
     ? Trash2
     : icon === "finish"
@@ -31,24 +35,16 @@ export function ConfirmModal({
     ? AlertTriangle
     : CheckCircle2;
 
-  useBackDismiss(true, onCancel);
-
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [onCancel]);
+  useModalDismiss(true, onCancel);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
-      >
+    <motion.div
+      key="confirm-modal-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+    >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -121,41 +117,7 @@ export function ConfirmModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }
 
-const backDismissStack: (() => void)[] = [];
-
-if (typeof window !== "undefined") {
-  window.addEventListener("liftlab:back", (event: Event) => {
-    if (event.defaultPrevented) return;
-    if (backDismissStack.length > 0) {
-      event.preventDefault();
-      const topHandler = backDismissStack.pop();
-      topHandler?.();
-    }
-  });
-}
-
-export function useBackDismiss(isActive: boolean, onDismiss: () => void) {
-  const onDismissRef = useRef(onDismiss);
-
-  useEffect(() => {
-    onDismissRef.current = onDismiss;
-  }, [onDismiss]);
-
-  useEffect(() => {
-    if (!isActive) return;
-    const handler = () => {
-      onDismissRef.current();
-    };
-    backDismissStack.push(handler);
-    return () => {
-      const idx = backDismissStack.lastIndexOf(handler);
-      if (idx !== -1) {
-        backDismissStack.splice(idx, 1);
-      }
-    };
-  }, [isActive]);
-}
+export { useModalDismiss, useBackDismiss } from "../../lib/modalStack";

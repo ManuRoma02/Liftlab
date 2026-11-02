@@ -2,9 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Search, X, ChevronDown, ChevronUp, Trash2, Dumbbell } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ConfirmModal } from "./ConfirmModal";
-import { getWorkoutLogDurationMinutes } from "../../lib/workoutUtils";
-import { triggerHaptic } from "../../lib/haptics";
+import { getWorkoutLogDurationMinutes, getLogDate } from "../../lib/workoutUtils";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export interface FullWorkoutHistoryModalProps {
   isOpen: boolean;
@@ -14,12 +15,6 @@ export interface FullWorkoutHistoryModalProps {
   t?: (key: string) => string;
   onDeleteWorkoutLog?: (id: string) => void;
 }
-
-const getLogDate = (log: any) => {
-  if (!log || !log.date) return new Date();
-  if (typeof log.date.toDate === "function") return log.date.toDate();
-  return new Date(log.date);
-};
 
 export function FullWorkoutHistoryModal({
   isOpen,
@@ -33,21 +28,7 @@ export function FullWorkoutHistoryModal({
   const [expandedLogIds, setExpandedLogIds] = useState<Record<string, boolean>>({});
   const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleBack = (event: Event) => {
-      if (pendingDeleteLogId) {
-        event.preventDefault();
-        setPendingDeleteLogId(null);
-        return;
-      }
-      if (event.defaultPrevented) return;
-      event.preventDefault();
-      onClose();
-    };
-    window.addEventListener("liftlab:back", handleBack);
-    return () => window.removeEventListener("liftlab:back", handleBack);
-  }, [isOpen, onClose, pendingDeleteLogId]);
+  useModalDismiss(isOpen, onClose);
 
   const tr = (key: string, fallback: string) => {
     if (typeof t === "function") {
@@ -88,17 +69,17 @@ export function FullWorkoutHistoryModal({
     }));
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
+      {isOpen && (
+        <motion.div
+          key="full-history-scrim"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+          onClick={onClose}
+        >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -292,20 +273,24 @@ export function FullWorkoutHistoryModal({
         </div>
       </motion.div>
 
-      {pendingDeleteLogId && onDeleteWorkoutLog && (
-        <ConfirmModal
-          message="Are you sure you want to delete this workout log from your history?"
-          confirmLabel={tr("delete", "Delete")}
-          cancelLabel={tr("cancel", "Cancel")}
-          destructive
-          onConfirm={() => {
-            onDeleteWorkoutLog(pendingDeleteLogId);
-            setPendingDeleteLogId(null);
-          }}
-          onCancel={() => setPendingDeleteLogId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {pendingDeleteLogId && onDeleteWorkoutLog && (
+          <ConfirmModal
+            key="delete-history-confirm"
+            message="Are you sure you want to delete this workout log from your history?"
+            confirmLabel={tr("delete", "Delete")}
+            cancelLabel={tr("cancel", "Cancel")}
+            destructive
+            onConfirm={() => {
+              onDeleteWorkoutLog(pendingDeleteLogId);
+              setPendingDeleteLogId(null);
+            }}
+            onCancel={() => setPendingDeleteLogId(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
+    )}
   </AnimatePresence>
   );
 }

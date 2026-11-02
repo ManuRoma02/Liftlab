@@ -26,12 +26,14 @@ import { ExerciseDetails } from "./components/common/ExerciseDetails";
 import { AddExercise } from "./components/common/AddExercise";
 
 import { parseLiftLabRoutineText } from "./lib/routineImport";
+import { removeJsonAtomic } from "./lib/storage";
 import { showToast } from "./lib/toast";
 import type { RoutineData } from "./types/workout";
 import { ToastViewport } from "./components/common/ToastViewport";
 import { OtaNotesView } from "./components/common/OtaNotesView";
 import { AnimatePresence, motion } from "motion/react";
-import { triggerHaptic } from "./lib/haptics";
+import { triggerHaptic, hapticPress } from "./lib/haptics";
+import { useModalDismiss } from "./lib/modalStack";
 import { appleSpringDefault, appleSpringSheet, APPLE_SPRINGS, CARTOON_SPRINGS, cartoonTabVariants } from "./lib/motion";
 
 export default function App() {
@@ -64,6 +66,10 @@ export default function App() {
     language,
     unit,
     isEmptyPromptOpen,
+    isUpdateTemplatePromptOpen,
+    handleConfirmUpdateTemplate,
+    editingRoutineDraft,
+    setEditingRoutineDraft,
     userName,
     restTimer,
     showRpe,
@@ -180,13 +186,21 @@ export default function App() {
       const r = activeRoutineId
         ? routines.find((x) => x.id === activeRoutineId)
         : undefined;
+      const initial =
+        (editingRoutineDraft && (!activeRoutineId || editingRoutineDraft.id === activeRoutineId))
+          ? editingRoutineDraft
+          : (r || editingRoutineDraft || undefined);
       return (
         <RoutineEditor
           unit={unit}
           t={t}
           exercises={exercises}
-          initialRoutine={r}
-          onBack={() => setActiveTab("workout")}
+          initialRoutine={initial}
+          onBack={() => {
+            setEditingRoutineDraft(null);
+            removeJsonAtomic("liftlab_routine_edit_draft");
+            setActiveTab("workout");
+          }}
           onSave={(updated) => handleSaveRoutine(updated, false)}
           mode="edit"
           onAddCustomExercise={handleAddExercise}
@@ -196,6 +210,7 @@ export default function App() {
           userName={userName}
           workoutLogs={workoutLogs}
           showRpe={showRpe}
+          onDraftChange={setEditingRoutineDraft}
         />
       );
     }
@@ -207,6 +222,7 @@ export default function App() {
           language={language}
           onBack={() => setActiveTab("workout")}
           t={t}
+          workoutLogs={workoutLogs}
         />
       );
     }
@@ -281,6 +297,7 @@ export default function App() {
             >
             {effectiveTab === "dashboard" && (
               <Dashboard
+                userName={userName}
                 t={t}
                 unit={unit}
                 navigateTo={navigateTo}
@@ -513,10 +530,8 @@ export default function App() {
                 <button
                   key={tab.id}
                   data-testid={`tab-${tab.id}`}
-                  onClick={() => {
-                    triggerHaptic("light");
-                    navigateTo(tab.id);
-                  }}
+                  onPointerDown={hapticPress("light")}
+                  onClick={() => navigateTo(tab.id)}
                   aria-current={isActive ? "page" : undefined}
                   aria-label={tab.label}
                   className="relative flex-1 min-h-[48px] flex flex-col items-center justify-center px-2 py-1 rounded-2xl sm:rounded-full cursor-pointer select-none lg:min-h-[72px] lg:w-full lg:flex-initial transition-colors"
@@ -621,8 +636,17 @@ export default function App() {
           />
         )}
 
-        {showPrivacyPolicy && <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />}
-        {showTOS && <TOSModal onClose={() => setShowTOS(false)} />}
+        <AnimatePresence>
+          {showPrivacyPolicy && (
+            <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showTOS && (
+            <TOSModal onClose={() => setShowTOS(false)} />
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {isDeleteAccountConfirmOpen && (
@@ -901,6 +925,82 @@ export default function App() {
                     onClick={() => {
                       triggerHaptic("light");
                       handleConfirmEmptySave(false);
+                    }}
+                    disabled={isConfirming}
+                    className={`w-full min-h-[44px] bg-white/10 text-white font-semibold py-3.5 rounded-full hover:bg-white/15 text-sm tracking-tight active:scale-95 transition-all cursor-pointer flex items-center justify-center ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {t("log_only")}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Update Routine Template Modal */}
+      <AnimatePresence>
+        {isUpdateTemplatePromptOpen && (
+          <motion.div
+            key="update-template-scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div
+              key="update-template-card"
+              role="dialog"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 12 }}
+              transition={{ type: "spring", duration: 0.28, bounce: 0 }}
+              className="bg-[#121418] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)]"
+            >
+              <div className="p-7 text-center">
+                <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center text-[#30D158] mx-auto mb-4 border border-[#30D158]/25 shadow-[0_0_24px_rgba(48,209,88,0.2)]">
+                  <Save className="w-7 h-7" />
+                </div>
+                <h2 className="text-xl font-bold text-white tracking-tight mb-1">
+                  {t("workout_completed")}
+                </h2>
+                <p className="text-xs text-[#8E8E93] mb-6">
+                  {language === "it"
+                    ? "Hai modificato serie o esercizi. Vuoi aggiornare la scheda abituale con queste modifiche?"
+                    : language === "es"
+                      ? "¿Deseas actualizar la rutina habitual con estos cambios?"
+                      : "You modified sets or exercises. Would you like to update the routine template with these changes?"}
+                </p>
+
+                <div className="flex flex-col gap-2.5">
+                  <button
+                    data-testid="modal-update-template-btn"
+                    onClick={() => {
+                      triggerHaptic("success");
+                      handleConfirmUpdateTemplate(true);
+                    }}
+                    disabled={isConfirming}
+                    className={`w-full min-h-[44px] bg-[#30D158] text-black font-bold py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all text-sm tracking-tight shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center gap-2 cursor-pointer ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {isConfirming ? (
+                      <div className="flex items-center gap-2" role="status" aria-label={t("saving") || "Saving..."}>
+                        <span className="relative flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black opacity-30" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-black" />
+                        </span>
+                        {t("saving") || "Saving..."}
+                      </div>
+                    ) : (
+                      language === "it" ? "Aggiorna Scheda" : language === "es" ? "Actualizar Rutina" : "Update Routine"
+                    )}
+                  </button>
+                  <button
+                    data-testid="modal-log-only-template-btn"
+                    onClick={() => {
+                      triggerHaptic("light");
+                      handleConfirmUpdateTemplate(false);
                     }}
                     disabled={isConfirming}
                     className={`w-full min-h-[44px] bg-white/10 text-white font-semibold py-3.5 rounded-full hover:bg-white/15 text-sm tracking-tight active:scale-95 transition-all cursor-pointer flex items-center justify-center ${isConfirming ? "opacity-50 cursor-not-allowed" : ""}`}

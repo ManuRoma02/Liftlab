@@ -7,8 +7,8 @@ import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { APPLE_SPRINGS } from "../../lib/motion";
-import { triggerHaptic } from "../../lib/haptics";
-import { useBackDismiss } from "./ConfirmModal";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export interface AppleBottomSheetProps {
   isOpen: boolean;
@@ -50,25 +50,19 @@ export function AppleBottomSheet({
 }: AppleBottomSheetProps) {
   const dragControls = useDragControls();
 
-  // Hardware and gesture back dismiss integration
-  useBackDismiss(isOpen, onClose);
-
-  // Keyboard Escape listener
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  // Coordinated LIFO keyboard Escape and hardware back dismiss integration
+  useModalDismiss(isOpen, onClose);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[250] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6 pointer-events-none">
+        <motion.div
+          key="apple-sheet-wrapper"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[250] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6 pointer-events-none"
+        >
           {/* Translucent Backdrop Dimming Scrim */}
           <motion.div
             key="apple-sheet-scrim"
@@ -76,10 +70,8 @@ export function AppleBottomSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            onClick={() => {
-              triggerHaptic("light");
-              onClose();
-            }}
+            onPointerDown={hapticPress("light")}
+            onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
             aria-hidden="true"
           />
@@ -138,10 +130,8 @@ export function AppleBottomSheet({
                     {showCloseButton && (
                       <button
                         type="button"
-                        onClick={() => {
-                          triggerHaptic("light");
-                          onClose();
-                        }}
+                        onPointerDown={hapticPress("light")}
+                        onClick={onClose}
                         aria-label="Close"
                         className="w-11 h-11 rounded-full bg-white/8 hover:bg-white/15 text-[#8E8E93] hover:text-white flex items-center justify-center transition-colors active:scale-95 cursor-pointer shrink-0"
                       >
@@ -158,7 +148,7 @@ export function AppleBottomSheet({
               {children}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

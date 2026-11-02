@@ -433,26 +433,11 @@ export async function downloadAndApplyOta(
       showToast(`Download aggiornamento v${manifest.version} in corso...`, "info");
     }
 
-    let bundle: BundleInfo;
-    try {
-      bundle = await CapacitorUpdater.download({
-        url: manifest.url,
-        version: manifest.version,
-        checksum: manifest.checksum,
-      });
-    } catch (downloadErr) {
-      if (manifest.url.includes("/main/updates/")) {
-        const fallbackUrl = manifest.url.replace("/main/updates/", "/feat/ftue-and-italian-localization/updates/");
-        console.warn(`[OTA] Primary bundle URL failed, trying branch fallback: ${fallbackUrl}`);
-        bundle = await CapacitorUpdater.download({
-          url: fallbackUrl,
-          version: manifest.version,
-          checksum: manifest.checksum,
-        });
-      } else {
-        throw downloadErr;
-      }
-    }
+    const bundle: BundleInfo = await CapacitorUpdater.download({
+      url: manifest.url,
+      version: manifest.version,
+      checksum: manifest.checksum,
+    });
 
     if (options.reloadImmediately) {
       if (!options.silent) {

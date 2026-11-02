@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Trophy, X, Search, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ACHIEVEMENTS } from "../../lib/achievements";
-import { triggerHaptic } from "../../lib/haptics";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export interface AchievementsModalProps {
   isOpen: boolean;
@@ -59,16 +60,7 @@ export function AchievementsModal({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterLevel>("all");
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleBack = (event: Event) => {
-      if (event.defaultPrevented) return;
-      event.preventDefault();
-      onClose();
-    };
-    window.addEventListener("liftlab:back", handleBack);
-    return () => window.removeEventListener("liftlab:back", handleBack);
-  }, [isOpen, onClose]);
+  useModalDismiss(isOpen, onClose);
 
   const tr = (key: string, fallback: string) => {
     if (typeof t === "function") {
@@ -97,8 +89,6 @@ export function AchievementsModal({
     });
   }, [filter, search, workoutLogs, unit, t]);
 
-  if (!isOpen) return null;
-
   const filterTabs: { id: FilterLevel; label: string }[] = [
     { id: "all", label: tr("all", "All") },
     { id: "bronze", label: "Bronze" },
@@ -109,7 +99,9 @@ export function AchievementsModal({
 
   return (
     <AnimatePresence>
-      <motion.div
+      {isOpen && (
+        <motion.div
+          key="achievements-modal-scrim"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -294,10 +286,8 @@ export function AchievementsModal({
           {/* Footer */}
           <div className="p-4 border-t border-white/6 flex justify-end shrink-0">
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="w-full sm:w-auto px-7 py-3 min-h-[44px] bg-[#30D158] text-black font-bold rounded-full hover:brightness-105 active:scale-95 transition-all text-xs cursor-pointer shadow-sm flex items-center justify-center"
             >
               {tr("close", "Close")}
@@ -305,6 +295,7 @@ export function AchievementsModal({
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

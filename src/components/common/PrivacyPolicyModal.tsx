@@ -1,39 +1,23 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Shield, X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { triggerHaptic } from "../../lib/haptics";
+import { motion } from "motion/react";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    const handleBack = (event: Event) => {
-      if (event.defaultPrevented) return;
-      event.preventDefault();
-      onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("liftlab:back", handleBack);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("liftlab:back", handleBack);
-    };
-  }, [onClose]);
+  useModalDismiss(true, onClose);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
-        onClick={() => {
-          triggerHaptic("light");
-          onClose();
-        }}
-      >
+    <motion.div
+      key="privacy-policy-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
+      onPointerDown={hapticPress("light")}
+      onClick={onClose}
+    >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -58,10 +42,8 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
               </p>
             </div>
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-all flex items-center justify-center text-[#8E8E93] hover:text-white self-start cursor-pointer"
               aria-label="Close"
             >
@@ -109,6 +91,5 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

@@ -23,6 +23,7 @@ import {
   Sliders,
 } from "lucide-react";
 import { triggerHaptic } from "../lib/haptics";
+import { safeGetItem } from "../lib/storage";
 import { motion, AnimatePresence } from "motion/react";
 import { CARTOON_SPRINGS } from "../lib/motion";
 import { OtaNotesView } from "./common/OtaNotesView";
@@ -525,7 +526,7 @@ export function Settings({
               }}
             />
 
-            {Boolean(localStorage.getItem("liftlab_backup_pre_import")) && onRestoreBackup && (
+            {Boolean(safeGetItem<unknown>("liftlab_backup_pre_import", null)) && onRestoreBackup && (
               <button
                 onClick={() => {
                   triggerHaptic("light");

@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { Trophy, X, Search } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
 import { ExerciseFilterBar } from "./ExerciseFilterBar";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
-import { triggerHaptic } from "../../lib/haptics";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export function PRListModal({
   exercises,
@@ -19,6 +20,7 @@ export function PRListModal({
   onClose: () => void;
   t: (key: string) => string;
 }) {
+  useModalDismiss(true, onClose);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -58,14 +60,14 @@ export function PRListModal({
   }, [exercises, selectedCategory, search, t]);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
+    <motion.div
+      key="pr-list-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -94,10 +96,8 @@ export function PRListModal({
               </div>
             </div>
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
               aria-label="Close"
             >
@@ -221,6 +221,5 @@ export function PRListModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

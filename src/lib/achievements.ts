@@ -13,6 +13,7 @@ import {
   Crown,
   Activity,
 } from "lucide-react";
+import { calculateSetVolume, getLogDate } from "./workoutUtils";
 
 export interface Achievement {
   id: string;
@@ -27,20 +28,9 @@ const safeLogs = (logs: any[] | undefined | null): any[] => {
   return Array.isArray(logs) ? logs : [];
 };
 
-const getAchDate = (log: any) => {
-  if (!log || !log.date) return new Date();
-  if (typeof log.date.toDate === "function") return log.date.toDate();
-  const d = new Date(log.date);
-  return isNaN(d.getTime()) ? new Date() : d;
-};
+const getAchDate = (log: any) => getLogDate(log);
 
-const getSafeSetVolume = (s: any): number => {
-  if (!s?.completed) return 0;
-  const w = typeof s.weight === "number" ? s.weight : Number(s.weight);
-  const r = typeof s.reps === "number" ? s.reps : Number(s.reps);
-  if (!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return 0;
-  return w * r;
-};
+const getSafeSetVolume = (s: any): number => calculateSetVolume(s);
 
 const getTotalVolume = (logs: any[] | undefined | null): number => {
   const safe = safeLogs(logs);

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Trophy, Clock, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
-import { getVolumeComparison, getWorkoutComparisonMetrics } from "../lib/workoutUtils";
+import { getVolumeComparison, getWorkoutComparisonMetrics, calculateSetVolume } from "../lib/workoutUtils";
 import { triggerHaptic } from "../lib/haptics";
 import { APPLE_SPRINGS } from "../lib/motion";
 
@@ -29,10 +29,7 @@ export function WorkoutSummaryView({
       if (s.completed && s.reps) {
         const r = parseInt(s.reps) || 0;
         totalReps += r;
-        if (s.weight) {
-          const w = parseFloat(s.weight) || 0;
-          totalVolume += w * r;
-        }
+        totalVolume += calculateSetVolume(s);
       }
     });
   });
@@ -50,7 +47,7 @@ export function WorkoutSummaryView({
 
   // Ensure volume is converted to a base kg for comparison
   let volumeKg = totalVolume;
-  if (unit === "LBS") {
+  if (String(unit || "").toUpperCase() === "LBS") {
     volumeKg = totalVolume * 0.453592;
   }
 

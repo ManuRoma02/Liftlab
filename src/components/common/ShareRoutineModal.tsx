@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { X, Copy } from "lucide-react";
 import QRCode from "qrcode";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import { showToast } from "../../lib/toast";
 import type { RoutineData } from "../../types/workout";
-import { triggerHaptic } from "../../lib/haptics";
+import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
+import { useModalDismiss } from "../../lib/modalStack";
 
 export function ShareRoutineModal({
   routine,
@@ -15,6 +16,7 @@ export function ShareRoutineModal({
   routine: RoutineData;
   onClose: () => void;
 }) {
+  useModalDismiss(true, onClose);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const shareText = useMemo(() => {
     const payload = {
@@ -78,14 +80,14 @@ export function ShareRoutineModal({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
+    <motion.div
+      key="share-routine-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -131,10 +133,8 @@ export function ShareRoutineModal({
               Copy Code
             </button>
             <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
+              onPointerDown={hapticPress("light")}
+              onClick={onClose}
               className="flex-1 min-h-[44px] py-3 bg-[#30D158] text-black rounded-full font-bold text-xs hover:brightness-105 transition-all cursor-pointer active:scale-95 shadow-sm flex items-center justify-center"
             >
               Close
@@ -142,6 +142,5 @@ export function ShareRoutineModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

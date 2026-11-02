@@ -49,12 +49,15 @@ if (typeof window !== "undefined") {
 
 /**
  * Returns whether haptic feedback is currently enabled by user settings.
- * Defaults to true if no preference is stored.
+ * Defaults to true if no preference is stored or if storage is inaccessible.
+ * Safely wraps window.localStorage access to guard against SecurityError DOMExceptions.
  */
 export function isHapticsEnabled(): boolean {
-  if (typeof window === "undefined" || !window.localStorage) return true;
+  if (typeof window === "undefined") return true;
   try {
-    const val = localStorage.getItem(HAPTICS_STORAGE_KEY);
+    const storage = window.localStorage;
+    if (!storage) return true;
+    const val = storage.getItem(HAPTICS_STORAGE_KEY);
     return val === null ? true : val === "true";
   } catch {
     return true;
@@ -63,11 +66,14 @@ export function isHapticsEnabled(): boolean {
 
 /**
  * Persists the user's haptic feedback preference to localStorage.
+ * Safely wraps window.localStorage access to guard against SecurityError DOMExceptions.
  */
 export function setHapticsEnabled(enabled: boolean): void {
-  if (typeof window === "undefined" || !window.localStorage) return;
+  if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(HAPTICS_STORAGE_KEY, enabled ? "true" : "false");
+    const storage = window.localStorage;
+    if (!storage) return;
+    storage.setItem(HAPTICS_STORAGE_KEY, enabled ? "true" : "false");
     window.dispatchEvent(
       new CustomEvent("liftlab:haptics-changed", { detail: { enabled } })
     );
@@ -160,21 +166,36 @@ export function triggerHaptic(style: HapticStyle = "light"): void {
 }
 
 /**
- * Instant pointer-down feedback helper.
- * Eliminates the 100-300ms touch-up delay by firing haptics the moment the pointer makes contact.
+ * Instant pointer-down tactile feedback helper.
+ * Eliminates the 100-300ms touch-up delay by firing haptics the moment the pointer makes contact,
+ * while ensuring ZERO vibrations occur during React's render phase.
  *
  * Supported patterns:
- * - `onPointerDown={() => hapticPress("light")}`
- * - `onPointerDown={hapticPress("light")}`
- * - `onPointerDown={hapticPress}`
+ * - `onPointerDown={hapticPress("light")}` (factory pattern: returns event handler, 0 render-time triggers)
+ * - `onPointerDown={hapticPress}` (callback pattern: direct invocation by PointerEvent triggers defaultStyle)
+ * - `onPointerDown={() => hapticPress("light")()}` (closure pattern)
  */
 export function hapticPress(
   styleOrEvent?: HapticStyle | unknown,
   defaultStyle: HapticStyle = "light"
 ): ((event?: unknown) => void) | void {
-  if (typeof styleOrEvent === "string") {
-    triggerHaptic(styleOrEvent as HapticStyle);
-    return () => triggerHaptic(styleOrEvent as HapticStyle);
+  // Pattern 1: Direct event handler invocation -> onPointerDown={hapticPress}
+  // The first parameter is a synthetic/native DOM Event object.
+  if (
+    styleOrEvent &&
+    typeof styleOrEvent === "object" &&
+    ("nativeEvent" in styleOrEvent || "target" in styleOrEvent || "type" in styleOrEvent)
+  ) {
+    triggerHaptic(defaultStyle);
+    return;
   }
-  triggerHaptic(defaultStyle);
+
+  // Pattern 2: Factory invocation in JSX -> onPointerDown={hapticPress("light")} or onPointerDown={hapticPress()}
+  // Return an event listener closure. DO NOT fire triggerHaptic here during render!
+  const targetStyle: HapticStyle =
+    typeof styleOrEvent === "string" ? (styleOrEvent as HapticStyle) : defaultStyle;
+
+  return (event?: unknown) => {
+    triggerHaptic(targetStyle);
+  };
 }

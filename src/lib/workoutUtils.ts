@@ -30,14 +30,22 @@ type WorkoutLogLike = {
   plannedSetCount?: number;
 };
 
-const toDate = (value: DateLike) => {
-  if (value instanceof Date) return value;
-  if (typeof value !== "object") return new Date(value);
-  if ("toDate" in value && typeof value.toDate === "function") {
-    return value.toDate();
+export function parseLogDate(value: any): Date {
+  if (!value) return new Date(0);
+  if (value instanceof Date) return isNaN(value.getTime()) ? new Date(0) : value;
+  if (typeof value === "object" && value !== null && "toDate" in value && typeof value.toDate === "function") {
+    const d = value.toDate();
+    return d instanceof Date && !isNaN(d.getTime()) ? d : new Date(0);
   }
-  return new Date(0);
-};
+  const parsed = new Date(value);
+  return isNaN(parsed.getTime()) ? new Date(0) : parsed;
+}
+
+export function getLogDate(log: any): Date {
+  return parseLogDate(log?.date);
+}
+
+const toDate = (value: DateLike) => parseLogDate(value);
 
 const getLogTime = (log: { date?: DateLike }) => {
   if (!log?.date) return 0;
@@ -249,6 +257,14 @@ export function parseGymNumber(value: number | string | "" | null | undefined): 
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+export function calculateSetVolume(s: any): number {
+  if (!s || !s.completed) return 0;
+  const w = parseGymNumber(s.weight);
+  const r = parseGymNumber(s.reps);
+  if (w === null || r === null || w <= 0 || r <= 0) return 0;
+  return w * r;
+}
+
 export function canCompleteSet(
   set: { weight?: number | string; reps?: number | string } | null | undefined,
   exercise?: { title?: string; type?: string; category?: string; equipment?: string },
@@ -288,6 +304,37 @@ export function dissolveSuperset<T extends { id: string; technique?: string; sup
     );
   }
   return updated;
+}
+
+export function hasRoutineTemplateChanged(
+  base?: RoutineData | null,
+  updated?: RoutineData | null,
+): boolean {
+  if (!base && !updated) return false;
+  if (!base || !updated) return true;
+
+  const baseExercises = base.exercises || [];
+  const updatedExercises = updated.exercises || [];
+  if (baseExercises.length !== updatedExercises.length) return true;
+
+  for (let i = 0; i < baseExercises.length; i++) {
+    const bEx = baseExercises[i];
+    const uEx = updatedExercises[i];
+    if (bEx.title !== uEx.title || bEx.id !== uEx.id) return true;
+
+    const bSets = bEx.sets || [];
+    const uSets = uEx.sets || [];
+    if (bSets.length !== uSets.length) return true;
+
+    for (let j = 0; j < bSets.length; j++) {
+      const bSet = bSets[j];
+      const uSet = uSets[j];
+      if (String(bSet.weight ?? "") !== String(uSet.weight ?? "")) return true;
+      if (String(bSet.reps ?? "") !== String(uSet.reps ?? "")) return true;
+    }
+  }
+
+  return false;
 }
 
 export function finalizeLiveNumericInput(value: number | string | "" | null | undefined): number | "" {
@@ -746,15 +793,91 @@ export type GeneratedWarmupSet = {
   percent: number;
 };
 
+export function getEquipmentBarWeight(
+  equipment?: string,
+  exerciseName?: string,
+  unit: string = "KG"
+): number {
+  const isLbs = String(unit).trim().toUpperCase() === "LBS";
+  const equip = String(equipment || "").toLowerCase();
+  const title = String(exerciseName || "").toLowerCase();
+
+  if (
+    equip.includes("dumbbell") ||
+    title.includes("dumbbell") ||
+    equip.includes("manubri") ||
+    title.includes("manubri")
+  ) {
+    return isLbs ? 5 : 2; // Dumbbell floor (2kg or 5lb)
+  }
+  if (
+    equip.includes("cable") ||
+    title.includes("cable") ||
+    equip.includes("cavi") ||
+    title.includes("cavi") ||
+    equip.includes("machine") ||
+    title.includes("machine") ||
+    equip.includes("macchina") ||
+    title.includes("macchina")
+  ) {
+    return isLbs ? 10 : 5; // Cable / selector pin floor (5kg or 10lb)
+  }
+  if (
+    equip.includes("bodyweight") ||
+    equip.includes("band") ||
+    equip.includes("other") ||
+    equip.includes("corpo libero") ||
+    title.includes("bodyweight") ||
+    title.includes("corpo libero")
+  ) {
+    return 0; // Bodyweight floor
+  }
+  return isLbs ? 45 : 20; // Default Olympic barbell floor
+}
+
 export function generateWarmupSets(
   workingWeight: number,
-  barWeight = 20
+  barWeightOrUnit: number | "KG" | "LBS" | string = 20,
+  exerciseNameOrEquipment?: string,
+  equipmentParam?: string
 ): GeneratedWarmupSet[] {
   if (workingWeight <= 0) return [];
-  const roundToStep = (val: number) => Math.max(barWeight, Math.round(val / 2.5) * 2.5);
+
+  let barWeight = 20;
+  let equipment = equipmentParam;
+
+  if (typeof barWeightOrUnit === "string") {
+    const unit = barWeightOrUnit;
+    const exerciseName = exerciseNameOrEquipment;
+    barWeight = getEquipmentBarWeight(equipment, exerciseName, unit);
+  } else if (typeof barWeightOrUnit === "number") {
+    barWeight = barWeightOrUnit;
+    if (exerciseNameOrEquipment) {
+      equipment = exerciseNameOrEquipment;
+      const equipLower = equipment.toLowerCase();
+      if (
+        (equipLower.includes("dumbbell") ||
+          equipLower.includes("cable") ||
+          equipLower.includes("machine") ||
+          equipLower.includes("bodyweight") ||
+          equipLower.includes("band") ||
+          equipLower.includes("other") ||
+          equipLower.includes("manubri") ||
+          equipLower.includes("cavi") ||
+          equipLower.includes("macchina") ||
+          equipLower.includes("corpo libero")) &&
+        (barWeight === 20 || barWeight === 45)
+      ) {
+        barWeight = getEquipmentBarWeight(equipment, undefined, barWeight === 45 ? "LBS" : "KG");
+      }
+    }
+  }
+
+  const effectiveMin = Math.min(barWeight, workingWeight);
+  const roundToStep = (val: number) => Math.max(effectiveMin, Math.round(val / 2.5) * 2.5);
 
   return [
-    { weight: Math.max(barWeight, roundToStep(workingWeight * 0.2)), reps: 10, percent: 20 },
+    { weight: Math.max(effectiveMin, roundToStep(workingWeight * 0.2)), reps: 10, percent: 20 },
     { weight: roundToStep(workingWeight * 0.5), reps: 5, percent: 50 },
     { weight: roundToStep(workingWeight * 0.7), reps: 3, percent: 70 },
     { weight: roundToStep(workingWeight * 0.85), reps: 1, percent: 85 },
@@ -787,28 +910,35 @@ export function calculateStreaks(workoutLogs: WorkoutLogLike[], referenceDate: D
   let best = 1;
   let cur = 1;
   for (let i = 1; i < uniqueDays.length; i++) {
-    const diffDays = Math.round((uniqueDays[i] - uniqueDays[i - 1]) / 86400000);
-    if (diffDays === 1) {
+    const stepDate = new Date(uniqueDays[i - 1]);
+    stepDate.setDate(stepDate.getDate() + 1);
+    if (uniqueDays[i] === stepDate.getTime()) {
       cur++;
       if (cur > best) best = cur;
-    } else if (diffDays > 1) {
+    } else {
       cur = 1;
     }
   }
 
-  const refMidnight = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate()).getTime();
+  const checkDate = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    referenceDate.getDate(),
+  );
   const daySet = new Set(uniqueDays);
 
   let currentStreak = 0;
-  let checkTime = refMidnight;
+  let checkTime = checkDate.getTime();
 
   if (!daySet.has(checkTime)) {
-    checkTime -= 86400000;
+    checkDate.setDate(checkDate.getDate() - 1);
+    checkTime = checkDate.getTime();
   }
 
   while (daySet.has(checkTime)) {
     currentStreak++;
-    checkTime -= 86400000;
+    checkDate.setDate(checkDate.getDate() - 1);
+    checkTime = checkDate.getTime();
   }
 
   return {
