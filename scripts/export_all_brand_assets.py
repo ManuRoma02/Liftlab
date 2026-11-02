@@ -76,11 +76,45 @@ if os.path.exists(android_res):
 
             print(f"Updated Android {folder} (full: {full_size}x{full_size}, fg: {fg_canvas_size}x{fg_canvas_size})")
 
-    # Android Splash Logo if exists
+    # Android Splash Logo (drawable/splash_logo.png)
     splash_logo = os.path.join(android_res, "drawable", "splash_logo.png")
     if os.path.exists(os.path.dirname(splash_logo)):
         splash_img = img_1024.resize((480, 480), Image.Resampling.LANCZOS)
         splash_img.save(splash_logo, format="PNG")
         print(f"Updated {splash_logo}")
+
+    # Generate Centered Native Android Splash Screen Drawables
+    splash_targets = [
+        ("drawable", 480, 320),
+        ("drawable-land-mdpi", 480, 320),
+        ("drawable-land-hdpi", 800, 480),
+        ("drawable-land-xhdpi", 1280, 720),
+        ("drawable-land-xxhdpi", 1600, 960),
+        ("drawable-land-xxxhdpi", 1920, 1280),
+        ("drawable-port-mdpi", 320, 480),
+        ("drawable-port-hdpi", 480, 800),
+        ("drawable-port-xhdpi", 720, 1280),
+        ("drawable-port-xxhdpi", 960, 1600),
+        ("drawable-port-xxxhdpi", 1280, 1920),
+    ]
+
+    bg_color = (9, 10, 14, 255) # #090A0E
+
+    for folder, w, h in splash_targets:
+        target_dir = os.path.join(android_res, folder)
+        if os.path.exists(target_dir):
+            splash_bg = Image.new("RGBA", (w, h), bg_color)
+            min_dim = min(w, h)
+            # Logo dimension: 32% of min dimension
+            logo_size = int(min_dim * 0.34)
+            if logo_size < 48:
+                logo_size = 48
+            logo_resized = img_1024.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+            offset_x = (w - logo_size) // 2
+            offset_y = (h - logo_size) // 2
+            splash_bg.paste(logo_resized, (offset_x, offset_y), logo_resized)
+            target_file = os.path.join(target_dir, "splash.png")
+            splash_bg.save(target_file, format="PNG", optimize=True)
+            print(f"Generated Android splash: {target_file} ({w}x{h}, logo={logo_size}x{logo_size})")
 
 print("All brand assets successfully exported!")

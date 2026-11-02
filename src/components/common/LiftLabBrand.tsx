@@ -4,16 +4,21 @@ export interface LiftLabBrandProps {
   variant?: "lockup" | "mark" | "text";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   badge?: boolean;
+  withBackground?: boolean;
   className?: string;
   onClick?: () => void;
 }
 
 /**
- * Pure Vector Emblem Mark for LiftLab (2026 Tactile Olympic Plate)
- * Features an Olympic competition bumper plate fused with a sculpted Emerald 'L'.
- * Zero crosshairs, zero weapon reticles, pure athletic engineering.
+ * Pure Vector Emblem Mark for LiftLab (2026 Apple HIG Minimal Geometric Dual-L)
+ * Features an interlocking architectural Emerald 'L' (Lift) paired with a Titanium White 'L' (Lab),
+ * set within an obsidian satin squircle with titanium specular bezel and emerald radiance aura.
  */
-export const LiftLabMark: React.FC<{ sizeClass?: string; className?: string; withBackground?: boolean }> = ({
+export const LiftLabMark: React.FC<{
+  sizeClass?: string;
+  className?: string;
+  withBackground?: boolean;
+}> = ({
   sizeClass = "w-8 h-8",
   className = "",
   withBackground = true,
@@ -27,106 +32,92 @@ export const LiftLabMark: React.FC<{ sizeClass?: string; className?: string; wit
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="llb-bgPlate" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#16181F" />
-          <stop offset="50%" stopColor="#0E1014" />
-          <stop offset="100%" stopColor="#060709" />
+        {/* Deep Obsidian Ceramic Gradient */}
+        <linearGradient id="llb-bgObsidian" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#151722" />
+          <stop offset="45%" stopColor="#090A0E" />
+          <stop offset="100%" stopColor="#030406" />
         </linearGradient>
 
-        <linearGradient id="llb-bezelGleam" x1="100" y1="60" x2="412" y2="452" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#3A3F4D" />
-          <stop offset="35%" stopColor="#1A1C24" />
-          <stop offset="70%" stopColor="#0F1116" />
-          <stop offset="100%" stopColor="#282C38" />
+        {/* Bezel Titanium Specular Sheen */}
+        <linearGradient id="llb-bezelGleam" x1="40" y1="20" x2="472" y2="492" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
+          <stop offset="25%" stopColor="rgba(255,255,255,0.08)" />
+          <stop offset="70%" stopColor="rgba(255,255,255,0.02)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0.16)" />
         </linearGradient>
 
-        <radialGradient id="llb-bumperUrethane" cx="256" cy="256" r="230" gradientUnits="userSpaceOnUse">
-          <stop offset="70%" stopColor="#181B24" />
-          <stop offset="88%" stopColor="#12141B" />
-          <stop offset="100%" stopColor="#0A0B0F" />
-        </radialGradient>
-
-        <radialGradient id="llb-innerHub" cx="256" cy="250" r="160" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#141720" />
-          <stop offset="75%" stopColor="#0A0B0E" />
-          <stop offset="100%" stopColor="#050608" />
-        </radialGradient>
-
-        <radialGradient id="llb-emeraldAura" cx="256" cy="256" r="140" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="rgba(48,209,88,0.22)" />
-          <stop offset="60%" stopColor="rgba(48,209,88,0.06)" />
+        {/* Core Emerald Radiance Aura */}
+        <radialGradient id="llb-emeraldAura" cx="256" cy="256" r="210" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="rgba(48,209,88,0.30)" />
+          <stop offset="50%" stopColor="rgba(48,209,88,0.07)" />
           <stop offset="100%" stopColor="rgba(48,209,88,0)" />
         </radialGradient>
 
-        <linearGradient id="llb-lFaceLight" x1="170" y1="130" x2="350" y2="380" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#3DF574" />
-          <stop offset="45%" stopColor="#30D158" />
-          <stop offset="100%" stopColor="#22B847" />
+        {/* Emerald L Primary Vector */}
+        <linearGradient id="llb-emGrad" x1="136" y1="136" x2="376" y2="376" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#47F880" />
+          <stop offset="35%" stopColor="#30D158" />
+          <stop offset="85%" stopColor="#1EAA44" />
+          <stop offset="100%" stopColor="#158232" />
         </linearGradient>
 
-        <linearGradient id="llb-lBevelShadow" x1="180" y1="140" x2="330" y2="390" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#209E40" />
-          <stop offset="100%" stopColor="#126B29" />
-        </linearGradient>
-
-        <linearGradient id="llb-specularTop" x1="170" y1="130" x2="250" y2="130" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#A6FFBE" />
+        {/* Top Crest Specular Highlight for Emerald L */}
+        <linearGradient id="llb-emCrest" x1="136" y1="136" x2="224" y2="160" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#B2FFCB" />
           <stop offset="100%" stopColor="#30D158" />
         </linearGradient>
+
+        {/* Titanium White L Accent Vector (Lab) */}
+        <linearGradient id="llb-whiteGrad" x1="264" y1="136" x2="376" y2="248" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="60%" stopColor="#F2F5F9" />
+          <stop offset="100%" stopColor="#D2D8E4" />
+        </linearGradient>
+
+        {/* Drop Shadow for Dimensional Separation */}
+        <filter id="llb-markElevation" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="16" stdDeviation="18" floodColor="rgba(0,0,0,0.65)" />
+        </filter>
       </defs>
 
       {/* Optional Continuous Curvature Container */}
       {withBackground && (
         <>
-          <rect width="512" height="512" rx="116" fill="url(#llb-bgPlate)" />
-          <rect x="2" y="2" width="508" height="508" rx="114" fill="none" stroke="url(#llb-bezelGleam)" strokeWidth="3" />
+          <rect width="512" height="512" rx="116" fill="url(#llb-bgObsidian)" />
+          <rect
+            x="2"
+            y="2"
+            width="508"
+            height="508"
+            rx="114"
+            fill="none"
+            stroke="url(#llb-bezelGleam)"
+            strokeWidth="2.5"
+          />
+          <circle cx="256" cy="256" r="180" fill="url(#llb-emeraldAura)" />
         </>
       )}
 
-      {/* Olympic Calibrated Plate */}
-      <circle cx="256" cy="256" r="198" fill="none" stroke="#252A36" strokeWidth="2" />
-      <circle cx="256" cy="256" r="194" fill="url(#llb-bumperUrethane)" />
-      <circle cx="256" cy="256" r="176" fill="none" stroke="#2D3342" strokeWidth="3" />
-      <circle cx="256" cy="256" r="173" fill="none" stroke="#0D0E13" strokeWidth="2" />
-
-      {/* Recessed Inner Steel Hub */}
-      <circle cx="256" cy="256" r="170" fill="url(#llb-innerHub)" />
-      <circle cx="256" cy="256" r="168" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
-
-      {/* Ambient Emerald Energy Aura */}
-      <circle cx="256" cy="256" r="150" fill="url(#llb-emeraldAura)" />
-
-      {/* Olympic Calibrated Grip Arcs */}
-      <path d="M 120 220 A 150 150 0 0 1 120 180" fill="none" stroke="#20242F" strokeWidth="6" strokeLinecap="round" />
-      <path d="M 392 220 A 150 150 0 0 0 392 180" fill="none" stroke="#20242F" strokeWidth="6" strokeLinecap="round" />
-      <path d="M 120 292 A 150 150 0 0 0 120 332" fill="none" stroke="#20242F" strokeWidth="6" strokeLinecap="round" />
-      <path d="M 392 292 A 150 150 0 0 1 392 332" fill="none" stroke="#20242F" strokeWidth="6" strokeLinecap="round" />
-
-      {/* Sculpted Olympic 'L' with 3D Bevels */}
-      <g>
-        {/* Base 3D Extrusion Shadow Bevel */}
+      {/* Master Mark Group */}
+      <g filter={withBackground ? "url(#llb-markElevation)" : undefined}>
+        {/* Primary Emerald 'L' (Lift) */}
         <path
-          d="M 172 144 C 172 136 178 130 186 130 L 242 130 C 250 130 256 136 256 144 L 256 308 C 256 314 261 319 267 319 L 348 319 C 356 319 362 325 362 333 L 362 366 C 362 374 356 380 348 380 L 186 380 C 178 380 172 374 172 366 Z"
-          fill="url(#llb-lBevelShadow)"
+          d="M 154 136 C 144 136 136 144 136 154 L 136 348 C 136 363 148 376 164 376 L 358 376 C 368 376 376 368 376 358 L 376 306 C 376 296 368 288 358 288 L 236 288 C 229 288 224 283 224 276 L 224 154 C 224 144 216 136 206 136 Z"
+          fill="url(#llb-emGrad)"
         />
 
-        {/* Main Chiseled Face */}
+        {/* Specular Titanium Glint on Top Crest of Emerald L */}
         <path
-          d="M 168 138 C 168 130 174 124 182 124 L 238 124 C 246 124 252 130 252 138 L 252 304 C 252 310 257 315 263 315 L 344 315 C 352 315 358 321 358 329 L 358 360 C 358 368 352 374 344 374 L 182 374 C 174 374 168 368 168 360 Z"
-          fill="url(#llb-lFaceLight)"
+          d="M 154 136 C 144 136 136 144 136 154 L 136 164 L 224 164 L 224 154 C 224 144 216 136 206 136 Z"
+          fill="url(#llb-emCrest)"
+          opacity="0.4"
         />
 
-        {/* Specular Titanium Highlight on Top Crest */}
+        {/* Interlocking Titanium White 'L' (Lab / Overload Accent) */}
         <path
-          d="M 182 124 L 238 124 C 246 124 252 130 252 138 L 252 144 L 178 144 L 168 138 C 168 130 174 124 182 124 Z"
-          fill="url(#llb-specularTop)"
-        />
-
-        {/* Kinetic Inset Energy Channel */}
-        <path
-          d="M 194 156 L 218 156 L 218 326 C 218 333 223 338 230 338 L 332 338 L 332 352 L 220 352 C 206 352 194 340 194 326 Z"
-          fill="#FFFFFF"
-          opacity="0.38"
+          d="M 276 136 C 269 136 264 141 264 148 L 264 232 C 264 241 271 248 280 248 L 364 248 C 371 248 376 243 376 236 L 376 216 C 376 209 371 204 364 204 L 316 204 C 312 204 308 200 308 196 L 308 148 C 308 141 303 136 296 136 Z"
+          fill="url(#llb-whiteGrad)"
         />
       </g>
     </svg>
@@ -136,6 +127,7 @@ export const LiftLabMark: React.FC<{ sizeClass?: string; className?: string; wit
 export const LiftLabBrand: React.FC<LiftLabBrandProps> = ({
   variant = "lockup",
   size = "md",
+  withBackground = false,
   className = "",
   onClick,
 }) => {
@@ -176,15 +168,15 @@ export const LiftLabBrand: React.FC<LiftLabBrandProps> = ({
         onClick={onClick}
         className={`inline-flex items-center justify-center ${onClick ? "cursor-pointer active:scale-95 transition-transform" : ""} ${className}`}
       >
-        <LiftLabMark sizeClass={currentSize.mark} />
+        <LiftLabMark sizeClass={currentSize.mark} withBackground={withBackground} />
       </div>
     );
   }
 
   const wordmarkContent = (
     <div className={`flex items-baseline select-none font-sans font-black ${currentSize.text}`}>
-      <span className="text-white">LIFT</span>
-      <span className="text-[#30D158] ml-1">LAB</span>
+      <span className="text-white tracking-[0.04em]">LIFT</span>
+      <span className="text-[#30D158] ml-1 tracking-[0.04em]">LAB</span>
     </div>
   );
 
@@ -205,7 +197,7 @@ export const LiftLabBrand: React.FC<LiftLabBrandProps> = ({
       onClick={onClick}
       className={`inline-flex items-center ${currentSize.gap} ${onClick ? "cursor-pointer active:scale-95 transition-transform" : ""} ${className}`}
     >
-      <LiftLabMark sizeClass={currentSize.mark} />
+      <LiftLabMark sizeClass={currentSize.mark} withBackground={withBackground} />
       {wordmarkContent}
     </div>
   );

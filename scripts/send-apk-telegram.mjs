@@ -57,17 +57,15 @@ async function sendApk() {
   formData.append("chat_id", CHAT_ID);
   formData.append(
     "caption",
-    `🏋️‍♂️ *LiftLab v1.0.3 — OTA & Animazioni Cartoon*
+    `🏋️‍♂️ *LiftLab v1.0.4 — Nuovo Brand Design & Icona Apple HIG*
 📅 ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })} | 📦 ${sizeMb} MB
 
 🎯 *Migliorie della versione:*
-• 🚀 *Aggiornamenti In-App (OTA)*: Nuova versione v1.0.3 con aggiornamenti automatici dal web senza dover riscaricare l'APK.
-• 🎬 *Animazioni Cartoon Esche & Tattili*:
-  - *Completamento Serie*: Elastic bounce da 460ms con overshoot visibile a occhio umano e ripple verde smeraldo.
-  - *Drop-Set a Cascata*: Serie drop collegata animata a cascata (80ms delay) per dare conferma visiva dell'azione combinata.
-  - *Timer di Recupero*: Tasti -15s/+15s/Stop elastici con fisica cartoon.
-  - *Preferiti*: Stella con rimbalzo e wobble cartoon (480ms).
-• 🏋️ *Drop-Set Unificati*: Segnati con un unico tocco.`,
+• 💎 *Nuovo Logo & Icona Minimal*: Monogramma geometrico 'LL' ad alta precisione in puro stile Apple HIG (smeraldo fitness e titanio satinato su ceramica ossidiana).
+• ⚡ *Nuova Splash Screen & Loading*: Transizione cinematografica e avvio fluido istantaneo con logo vettoriale ad altissima definizione.
+• 🚀 *Aggiornamenti In-App (OTA)*: Versione v1.0.4 sincronizzata e attiva.
+• 🎬 *Animazioni Cartoon & Feedback Tattile*: Elastic bounce su serie completate, timer elastico e preferiti reattivi.
+• 📱 *Applicato Ovunque*: Nuove icone launcher Android adaptive, splash screen multi-densità e componenti in-app.`,
   );
   formData.append("parse_mode", "Markdown");
   formData.append("document", blob, "LiftLab.apk");

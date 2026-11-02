@@ -10,6 +10,7 @@
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
     "lint": "tsc --noEmit",
     "test": "tsx src/lib/workoutUtils.test.ts && tsx src/lib/routineImport.test.ts && tsx src/lib/storage.test.ts && tsx src/lib/achievements.test.ts && tsx src/lib/searchUtils.test.ts && tsx src/lib/translations.test.ts && tsx src/lib/otaUpdate.test.ts && tsx src/lib/motionAndHaptics.test.ts && tsx src/lib/modalStack.test.ts",
+    "build:apk": "cd android && .\\gradlew.bat assembleDebug && cd ..",
     "send:apk": "node scripts/send-apk-telegram.mjs",
     "ota:release": "node scripts/release-ota.mjs",
     "ota:build": "node scripts/release-ota.mjs"
