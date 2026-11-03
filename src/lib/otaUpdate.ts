@@ -163,6 +163,18 @@ export async function initOta(): Promise<void> {
     // If this is not called within appReadyTimeout, CapacitorUpdater rolls back.
     await CapacitorUpdater.notifyAppReady();
     console.log("[OTA] notifyAppReady() confirmed active bundle.");
+    // Guard: if the factory APK version is newer than a previously cached bundle, reset to factory!
+    try {
+      const current = await getCurrentOtaVersion();
+      if (!current.isBuiltin && isVersionNewer(APP_VERSION, current.version)) {
+        console.log(`[OTA] Factory APK v${APP_VERSION} is newer than cached bundle v${current.version}. Purging old bundle cache...`);
+        await CapacitorUpdater.reset();
+        await CapacitorUpdater.reload();
+        return;
+      }
+    } catch (e) {
+      console.warn("[OTA] Builtin version vs cached bundle check:", e);
+    }
 
     // Check if an update bundle was already staged on previous session
     try {

@@ -1,8 +1,8 @@
 {
-  "version": "1.0.6",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.6.zip",
-  "checksum": "fb490ded2cc3ced7de12817be73ad11fab7b9493cc6db20cb81fcedc99b8846d",
-  "releaseDate": "2026-11-02T23:51:10.364Z",
-  "notes": "• Sezione Progressi completamente riprogettata secondo Apple HIG (mobile-ios-design)\n• Segmented Control iOS a 3 sezioni: Panoramica, Grafici e Storico\n• Analisi Grafici con selettore metrica (Forza 1RM, Volume, Muscoli, Peso) e timeframe funzionante (30G, 90G, 1A, Tutto)\n• Storico sessioni con ricerca istantanea e layout Inset Grouped pulito\n• Risolto padding inferiore pb-44 per visibilità dock",
+  "version": "1.0.7",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.7.zip",
+  "checksum": "1306e75f232021f362e6cae87215f97bf63716fd9f2b11e4d7ceb4a786f3112e",
+  "releaseDate": "2026-11-03T00:00:31.900Z",
+  "notes": "• Nuova architettura Progressi in stile Apple Health (Panoramica, Grafici e Storico)\n• Grafici dedicati per Forza 1RM, Volume, Ripartizione Muscolare e Peso Corporeo con filtri temporali\n• Storico sessioni con ricerca istantanea e schede set espandibili\n• Nuovo logo Nano Banana e icone ad alta definizione applicate ovunque\n• VersionCode aggiornato e purge automatico delle vecchie cache all'avvio",
   "bundleSizeMb": "1.60"
 }

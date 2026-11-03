@@ -39,6 +39,29 @@ if (!BOT_TOKEN || !CHAT_ID) {
 
 const apkPath = path.join(rootDir, "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
 
+// Read version and notes dynamically
+let version = "1.0.6";
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf-8"));
+  if (pkg.version) version = pkg.version;
+} catch {}
+
+let versionCode = "1";
+try {
+  const gradle = fs.readFileSync(path.join(rootDir, "android", "app", "build.gradle"), "utf-8");
+  const match = gradle.match(/versionCode\s+(\d+)/);
+  if (match) versionCode = match[1];
+} catch {}
+
+let releaseNotes = "• Ottimizzazioni prestazioni e aggiornamenti interfaccia.";
+try {
+  const manifestPath = path.join(rootDir, "updates", "update-manifest.json");
+  if (fs.existsSync(manifestPath)) {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+    if (manifest.notes) releaseNotes = manifest.notes;
+  }
+} catch {}
+
 async function sendApk() {
   if (!fs.existsSync(apkPath)) {
     console.error(`❌ APK file not found at: ${apkPath}`);
@@ -48,27 +71,27 @@ async function sendApk() {
 
   const stats = fs.statSync(apkPath);
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-  console.log(`📦 Preparing to send APK (${sizeMb} MB) to Telegram chat ${CHAT_ID}...`);
+  const apkFileName = `LiftLab-v${version}.apk`;
+
+  console.log(`📦 Preparing to send ${apkFileName} (${sizeMb} MB, build ${versionCode}) to Telegram chat ${CHAT_ID}...`);
 
   const fileBuffer = fs.readFileSync(apkPath);
   const blob = new Blob([fileBuffer], { type: "application/vnd.android.package-archive" });
 
-  const formData = new FormData();
-  formData.append("chat_id", CHAT_ID);
-  formData.append(
-    "caption",
-    `🏋️‍♂️ *LiftLab v1.0.4 — Nuovo Brand Design & Icona Apple HIG*
+  const captionText = `🏋️‍♂️ *LiftLab v${version}* (Build ${versionCode})
 📅 ${new Date().toLocaleString("it-IT", { timeZone: "Europe/Rome" })} | 📦 ${sizeMb} MB
 
-🎯 *Migliorie della versione:*
-• 💎 *Nuovo Logo & Icona Minimal*: Monogramma geometrico 'LL' ad alta precisione in puro stile Apple HIG (smeraldo fitness e titanio satinato su ceramica ossidiana).
-• ⚡ *Nuova Splash Screen & Loading*: Transizione cinematografica e avvio fluido istantaneo con logo vettoriale ad altissima definizione.
-• 🚀 *Aggiornamenti In-App (OTA)*: Versione v1.0.4 sincronizzata e attiva.
-• 🎬 *Animazioni Cartoon & Feedback Tattile*: Elastic bounce su serie completate, timer elastico e preferiti reattivi.
-• 📱 *Applicato Ovunque*: Nuove icone launcher Android adaptive, splash screen multi-densità e componenti in-app.`,
-  );
+📋 *Novità & Migliorie:*
+${releaseNotes}
+
+💡 *Consiglio per l'aggiornamento:*
+Scarica e installa questo APK (*${apkFileName}*). Poiché il versionCode è aggiornato a ${versionCode}, Android riconosce l'aggiornamento pulito e azzera eventuali cache obsolete!`;
+
+  const formData = new FormData();
+  formData.append("chat_id", CHAT_ID);
+  formData.append("caption", captionText);
   formData.append("parse_mode", "Markdown");
-  formData.append("document", blob, "LiftLab.apk");
+  formData.append("document", blob, apkFileName);
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
@@ -78,7 +101,7 @@ async function sendApk() {
 
     const data = await response.json();
     if (data.ok) {
-      console.log("✅ APK inviato con successo sul tuo Telegram!");
+      console.log(`✅ ${apkFileName} inviato con successo sul tuo Telegram!`);
     } else {
       console.error("❌ Errore API Telegram:", data);
       process.exit(1);

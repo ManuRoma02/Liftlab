@@ -116,6 +116,18 @@ export const BUILD_TIME = "${nowIso}";
 fs.writeFileSync(versionTsPath, versionTsContent, "utf-8");
 console.log(`✓ Updated src/lib/version.ts to v${nextVersion}`);
 
+// 3b. Update android/app/build.gradle (versionCode & versionName)
+const gradlePath = path.join(rootDir, "android", "app", "build.gradle");
+if (fs.existsSync(gradlePath)) {
+  let gradleContent = fs.readFileSync(gradlePath, "utf-8");
+  const semverParts = nextVersion.split(".").map((p) => parseInt(p, 10) || 0);
+  const code = (semverParts[0] || 1) * 10000 + (semverParts[1] || 0) * 100 + (semverParts[2] || 0);
+  gradleContent = gradleContent.replace(/versionCode\s+\d+/, `versionCode ${code}`);
+  gradleContent = gradleContent.replace(/versionName\s+["'][^"']+["']/, `versionName "${nextVersion}"`);
+  fs.writeFileSync(gradlePath, gradleContent, "utf-8");
+  console.log(`✓ Updated android/app/build.gradle to versionCode ${code}, versionName "${nextVersion}"`);
+}
+
 // 4. Build web production bundle
 console.log(`\n🔨 Compiling production bundle (vite build)...`);
 try {
