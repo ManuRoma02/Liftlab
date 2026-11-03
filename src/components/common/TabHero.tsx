@@ -11,7 +11,7 @@ export function TabHero({
   action,
   onOpenSettings,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   subtitle: string;
   icon: React.ReactNode;

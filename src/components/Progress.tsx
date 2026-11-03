@@ -476,7 +476,7 @@ export function Progress({
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-44 flex flex-col gap-6 w-full">
       {/* iOS Header */}
       <TabHero
-        eyebrow={t("progress_analysis") || "ANALISI & RISULTATI"}
+
         title={t("progress") || "Progressi"}
         subtitle={
           (t("progress_subtitle") !== "progress_subtitle" && t("progress_subtitle")) ||

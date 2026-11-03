@@ -1313,12 +1313,20 @@ export function RoutineEditor({
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex flex-col justify-center min-w-0 max-w-[180px] sm:max-w-xs truncate">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-primary truncate">
-              {mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")}
-            </span>
-            <span className="text-sm font-semibold text-on-surface truncate">
-              {routine.title || (mode === "live" ? t("live_workout") : t("edit_routine"))}
-            </span>
+            {routine.title && routine.title.trim().toLowerCase() !== (mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")).trim().toLowerCase() ? (
+              <>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-primary truncate">
+                  {mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")}
+                </span>
+                <span className="text-sm font-semibold text-on-surface truncate">
+                  {routine.title}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm font-bold text-on-surface truncate">
+                {routine.title || (mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine"))}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-stack-md">

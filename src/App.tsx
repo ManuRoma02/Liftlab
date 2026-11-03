@@ -299,7 +299,9 @@ export default function App() {
             {effectiveTab === "dashboard" && (
               <Dashboard
                 userName={userName}
+                language={language}
                 t={t}
+
                 unit={unit}
                 navigateTo={navigateTo}
                 onSelectRoutine={setActiveRoutineId}
@@ -324,6 +326,7 @@ export default function App() {
             {effectiveTab === "library" && (
               <Library
                 t={t}
+
                 unit={unit}
                 exercises={exercises}
                 isCatalogLoading={isExerciseCatalogLoading}
@@ -335,6 +338,7 @@ export default function App() {
             {effectiveTab === "workout" && (
               <Workout
                 t={t}
+
                 unit={unit}
                 routines={routines}
                 onDuplicateRoutine={handleDuplicateRoutine}
@@ -354,6 +358,7 @@ export default function App() {
             {effectiveTab === "progress" && (
               <Progress
                 t={t}
+
                 unit={unit}
                 exercises={exercises}
                 workoutLogs={workoutLogs}

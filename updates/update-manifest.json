@@ -1,8 +1,8 @@
 {
-  "version": "1.0.9",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.9.zip",
-  "checksum": "bae79d599e9a530643a1bc58738cde27bfa19ada6b8247eaefbd97c9a4743ccd",
-  "releaseDate": "2026-11-03T18:04:32.742Z",
-  "notes": "• Workout: 3 pulsanti header su singola riga senza andare a capo (responsivo). • Prestazioni: rimosso lag su apertura finestre (peso, PR, selezione esercizi, bottom sheet). • Pulizia: rimosso 'Storico salvato sul dispositivo' e copy AI slop.",
+  "version": "1.0.10",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.10.zip",
+  "checksum": "f0590ee6eb9a1eb47ac03a323139d1ce6a3535b60b03a29567cce91d0d4dae72",
+  "releaseDate": "2026-11-03T18:20:30.853Z",
+  "notes": "• Rimossi titoli ed eyebrow duplicati nelle sezioni (Allenamento, Impostazioni, Libreria, Risultati)\n• Eliminata dicitura ridondante del calendario sotto il logo LiftLab, sostituita con la data reale odierna\n• Header e navigazione puliti in stile Apple",
   "bundleSizeMb": "1.61"
 }

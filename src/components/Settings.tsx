@@ -184,7 +184,7 @@ export function Settings({
         </button>
 
         <div className="h-7 flex items-center">
-          <h2 className="text-base font-semibold text-white tracking-tight">{t("settings")}</h2>
+
         </div>
 
         <div className="w-14" />

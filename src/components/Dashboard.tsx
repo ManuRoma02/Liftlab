@@ -70,6 +70,7 @@ export const Dashboard = React.memo(
     setWeeklyGoal,
     onDeleteLog,
     userName: userNameProp,
+    language,
   }: {
     t: any;
     unit: string;
@@ -89,6 +90,7 @@ export const Dashboard = React.memo(
     setWeeklyGoal: (n: number) => void;
     onDeleteLog?: (id: string) => void;
     userName?: string;
+    language?: string;
   }) => {
     const userName =
       userNameProp && userNameProp !== "Guest" && userNameProp !== "User"
@@ -97,6 +99,16 @@ export const Dashboard = React.memo(
     const welcomeBase = (t("welcome_title") || "Benvenuto su LiftLab").replace(/[!¡]/g, "").trim();
 
     const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
+    const todayFormattedDate = useMemo(() => {
+      const now = new Date();
+      const locale = language === "it" ? "it-IT" : language === "es" ? "es-ES" : "en-US";
+      const formatted = now.toLocaleDateString(locale, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      });
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }, [language]);
     const hasTodayWorkout = hasWorkoutLoggedOnDay(workoutLogs, new Date());
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
     const [focusedActivity, setFocusedActivity] = useState<DetailedActivity | null>(null);
@@ -451,7 +463,7 @@ export const Dashboard = React.memo(
                 <span className="text-xl font-black tracking-tight text-[#30D158] leading-none">LAB</span>
               </div>
               <p className="text-xs text-[#8E8E93] font-medium mt-1">
-                {(t("training_calendar_day") || "Calendario: {day}").replace("{day}", days[selectedDayIndex].full)}
+                {todayFormattedDate}
               </p>
             </div>
           </div>

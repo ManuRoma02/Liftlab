@@ -159,7 +159,7 @@ export function Library({
   return (
     <main className="px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col w-full max-w-[1280px] mx-auto gap-stack-lg relative">
       <TabHero
-        eyebrow={t("library")}
+
         title={t("library")}
         subtitle={isCatalogLoading ? (t("loading_catalog") || "Caricamento catalogo...") : (t("exercises_stored_offline") || "{count} esercizi disponibili offline").replace("{count}", String(safeExercises.length))}
         icon={<Database className="w-7 h-7" />}

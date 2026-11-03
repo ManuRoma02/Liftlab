@@ -122,7 +122,7 @@ export function Workout({
   return (
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-36 flex flex-col gap-stack-lg w-full">
       <TabHero
-        eyebrow={t("workout")}
+
         title={t("workout")}
         subtitle={routines.length > 0 ? t("select_program") : (t("no_routines_subtitle") || "Crea la tua prima scheda per iniziare ad allenarti.")}
         icon={<Dumbbell className="w-7 h-7" />}
