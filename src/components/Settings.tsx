@@ -27,6 +27,7 @@ import { safeGetItem } from "../lib/storage";
 import { motion, AnimatePresence } from "motion/react";
 import { CARTOON_SPRINGS } from "../lib/motion";
 import { OtaNotesView } from "./common/OtaNotesView";
+import { LiftLabBrand, LiftLabMark } from "./common/LiftLabBrand";
 import {
   getCurrentOtaVersion,
   checkForOtaUpdate,
@@ -192,13 +193,16 @@ export function Settings({
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-[768px] mx-auto px-4 py-6 flex flex-col gap-7">
         {/* Large Title */}
-        <div className="px-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#30D158] mb-1">
-            {t("local_control") || "Local Control"}
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {t("settings")}
-          </h1>
+        <div className="px-1 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#30D158] mb-1">
+              {t("local_control") || "Local Control"}
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              {t("settings")}
+            </h1>
+          </div>
+          <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md shrink-0" />
         </div>
 
         {/* Section 1: PREFERENCES */}
@@ -755,6 +759,16 @@ export function Settings({
             </div>
           </div>
         )}
+        {/* Brand Footer */}
+        <div className="flex flex-col items-center justify-center pt-6 pb-12 gap-2 text-center select-none">
+          <LiftLabBrand variant="lockup" size="md" withBackground={true} />
+          <p className="text-xs text-[#8E8E93] font-medium mt-1">
+            LiftLab v{otaStatus?.currentVersion || "1.0.7"} &bull; 100% Offline & Private
+          </p>
+          <p className="text-[11px] text-[#8E8E93]/60">
+            Designed with Apple Human Interface Guidelines
+          </p>
+        </div>
       </main>
     </div>
   );

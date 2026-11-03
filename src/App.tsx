@@ -31,6 +31,7 @@ import { showToast } from "./lib/toast";
 import type { RoutineData } from "./types/workout";
 import { ToastViewport } from "./components/common/ToastViewport";
 import { OtaNotesView } from "./components/common/OtaNotesView";
+import { LiftLabMark } from "./components/common/LiftLabBrand";
 import { AnimatePresence, motion } from "motion/react";
 import { triggerHaptic, hapticPress } from "./lib/haptics";
 import { useModalDismiss } from "./lib/modalStack";
@@ -512,9 +513,7 @@ export default function App() {
             className="apple-floating-dock pointer-events-auto w-full max-w-[390px] sm:max-w-md h-[64px] px-2 py-1.5 rounded-[28px] sm:rounded-full flex items-center justify-around gap-1 lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:flex-col lg:justify-center lg:gap-3 lg:px-3 lg:py-4 gpu-accelerated"
           >
             <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#30D158] text-black shadow-[0_4px_14px_rgba(48,209,88,0.35)]">
-                <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
-              </div>
+              <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md" />
               <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
             </div>
 

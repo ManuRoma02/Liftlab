@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Dumbbell, Scale, Target, Check, ChevronRight } from "lucide-react";
 import { triggerHaptic } from "../lib/haptics";
 import { parseGymNumber } from "../lib/workoutUtils";
+import { LiftLabMark } from "./common/LiftLabBrand";
 
 interface OnboardingProps {
   onFinish: (setupData?: { unit?: "KG" | "LBS"; weight?: number; weeklyGoal?: number }) => void;
@@ -134,9 +135,7 @@ export function OnboardingTutorial({
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center text-center gap-4 relative z-10 pt-2"
             >
-              <div className="w-16 h-16 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 flex items-center justify-center text-[#30D158] mb-2 shadow-[0_4px_20px_rgba(48,209,88,0.2)]">
-                <Dumbbell className="w-8 h-8 stroke-[2.2]" />
-              </div>
+              <LiftLabMark sizeClass="w-16 h-16" withBackground={true} className="rounded-2xl shadow-xl mb-2" />
 
               <h2 id="onboarding-title" className="text-2xl font-black text-white tracking-tight">
                 {i18n.step1Title}

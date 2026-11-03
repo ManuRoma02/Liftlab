@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect } from "react";
+import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { APPLE_SPRINGS } from "../../lib/motion";
@@ -30,6 +31,7 @@ export interface AppleBottomSheetProps {
  * Implements Apple Design WWDC guidelines:
  * - Mobile (< md): Anchored to bottom, rounded-t-[32px], drag handle pill, direct manipulation drag-to-dismiss.
  * - Desktop/Tablet (>= md): Ergonomic centered modal with rounded-3xl and subtle glass border.
+ * - Portal isolation: mounts to document.body, escaping CSS transforms and stacking contexts.
  * - Critically damped spring enter/exit transitions (APPLE_SPRINGS.sheet).
  * - Full integration with useBackDismiss for Android hardware back button and iOS back swipe.
  * - Full safe-area inset compliance (env(safe-area-inset-bottom)).
@@ -53,7 +55,7 @@ export function AppleBottomSheet({
   // Coordinated LIFO keyboard Escape and hardware back dismiss integration
   useModalDismiss(isOpen, onClose);
 
-  return (
+  const sheetContent = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -61,7 +63,7 @@ export function AppleBottomSheet({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[250] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6 pointer-events-none"
+          className="fixed inset-0 z-[9999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6 pointer-events-none"
         >
           {/* Translucent Backdrop Dimming Scrim */}
           <motion.div
@@ -152,4 +154,7 @@ export function AppleBottomSheet({
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(sheetContent, document.body);
 }

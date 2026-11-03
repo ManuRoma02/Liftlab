@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import consoleIconImg from "../../assets/images/liftlab_console_icon.png";
+import React from "react";
 
 export interface LiftLabBrandProps {
   variant?: "lockup" | "mark" | "text";
@@ -11,8 +10,8 @@ export interface LiftLabBrandProps {
 }
 
 /**
- * Pure Vector Emblem & AI Raster Mark for LiftLab (2026 Apple HIG Minimal Geometric Design)
- * Renders the luxury tactile obsidian squircle icon with automatic zero-latency SVG vector fallback.
+ * Pure Vector Master Emblem for LiftLab (Twin 'L' Monogram — Lift & Lab)
+ * Renders the iconic interlocking emerald + titanium white "doppia L" with 100% zero-latency vector fidelity.
  */
 export const LiftLabMark: React.FC<{
   sizeClass?: string;
@@ -23,21 +22,7 @@ export const LiftLabMark: React.FC<{
   className = "",
   withBackground = true,
 }) => {
-  const [imgError, setImgError] = useState(false);
-
-  // If raster badge requested and not failed, display the Nano Banana AI tactile icon
-  if (withBackground && !imgError && consoleIconImg) {
-    return (
-      <img
-        src={consoleIconImg}
-        alt="LiftLab"
-        onError={() => setImgError(true)}
-        className={`${sizeClass} rounded-2xl object-cover shrink-0 select-none shadow-md ${className}`}
-      />
-    );
-  }
-
-  // Pure SVG fallback (rendered with 100% vector fidelity)
+  // Pure SVG Master (100% vector fidelity, no raster dependencies)
   return (
     <svg
       viewBox="0 0 512 512"

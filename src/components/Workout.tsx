@@ -15,9 +15,11 @@ import {
   Sparkles,
   Play,
   Pencil,
+  ChevronRight,
 } from "lucide-react";
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
+import { AppleBottomSheet } from "./common/AppleBottomSheet";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { RoutineData } from "../types/workout";
 import { motion } from "motion/react";
@@ -156,54 +158,19 @@ export function Workout({
               <Plus className="w-3.5 h-3.5 shrink-0 text-[#8E8E93]" strokeWidth={2} />
               <span className="truncate">{t("create_new") || "Nuova Scheda"}</span>
             </motion.button>
-            <div className="relative shrink-0">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  triggerHaptic("light");
-                  setIsImportMenuOpen((prev) => !prev);
-                }}
-                aria-expanded={isImportMenuOpen}
-                aria-haspopup="menu"
-                className="w-10 h-10 rounded-full bg-white/6 hover:bg-white/10 border border-white/10 text-[#8E8E93] hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                title={t("upload_routine_file") || "Import"}
-              >
-                <Upload className="w-4 h-4" strokeWidth={2} />
-              </motion.button>
-              {isImportMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-[999]"
-                    onClick={() => setIsImportMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[1000] overflow-hidden py-1.5">
-                    <button
-                      onClick={() => {
-                        triggerHaptic("light");
-                        setIsImportMenuOpen(false);
-                        importInputRef.current?.click();
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <Upload className="w-4 h-4 text-[#30D158] shrink-0" />
-                      <span>{t("upload_routine_file") || "Carica File Scheda"}</span>
-                    </button>
-                    <hr className="border-white/8 my-1" />
-                    <button
-                      onClick={() => {
-                        triggerHaptic("light");
-                        setIsImportMenuOpen(false);
-                        onOpenImportCode();
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <LinkIcon className="w-4 h-4 text-[#30D158] shrink-0" />
-                      <span>{t("import_routine_code") || "Incolla Testo o Codice"}</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                triggerHaptic("light");
+                setIsImportMenuOpen(true);
+              }}
+              aria-expanded={isImportMenuOpen}
+              aria-haspopup="dialog"
+              className="w-10 h-10 rounded-full bg-white/6 hover:bg-white/10 border border-white/10 text-[#8E8E93] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+              title={t("upload_routine_file") || "Import"}
+            >
+              <Upload className="w-4 h-4" strokeWidth={2} />
+            </motion.button>
             <input
               ref={importInputRef}
               type="file"
@@ -507,6 +474,74 @@ export function Workout({
           onCancel={() => setRoutineToDelete(null)}
         />
       )}
+
+      {/* Apple HIG Action Sheet for Routine Import */}
+      <AppleBottomSheet
+        isOpen={isImportMenuOpen}
+        onClose={() => setIsImportMenuOpen(false)}
+        title={t("import_routine_title") || "Importa Scheda"}
+        subtitle={t("import_routine_subtitle") || "Seleziona la modalità di importazione"}
+        maxWidth="max-w-md"
+      >
+        <div className="flex flex-col gap-3 py-2 pb-4">
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setIsImportMenuOpen(false);
+              importInputRef.current?.click();
+            }}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/6 hover:bg-white/10 active:scale-[0.98] transition-all text-left border border-white/8 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 flex items-center justify-center text-[#30D158] shrink-0 shadow-sm">
+              <Upload className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors">
+                {t("upload_routine_file") || "Carica File Scheda"}
+              </div>
+              <div className="text-xs text-[#8E8E93] mt-0.5 truncate">
+                {t("upload_routine_file_desc") || "Importa file .json esportato in precedenza"}
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setIsImportMenuOpen(false);
+              onOpenImportCode();
+            }}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/6 hover:bg-white/10 active:scale-[0.98] transition-all text-left border border-white/8 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-center text-[#0A84FF] shrink-0 shadow-sm">
+              <LinkIcon className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-white group-hover:text-[#0A84FF] transition-colors">
+                {t("import_routine_code") || "Incolla Testo o Codice"}
+              </div>
+              <div className="text-xs text-[#8E8E93] mt-0.5 truncate">
+                {t("import_routine_code_desc") || "Incolla testo formattato o codice JSON"}
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#8E8E93] group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setIsImportMenuOpen(false);
+            }}
+            className="w-full mt-2 min-h-[48px] rounded-2xl bg-white/8 hover:bg-white/12 active:scale-[0.98] transition-all text-white font-semibold text-sm flex items-center justify-center cursor-pointer"
+          >
+            {t("cancel") || "Annulla"}
+          </button>
+        </div>
+      </AppleBottomSheet>
     </main>
   );
 }
