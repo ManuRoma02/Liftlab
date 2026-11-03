@@ -1296,7 +1296,7 @@ export function RoutineEditor({
         return matchesSearch && matchesMuscle && matchesEquipment;
       })
       .sort((a, b) => b.score - a.score || String(a.ex.title).localeCompare(String(b.ex.title)))
-      .slice(0, queryStr ? 80 : 32)
+      .slice(0, queryStr ? 60 : 24)
       .map(({ ex }) => ex);
   }, [debouncedExerciseSearch, exercises, filterEquipment, filterMuscle, t]);
 
@@ -2181,8 +2181,8 @@ export function RoutineEditor({
 
       {/* Exercise Selection Modal */}
       {isExerciseModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-surface-container-high border border-surface-variant rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+          <div className="bg-surface-container-high border border-surface-variant rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl will-change-transform transform-gpu">
             <div className="p-4 border-b border-surface-variant space-y-4 bg-surface sticky top-0 rounded-t-xl z-10">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-primary font-[var(--font-headline-md)]">

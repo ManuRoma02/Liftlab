@@ -439,17 +439,6 @@ export const Dashboard = React.memo(
       return set;
     }, [workoutLogs]);
 
-    const streakMessage =
-      currentStreak === 0
-        ? "Start your streak today!"
-        : currentStreak < 3
-          ? "Great start — keep going!"
-          : currentStreak < 7
-            ? "On fire — don't stop!"
-            : currentStreak < 14
-              ? "One week strong!"
-              : "Unstoppable!";
-
     return (
       <main className="px-margin-mobile py-stack-lg pb-44 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
         {/* Top Header Bar: Clean Apple Fitness+ aesthetic */}
@@ -597,9 +586,7 @@ export const Dashboard = React.memo(
                   : ((t("workouts_plural") !== "workouts_plural" && t("workouts_plural")) || "allenamenti")}
               </span>
             </div>
-            <p className="text-[11px] text-[#8E8E93] leading-tight z-10">
-              {t("history_saved_local") || "Storico salvato sul dispositivo"}
-            </p>
+            
           </motion.button>
 
           {/* Weekly goal card */}

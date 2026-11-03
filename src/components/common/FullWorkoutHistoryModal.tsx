@@ -77,7 +77,7 @@ export function FullWorkoutHistoryModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4"
           onClick={onClose}
         >
         <motion.div
@@ -89,7 +89,7 @@ export function FullWorkoutHistoryModal({
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] will-change-transform transform-gpu"
         >
           {/* Header */}
           <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">

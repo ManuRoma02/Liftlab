@@ -1,8 +1,8 @@
 {
-  "version": "1.0.8",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.8.zip",
-  "checksum": "ebf928a042df3ecca2f39e300727d6b885fb7860efdb490a8d3d0202b3162fca",
-  "releaseDate": "2026-11-03T16:26:44.537Z",
-  "notes": "• Logo header: rimosso cerchio, due L a piena altezza Y su LIFT LAB e data. • Library: nuovo selettore categorie a lista in alto con Add Exercise, rimosso banner e scroll orizzontale. • Documentazione e test verificati.",
+  "version": "1.0.9",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.9.zip",
+  "checksum": "bae79d599e9a530643a1bc58738cde27bfa19ada6b8247eaefbd97c9a4743ccd",
+  "releaseDate": "2026-11-03T18:04:32.742Z",
+  "notes": "• Workout: 3 pulsanti header su singola riga senza andare a capo (responsivo). • Prestazioni: rimosso lag su apertura finestre (peso, PR, selezione esercizi, bottom sheet). • Pulizia: rimosso 'Storico salvato sul dispositivo' e copy AI slop.",
   "bundleSizeMb": "1.61"
 }

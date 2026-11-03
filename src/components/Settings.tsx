@@ -195,14 +195,11 @@ export function Settings({
         {/* Large Title */}
         <div className="px-1 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#30D158] mb-1">
-              {t("local_control") || "Local Control"}
-            </p>
             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {t("settings")}
             </h1>
           </div>
-          <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md shrink-0" />
+          <LiftLabMark sizeClass="w-10 h-10" withBackground={false} />
         </div>
 
         {/* Section 1: PREFERENCES */}

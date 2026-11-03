@@ -420,7 +420,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
               onClick={() => setIsWeightModalOpen(false)}
             >
               <motion.div
@@ -432,7 +432,7 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 12 }}
                 transition={{ type: "spring", duration: 0.28, bounce: 0 }}
-                className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_64px_rgba(0,0,0,0.8)] overflow-hidden relative"
+                className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden relative will-change-transform transform-gpu"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-7 flex flex-col items-center text-center">

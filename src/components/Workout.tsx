@@ -133,7 +133,7 @@ export function Workout({
           </span>
         }
         action={
-          <div className="flex items-center gap-2 w-full justify-end relative flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-full justify-end relative flex-nowrap overflow-x-hidden">
             <motion.button
               data-testid="start-freestyle-workout-btn"
               whileTap={{ scale: 0.95 }}
@@ -141,10 +141,10 @@ export function Workout({
                 triggerHaptic("medium");
                 onStartLiveWorkout("empty");
               }}
-              className="bg-[#30D158] text-black text-xs font-bold h-10 px-4 rounded-full hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.25)] shrink-0"
+              className="bg-[#30D158] text-black text-[11px] sm:text-xs font-bold h-10 px-2.5 sm:px-4 rounded-full hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.25)] shrink min-w-0"
             >
               <Plus className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
-              <span className="truncate">{t("start_empty") || "Allenamento Libero"}</span>
+              <span className="truncate whitespace-nowrap">{t("start_empty") || "Allenamento Libero"}</span>
             </motion.button>
             <motion.button
               data-testid="create-routine-btn"
@@ -153,10 +153,10 @@ export function Workout({
                 triggerHaptic("light");
                 onCreate();
               }}
-              className="bg-white/8 text-white border border-white/10 text-xs font-semibold h-10 px-3.5 rounded-full hover:bg-white/12 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              className="bg-white/8 text-white border border-white/10 text-[11px] sm:text-xs font-semibold h-10 px-2 sm:px-3.5 rounded-full hover:bg-white/12 active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shrink min-w-0"
             >
               <Plus className="w-3.5 h-3.5 shrink-0 text-[#8E8E93]" strokeWidth={2} />
-              <span className="truncate">{t("create_new") || "Nuova Scheda"}</span>
+              <span className="truncate whitespace-nowrap">{t("create_new") || "Nuova Scheda"}</span>
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}

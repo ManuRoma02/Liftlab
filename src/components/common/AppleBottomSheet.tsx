@@ -74,7 +74,7 @@ export function AppleBottomSheet({
             transition={{ duration: 0.22, ease: "easeOut" }}
             onPointerDown={hapticPress("light")}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
+            className="fixed inset-0 bg-black/75 backdrop-blur-[2px] pointer-events-auto"
             aria-hidden="true"
           />
 
@@ -84,9 +84,9 @@ export function AppleBottomSheet({
             role="dialog"
             aria-modal="true"
             aria-label={title || "Modal sheet"}
-            initial={{ y: "100%", opacity: 0.95 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0.95 }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
             transition={APPLE_SPRINGS.sheet}
             drag="y"
             dragControls={dragControls}
@@ -100,7 +100,7 @@ export function AppleBottomSheet({
                 onClose();
               }
             }}
-            className={`pointer-events-auto w-full ${maxWidth} ${maxHeight} flex flex-col overflow-hidden bg-[#1C1C1E]/95 backdrop-blur-2xl border-t border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4),inset_0_1px_1px_0_rgba(255,255,255,0.16)] rounded-t-[32px] md:rounded-3xl md:border md:border-white/10 md:shadow-2xl pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] md:pb-6 relative ${className}`}
+            className={`pointer-events-auto w-full ${maxWidth} ${maxHeight} flex flex-col overflow-hidden bg-[#1C1C1E] border-t border-white/10 shadow-2xl rounded-t-[32px] md:rounded-3xl md:border md:border-white/10 will-change-transform transform-gpu pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] md:pb-6 relative ${className}`}
           >
             {/* Top Drag Handle Header (Interactive Direct Manipulation Area) */}
             <div

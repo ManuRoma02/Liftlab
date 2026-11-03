@@ -29,9 +29,11 @@ export function TabHero({
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] mb-0.5">
-            {eyebrow}
-          </p>
+          {eyebrow && eyebrow.toLowerCase().trim() !== title.toLowerCase().trim() && (
+            <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] mb-0.5">
+              {eyebrow}
+            </p>
+          )}
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-[-0.025em] leading-none text-balance">
             {title}
           </h1>
