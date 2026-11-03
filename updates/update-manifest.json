@@ -1,8 +1,8 @@
 {
-  "version": "1.0.7",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.7.zip",
-  "checksum": "1306e75f232021f362e6cae87215f97bf63716fd9f2b11e4d7ceb4a786f3112e",
-  "releaseDate": "2026-11-03T00:00:31.900Z",
-  "notes": "• Nuova architettura Progressi in stile Apple Health (Panoramica, Grafici e Storico)\n• Grafici dedicati per Forza 1RM, Volume, Ripartizione Muscolare e Peso Corporeo con filtri temporali\n• Storico sessioni con ricerca istantanea e schede set espandibili\n• Nuovo logo Nano Banana e icone ad alta definizione applicate ovunque\n• VersionCode aggiornato e purge automatico delle vecchie cache all'avvio",
-  "bundleSizeMb": "1.60"
+  "version": "1.0.8",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.8.zip",
+  "checksum": "ebf928a042df3ecca2f39e300727d6b885fb7860efdb490a8d3d0202b3162fca",
+  "releaseDate": "2026-11-03T16:26:44.537Z",
+  "notes": "• Logo header: rimosso cerchio, due L a piena altezza Y su LIFT LAB e data. • Library: nuovo selettore categorie a lista in alto con Add Exercise, rimosso banner e scroll orizzontale. • Documentazione e test verificati.",
+  "bundleSizeMb": "1.61"
 }

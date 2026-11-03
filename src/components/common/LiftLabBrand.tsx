@@ -25,7 +25,7 @@ export const LiftLabMark: React.FC<{
   // Pure SVG Master (100% vector fidelity, no raster dependencies)
   return (
     <svg
-      viewBox="0 0 512 512"
+      viewBox={withBackground ? "0 0 512 512" : "136 136 240 240"}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${sizeClass} shrink-0 select-none ${className}`}

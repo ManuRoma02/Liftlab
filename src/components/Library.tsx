@@ -1,10 +1,9 @@
 import React, { useDeferredValue, useState, useEffect, useMemo } from "react";
-import { Database, Plus, Search, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Database, Plus, Search, ChevronDown, ChevronRight, X, Filter, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { TabHero } from "./common/TabHero";
 import { ExerciseMuscleVisual } from "./common/ExerciseMuscleVisual";
 import { ExerciseMedia } from "./common/ExerciseMedia";
-import { ExerciseFilterBar } from "./common/ExerciseFilterBar";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { ExerciseData } from "../types/workout";
 import { triggerHaptic } from "../lib/haptics";
@@ -33,6 +32,7 @@ export function Library({
   const deferredSearch = useDeferredValue(search);
   const [filter, setFilter] = useState("All");
   const [selectedMuscle, setSelectedMuscle] = useState("All");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Auto-reset search query, selected category, and selected muscle filters whenever opened
   useEffect(() => {
@@ -40,6 +40,7 @@ export function Library({
       setSearch("");
       setFilter("All");
       setSelectedMuscle("All");
+      setIsFilterOpen(false);
     }
   }, [isOpen]);
 
@@ -54,6 +55,24 @@ export function Library({
     }
     return counts;
   }, [safeExercises]);
+
+  const availableCategories = useMemo(() => {
+    const defaultOrder = [
+      "All",
+      "Chest",
+      "Back",
+      "Legs",
+      "Shoulders",
+      "Arms",
+      "Core",
+      "Cardio",
+      "Functional",
+    ];
+    const extras = Object.keys(categoryCounts).filter(
+      (cat) => !defaultOrder.includes(cat) && cat !== "All"
+    );
+    return [...defaultOrder, ...extras];
+  }, [categoryCounts]);
 
   const featuredTitles = [
     "Barbell Bench Press",
@@ -151,12 +170,88 @@ export function Library({
           </span>
         }
         action={
-          <div className="flex items-center justify-between w-full gap-2">
-            <span className="text-xs text-[#8E8E93] font-medium hidden sm:inline">
-              {isSearching
-                ? (t("found_badge") || "{count} trovati").replace("{count}", String(filteredExercises.length))
-                : (t("custom_exercise_hint") || "Non trovi il tuo esercizio?")}
-            </span>
+          <div className="flex items-center justify-between w-full gap-2 relative">
+            {/* Category Selectable Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  setIsFilterOpen((prev) => !prev);
+                }}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                  filter !== "All"
+                    ? "bg-[#30D158]/15 border-[#30D158]/40 text-[#30D158]"
+                    : "bg-white/6 hover:bg-white/12 border-white/10 text-white"
+                }`}
+                aria-haspopup="listbox"
+                aria-expanded={isFilterOpen}
+              >
+                <Filter className="w-3.5 h-3.5 text-[#30D158]" />
+                <span>{filter === "All" ? (t("all") || "Tutti") : (t(filter.toLowerCase()) || filter)}</span>
+                <span className="text-[10px] tabular-nums bg-white/10 px-1.5 py-0.5 rounded-full font-mono text-[#8E8E93]">
+                  {categoryCounts[filter] ?? safeExercises.length}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-[#8E8E93] transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isFilterOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <div
+                    role="listbox"
+                    aria-label="Filter exercises by category"
+                    className="absolute left-0 top-full mt-2 w-56 sm:w-64 bg-[#1C1C1E] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-50 max-h-72 overflow-y-auto custom-scrollbar flex flex-col gap-0.5"
+                  >
+                    {availableCategories.map((cat) => {
+                      const isSelected = filter.toLowerCase() === cat.toLowerCase();
+                      const count = categoryCounts[cat];
+                      return (
+                        <button
+                          key={cat}
+                          role="option"
+                          aria-selected={isSelected}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic("light");
+                            setFilter(cat);
+                            setSelectedMuscle("All");
+                            setIsFilterOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left cursor-pointer ${
+                            isSelected
+                              ? "bg-[#30D158] text-black font-extrabold shadow-[0_2px_8px_rgba(48,209,88,0.25)]"
+                              : "text-white/90 hover:bg-white/8 hover:text-white"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isSelected ? (
+                              <Check className="w-3.5 h-3.5 shrink-0 text-black stroke-[3]" />
+                            ) : (
+                              <span className="w-3.5 h-3.5 shrink-0" />
+                            )}
+                            <span className="truncate">{cat === "All" ? (t("all") || "Tutti") : (t(cat.toLowerCase()) || cat)}</span>
+                          </div>
+                          {count !== undefined && (
+                            <span
+                              className={`ml-2 text-[10px] tabular-nums px-2 py-0.5 rounded-full shrink-0 font-mono ${
+                                isSelected ? "bg-black/20 text-black font-extrabold" : "bg-white/10 text-[#8E8E93]"
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
             <motion.button
               data-testid="library-add-exercise-btn"
               whileTap={{ scale: 0.95 }}
@@ -213,26 +308,6 @@ export function Library({
           </button>
         )}
       </div>
-
-      {!isSearching && (
-        <div className="bg-[#30D158]/10 border border-[#30D158]/20 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <div className="w-8 h-8 rounded-full bg-[#30D158]/20 flex items-center justify-center text-[#30D158] flex-shrink-0">
-            <Search className="w-4 h-4" />
-          </div>
-          <p className="text-xs font-semibold text-[#30D158]">{t("search_tip")}</p>
-        </div>
-      )}
-
-      {/* Exercise Filter Pills */}
-      <ExerciseFilterBar
-        selectedCategory={filter}
-        onSelectCategory={(cat) => {
-          setFilter(cat);
-          setSelectedMuscle("All");
-        }}
-        counts={categoryCounts}
-        t={t}
-      />
 
       {/* Header and Results Count */}
       <div className="w-full flex items-center justify-between px-1">

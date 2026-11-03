@@ -455,7 +455,7 @@ export const Dashboard = React.memo(
         {/* Top Header Bar: Clean Apple Fitness+ aesthetic */}
         <header className="flex items-center justify-between px-1 pt-1 pb-1">
           <div className="flex items-center gap-3">
-            <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md" />
+            <LiftLabMark sizeClass="w-10 h-10" withBackground={false} />
             <div>
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-black tracking-tight text-white leading-none">LIFT</span>

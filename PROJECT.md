@@ -38,11 +38,11 @@
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| E2E | E2E Testing Track | Requirement-driven test harness, runner, and test cases (Tiers 1-4) published via `TEST_READY.md` | none | IN_PROGRESS |
-| 1 | Core Architecture, Storage & Haptics Foundation | Features #1, #2, #3, #4, #5, #6, #7, #8, #9 | none | PLANNED |
-| 2 | Functional Bugs & Logic Fixes | Features #10, #11, #12, #13, #14, #15, #16, #17 | M1 | PLANNED |
-| 3 | Apple Design & iOS HIG UI/UX Overhaul | Features #18, #19, #20, #21, #22, #23 | M1 | PLANNED |
-| FINAL | Final Verification & Adversarial Hardening | Pass 100% of E2E tests (Tiers 1-4), then Tier 5 adversarial coverage hardening | E2E, M1, M2, M3 | PLANNED |
+| E2E | E2E Testing Track | Requirement-driven test harness, runner, and test cases (Tiers 1-4) published via `TEST_READY.md` | none | COMPLETED |
+| 1 | Core Architecture, Storage & Haptics Foundation | Features #1, #2, #3, #4, #5, #6, #7, #8, #9 | none | COMPLETED |
+| 2 | Functional Bugs & Logic Fixes | Features #10, #11, #12, #13, #14, #15, #16, #17 | M1 | COMPLETED |
+| 3 | Apple Design & iOS HIG UI/UX Overhaul | Features #18, #19, #20, #21, #22, #23 | M1 | COMPLETED |
+| FINAL | Final Verification & Adversarial Hardening | Pass 100% of E2E tests (Tiers 1-4), then Tier 5 adversarial coverage hardening | E2E, M1, M2, M3 | COMPLETED |
 
 ## Interface Contracts
 ### `src/lib/haptics.ts`
