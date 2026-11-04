@@ -27,7 +27,7 @@ export function TOSModal({ onClose }: { onClose: () => void }) {
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-2xl"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
         >
           <div className="flex justify-between items-center p-6 md:p-7 border-b border-white/8 shrink-0">
             <div>

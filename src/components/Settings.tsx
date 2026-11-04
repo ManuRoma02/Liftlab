@@ -211,7 +211,7 @@ export function Settings({
             {t("preferences")}
           </div>
 
-          <div className="bg-[#1C1C1E] border border-white/6 rounded-2xl divide-y divide-white/6 overflow-hidden shadow-sm">
+          <div className="bg-[#141417] border border-white/[0.08] rounded-2xl divide-y divide-white/[0.06] overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
             {/* Preference Item: Language */}
             {setLanguage && (
               <div className="flex items-center justify-between gap-3 p-4">
@@ -503,7 +503,7 @@ export function Settings({
             {t("privacyData")}
           </div>
 
-          <div className="bg-[#1C1C1E] border border-white/6 rounded-2xl divide-y divide-white/6 overflow-hidden shadow-sm">
+          <div className="bg-[#141417] border border-white/[0.08] rounded-2xl divide-y divide-white/[0.06] overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
             <button
               onClick={() => {
                 triggerHaptic("light");
@@ -618,7 +618,7 @@ export function Settings({
             {t("ota_updates") || "Aggiornamenti In-App (OTA)"}
           </div>
 
-          <div className="bg-[#1C1C1E] border border-white/8 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-sm">
+          <div className="bg-[#141417] border border-white/[0.08] rounded-2xl overflow-hidden divide-y divide-white/[0.06] shadow-[0_6px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
             {/* Version & Status */}
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3.5">
@@ -812,7 +812,7 @@ export function Settings({
               {t("danger_zone") || "Danger Zone"}
             </div>
 
-            <div className="bg-[#1C1C1E] border border-[#FF453A]/25 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-[#141417] border border-[#FF453A]/30 rounded-2xl overflow-hidden shadow-[0_6px_24px_rgba(255,69,58,0.1),inset_0_1px_0_rgba(255,255,255,0.06)]">
               <button
                 onClick={() => {
                   triggerHaptic("warning");

@@ -93,7 +93,7 @@ export function WorkoutSummaryView({
           transition={APPLE_SPRINGS.bouncy}
           className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#30D158] to-[#64D2FF] p-0.5 shadow-[0_0_50px_rgba(48,209,88,0.35)]"
         >
-          <div className="w-full h-full bg-[#1C1C1E] rounded-[22px] flex items-center justify-center text-[#30D158]">
+          <div className="w-full h-full bg-[#141417] rounded-[22px] flex items-center justify-center text-[#30D158]">
             <Trophy className="w-12 h-12 text-[#30D158]" />
           </div>
         </motion.div>

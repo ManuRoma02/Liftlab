@@ -1,8 +1,8 @@
 {
-  "version": "1.0.11",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.11.zip",
-  "checksum": "e8befce2570e17e05bf93e51b0066cb94696a500c1f7faa29839441d10ea37e2",
-  "releaseDate": "2026-11-04T14:57:05.323Z",
-  "notes": "• Loading: Skeleton shimmer placeholder in Library invece di schermata vuota (Concept 1)\n• Switch vs Segmented: Switch solo per On/Off e Segmented Controls per scelte opposte (Concept 2)\n• Bottoni d'azione specifici invece di generici OK/Conferma (Concept 3)\n• Intera riga cliccabile per tutti gli switch (Concept 4)\n• Tagliate parole riempitive da dialoghi e messaggi di stato (Concept 5)",
+  "version": "1.0.12",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.12.zip",
+  "checksum": "781266c4e751088f0213330fe07aff707f04dabcf7ad1ebf123cd3acd829c671",
+  "releaseDate": "2026-11-04T15:29:22.208Z",
+  "notes": "Design System Dark Mode Elevation: gerarchia superficiale a 4 livelli (Canvas 0, Card 1, Elementi annidati 2, Modali e Bottom Sheet 3), specular highlight con doppi bordi Apple, contrasto tipografico off-white, palette accenti calibrata.",
   "bundleSizeMb": "1.61"
 }

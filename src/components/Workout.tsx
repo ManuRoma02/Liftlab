@@ -201,7 +201,7 @@ export function Workout({
             onChange={(e) => setRoutineSearch(e.target.value)}
             placeholder={t("search") || "Cerca schede o esercizi..."}
             aria-label={t("search") || "Cerca schede o esercizi"}
-            className="w-full bg-[#1C1C1E] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
+            className="w-full bg-[#18191e] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
           />
           {routineSearch.length > 0 && (
             <button
@@ -383,7 +383,7 @@ export function Workout({
                             setActiveMenuId(null);
                           }}
                         />
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-[#1C1C1E] border border-white/15 rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.95)] z-[1000] overflow-hidden py-1.5">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-[#24252c] border border-white/16 rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl z-[1000] overflow-hidden py-1.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

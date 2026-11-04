@@ -55,7 +55,7 @@ export function ConfirmModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 15 }}
           transition={{ type: "spring", ...CARTOON_SPRINGS.bouncy }}
-          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden"
         >
           {/* iOS Alert Icon */}
           <motion.div

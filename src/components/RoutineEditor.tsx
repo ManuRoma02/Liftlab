@@ -1519,7 +1519,7 @@ export function RoutineEditor({
           </div>
         )}
         {mode === "live" && workoutLogs.length === 0 && !isGuideDismissed && (
-          <div className="mx-margin-mobile md:mx-margin-desktop mb-4 p-4 rounded-2xl bg-[#1C1C1E] border border-[#30D158]/30 shadow-lg relative flex flex-col gap-2">
+          <div className="mx-margin-mobile md:mx-margin-desktop mb-4 p-4 rounded-2xl bg-[#141417] border border-[#30D158]/35 shadow-[0_8px_24px_rgba(48,209,88,0.15),inset_0_1px_0_rgba(255,255,255,0.06)] relative flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#30D158]" />
@@ -1985,7 +1985,7 @@ export function RoutineEditor({
                                 </div>
                                 <div className={`${showRpe ? "col-span-3" : "col-span-4"} relative flex items-center`}>
                                   <input
-                                    className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
+                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isBodyweightExercise(ex) ? "BW" : unit}
                                     type="text"
                                     inputMode="decimal"
@@ -2007,7 +2007,7 @@ export function RoutineEditor({
                                 </div>
                                 <div className={`${showRpe ? "col-span-2" : "col-span-3"} relative flex items-center`}>
                                   <input
-                                    className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
+                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isTimedExercise(ex) ? "Secs" : (t("reps_upper") || "Ripet.")}
                                     type="text"
                                     inputMode="numeric"
@@ -2030,7 +2030,7 @@ export function RoutineEditor({
                                 {showRpe && (
                                   <div className="col-span-2">
                                     <input
-                                      className="w-full bg-[#1C1C1E] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:outline-none transition-all shadow-inner"
+                                      className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:outline-none transition-all shadow-inner"
                                       placeholder="RPE"
                                       type="text"
                                       inputMode="decimal"
@@ -2430,7 +2430,7 @@ export function RoutineEditor({
             className="fixed bottom-0 left-0 w-full z-[150] px-margin-mobile py-3 pointer-events-auto"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
           >
-            <div className="bg-[#1C1C1E]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+            <div className="bg-[#24252c]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-white/16 shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)]">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25 flex items-center justify-center relative shadow-sm">
                   <Clock className="w-5 h-5 absolute" />

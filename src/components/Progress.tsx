@@ -492,7 +492,7 @@ export function Progress({
       />
 
       {/* iOS Segmented Control (Panoramica, Grafici, Storico) */}
-      <div className="w-full bg-[#1C1C1E]/90 p-1.5 rounded-2xl border border-white/10 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+      <div className="w-full bg-[#18191e]/90 p-1.5 rounded-2xl border border-white/10 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
         <div className="grid grid-cols-3 gap-1">
           {[
             { id: "overview" as const, label: "Panoramica", icon: BarChart2 },
@@ -844,7 +844,7 @@ export function Progress({
         >
           {/* Sub-Segmented Control: Select Metric to Analyze */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-            <div className="flex p-1 bg-[#1C1C1E] rounded-2xl border border-white/10 shadow-sm overflow-x-auto">
+            <div className="flex p-1 bg-[#18191e] rounded-2xl border border-white/10 shadow-sm overflow-x-auto">
               {[
                 { id: "strength" as const, label: "Forza & 1RM", icon: Dumbbell },
                 { id: "volume" as const, label: "Volume Sessione", icon: Zap },
@@ -1328,7 +1328,7 @@ export function Progress({
                 placeholder="Cerca per nome scheda o esercizio..."
                 value={historySearch}
                 onChange={(e) => setHistorySearch(e.target.value)}
-                className="w-full bg-[#1C1C1E] border border-white/10 rounded-2xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-[#8E8E93] focus:ring-1 focus:ring-[#30D158] focus:border-[#30D158] outline-none transition-all shadow-sm"
+                className="w-full bg-[#18191e] border border-white/10 rounded-2xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-[#8E8E93] focus:ring-1 focus:ring-[#30D158] focus:border-[#30D158] outline-none transition-all shadow-sm"
               />
               {historySearch && (
                 <button
@@ -1575,9 +1575,9 @@ export function Progress({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl max-h-[85vh] overflow-hidden"
+            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-lg flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] max-h-[85vh] overflow-hidden"
           >
-            <div className="p-5 border-b border-white/10 flex flex-col gap-3.5 bg-[#1C1C1E]">
+            <div className="p-5 border-b border-white/10 flex flex-col gap-3.5 bg-[#24252c]">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg text-white tracking-tight">
                   {pickerTarget.startsWith("record-") ? "Scegli Esercizio Record" : "Seleziona Esercizio"}
@@ -1732,7 +1732,7 @@ export function Progress({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="bg-[#1C1C1E] border border-white/15 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center shadow-2xl"
+              className="bg-[#24252c] border border-white/16 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
             >
               <div className="relative mb-4">
                 {[...Array(6)].map((_, i) => (

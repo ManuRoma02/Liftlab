@@ -204,7 +204,7 @@ export function Library({
                   <div
                     role="listbox"
                     aria-label="Filter exercises by category"
-                    className="absolute left-0 top-full mt-2 w-56 sm:w-64 bg-[#1C1C1E] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-50 max-h-72 overflow-y-auto custom-scrollbar flex flex-col gap-0.5"
+                    className="absolute left-0 top-full mt-2 w-56 sm:w-64 bg-[#24252c] border border-white/16 rounded-2xl p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl z-50 max-h-72 overflow-y-auto custom-scrollbar flex flex-col gap-0.5"
                   >
                     {availableCategories.map((cat) => {
                       const isSelected = filter.toLowerCase() === cat.toLowerCase();
@@ -275,7 +275,7 @@ export function Library({
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
         <input
           data-testid="library-search-input"
-          className="w-full bg-[#1C1C1E] border border-white/8 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
+          className="w-full bg-[#18191e] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
           placeholder={t("search") || "Cerca esercizi..."}
           aria-label={t("search") || "Cerca esercizi"}
           type="text"

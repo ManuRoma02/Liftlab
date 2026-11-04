@@ -309,7 +309,7 @@ export function ExerciseDetails({
           <AccordionItem
             title={t("instructions")}
             icon={<ClipboardList className="w-5 h-5 text-[#0A84FF]" />}
-            className="md:col-span-4 bg-[#1C1C1E] border border-white/8 rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="md:col-span-4 bg-[#141417] border border-white/[0.08] rounded-3xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
           >
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-5 mt-3">
               {(
@@ -357,7 +357,7 @@ export function ExerciseDetails({
                     triggerHaptic("light");
                     onSelectVariation?.(variant);
                   }}
-                  className="bg-[#1C1C1E] border border-white/6 hover:border-white/20 rounded-2xl p-3.5 flex flex-col items-center text-center gap-2 transition-all active:scale-95 group cursor-pointer"
+                  className="bg-[#18191e] border border-white/10 hover:border-white/20 rounded-2xl p-3.5 flex flex-col items-center text-center gap-2 transition-all active:scale-95 group cursor-pointer shadow-sm"
                 >
                   <ExerciseMedia
                     exercise={variant}

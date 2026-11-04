@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const APP_VERSION = "1.0.11";
-export const BUILD_TIME = "2026-11-04T14:57:05.323Z";
+export const APP_VERSION = "1.0.12";
+export const BUILD_TIME = "2026-11-04T15:29:22.208Z";

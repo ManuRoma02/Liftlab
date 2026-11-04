@@ -437,7 +437,7 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 12 }}
                 transition={{ type: "spring", duration: 0.28, bounce: 0 }}
-                className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden relative will-change-transform transform-gpu"
+                className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] overflow-hidden relative will-change-transform transform-gpu"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-7 flex flex-col items-center text-center">
@@ -497,7 +497,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-[#161618] px-6 py-3 border-t border-white/5 flex justify-center">
+                <div className="bg-[#1c1d24] px-6 py-3 border-t border-white/8 flex justify-center">
                   <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide">
                     {currentWeight > 0 ? `Current: ${currentWeight} ${unit}` : "No weight logged yet"}
                   </p>
@@ -754,7 +754,7 @@ export default function App() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -60, opacity: 0, scale: 0.95 }}
             transition={CARTOON_SPRINGS.bouncy}
-            className="fixed top-2 inset-x-3 sm:inset-x-auto sm:right-4 sm:max-w-md z-[500] p-3.5 bg-[#1C1C1E]/95 backdrop-blur-2xl border border-[#30D158]/50 shadow-[0_12px_40px_rgba(0,0,0,0.7)] rounded-2xl flex items-center justify-between gap-3 text-white"
+            className="fixed top-2 inset-x-3 sm:inset-x-auto sm:right-4 sm:max-w-md z-[500] p-3.5 bg-[#24252c]/95 backdrop-blur-2xl border border-[#30D158]/50 shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] rounded-2xl flex items-center justify-between gap-3 text-white"
             style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -847,7 +847,7 @@ export default function App() {
               setActiveTab("live_editor");
             }}
             aria-label="Return to active workout"
-            className="fixed bottom-20 right-4 z-[100] bg-[#1C1C1E]/95 backdrop-blur-2xl border border-[#30D158]/50 text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex items-center gap-2.5 transition-all cursor-pointer group lg:bottom-6 lg:right-6"
+            className="fixed bottom-20 right-4 z-[100] bg-[#24252c]/95 backdrop-blur-2xl border border-[#30D158]/50 text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-[0_12px_36px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center gap-2.5 transition-all cursor-pointer group lg:bottom-6 lg:right-6"
           >
             <div className="relative flex items-center justify-center">
               <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] animate-ping absolute opacity-75"></span>

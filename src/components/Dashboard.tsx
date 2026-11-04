@@ -480,7 +480,7 @@ export const Dashboard = React.memo(
         </header>
 
         {/* Weekly Training Calendar Card */}
-        <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45)] p-4 sm:p-5">
+        <section className="bg-[#141417] border border-white/[0.08] rounded-3xl overflow-hidden relative shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] p-4 sm:p-5">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(48,209,88,0.1),transparent_18rem)]" />
           </div>
@@ -575,7 +575,7 @@ export const Dashboard = React.memo(
               setIsStreakModalOpen(true);
             }}
             data-testid="streak-card"
-            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="bg-[#141417] border border-white/[0.08] rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#30D158]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
@@ -613,7 +613,7 @@ export const Dashboard = React.memo(
               setIsGoalModalOpen(true);
             }}
             data-testid="weekly-goal-card"
-            className="bg-[#1C1C1E] border border-white/8 rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+            className="bg-[#141417] border border-white/[0.08] rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#0A84FF]/10 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between z-10">
@@ -992,7 +992,7 @@ export const Dashboard = React.memo(
 
         {/* Day One Welcome Hub when workoutLogs.length === 0 */}
         {workoutLogs.length === 0 && selectedDayIndex === todayIndex && (
-          <section className="bg-gradient-to-br from-[#1C1C1E] via-[#1C1C1E] to-[#161618] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45)] relative overflow-hidden flex flex-col gap-4">
+          <section className="bg-gradient-to-br from-[#16161a] via-[#141417] to-[#101013] border border-white/[0.09] rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 w-72 h-72 bg-[#30D158]/10 blur-[90px] rounded-full pointer-events-none" />
             <div className="relative z-10 flex flex-col gap-1.5">
               <span className="w-fit text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">
@@ -1081,7 +1081,7 @@ export const Dashboard = React.memo(
 
         {/* Next Workout Card */}
         {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
-          <section className="bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45)] flex flex-col">
+          <section className="bg-[#141417] border border-white/[0.08] rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
             <button
               onClick={() => {
                 triggerHaptic("medium");
@@ -1137,7 +1137,7 @@ export const Dashboard = React.memo(
 
         {/* Quick Start Hero when no routine is scheduled */}
         {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
-          <section className="bg-gradient-to-br from-[#1C1C1E] to-black border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45)] relative overflow-hidden flex flex-col gap-4">
+          <section className="bg-gradient-to-br from-[#16161a] to-[#0d0e11] border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
             <div className="relative z-10 flex flex-col gap-1">
               <span className="w-fit text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">

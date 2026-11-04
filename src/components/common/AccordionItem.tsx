@@ -18,7 +18,7 @@ export function AccordionItem({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
     <div
-      className={`bg-[#1C1C1E] border border-white/8 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)] ${className}`}
+      className={`bg-[#141417] border border-white/[0.08] rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] ${className}`}
     >
       <button
         onClick={() => {

@@ -117,10 +117,10 @@ export function AchievementsModal({
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#1C1C1E] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col"
         >
           {/* Header */}
-          <div className="p-5 border-b border-white/8 flex justify-between items-center bg-[#1C1C1E] shrink-0">
+          <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c] shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#FF9F0A]/15 border border-[#FF9F0A]/25 rounded-2xl flex items-center justify-center text-[#FF9F0A]">
                 <Trophy className="w-5 h-5" />

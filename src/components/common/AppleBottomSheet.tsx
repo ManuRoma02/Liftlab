@@ -100,7 +100,7 @@ export function AppleBottomSheet({
                 onClose();
               }
             }}
-            className={`pointer-events-auto w-full ${maxWidth} ${maxHeight} flex flex-col overflow-hidden bg-[#1C1C1E] border-t border-white/10 shadow-2xl rounded-t-[32px] md:rounded-3xl md:border md:border-white/10 will-change-transform transform-gpu pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] md:pb-6 relative ${className}`}
+            className={`pointer-events-auto w-full ${maxWidth} ${maxHeight} flex flex-col overflow-hidden bg-[#24252c] border-t border-white/15 shadow-[0_-16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] rounded-t-[32px] md:rounded-3xl md:border md:border-white/15 md:shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] will-change-transform transform-gpu pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] md:pb-6 relative ${className}`}
           >
             {/* Top Drag Handle Header (Interactive Direct Manipulation Area) */}
             <div
