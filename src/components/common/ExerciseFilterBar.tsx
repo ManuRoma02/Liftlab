@@ -1,7 +1,6 @@
 import React from "react";
 import { triggerHaptic } from "../../lib/haptics";
-import { motion } from "motion/react";
-import { CARTOON_SPRINGS } from "../../lib/motion";
+import { ChevronDown, Dumbbell, Layers } from "lucide-react";
 
 export interface ExerciseFilterBarProps {
   selectedCategory: string;
@@ -38,92 +37,84 @@ export const ExerciseFilterBar: React.FC<ExerciseFilterBarProps> = ({
   t,
   className = "",
 }) => {
+  const formatCategory = (cat: string) => {
+    if (cat.toLowerCase() === "all") return t("all") || "Tutti i muscoli";
+    return t(cat.toLowerCase()) || cat;
+  };
+
+  const formatEquipment = (eq: string) => {
+    if (eq.toLowerCase() === "all") return t("all") || "Tutte le attrezzature";
+    return t(eq.toLowerCase()) || eq;
+  };
+
+  const hasEquipment = Boolean(equipments && equipments.length > 0 && onSelectEquipment);
+
   return (
-    <div className={`flex flex-col gap-2 w-full ${className}`}>
-      {/* Category Pills (Muscle Groups / Disciplines) */}
-      <div
-        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-0.5 select-none touch-pan-x"
-        role="tablist"
-        aria-label="Filter exercises by muscle group"
-      >
-        {categories.map((cat) => {
-          const isSelected =
-            selectedCategory.toLowerCase() === cat.toLowerCase();
-          const count = counts ? counts[cat] : undefined;
-
-          // Don't hide 'All', but if counts are provided and a category has 0 items, we can still show or fade it
-          const countBadge =
-            count !== undefined ? (
-              <span
-                className={`ml-1 text-[10px] tabular-nums px-1.5 py-0.2 rounded-full ${
-                  isSelected
-                    ? "bg-black/20 text-black font-extrabold"
-                    : "bg-white/10 text-[#8E8E93]"
-                }`}
-              >
-                {count}
+    <div className={`w-full grid ${hasEquipment ? "grid-cols-2" : "grid-cols-1"} gap-2 ${className}`}>
+      {/* Category / Muscle Group Dropdown */}
+      <div className="relative group">
+        <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-[#1C1C1E] active:bg-[#2C2C2E] border border-white/10 rounded-xl text-xs font-semibold text-white shadow-sm transition-all pointer-events-none group-focus-within:border-[#30D158] group-focus-within:ring-1 group-focus-within:ring-[#30D158]/40">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Dumbbell className="w-3.5 h-3.5 text-[#30D158] shrink-0" />
+            <span className="truncate">
+              {formatCategory(selectedCategory)}
+            </span>
+            {counts && counts[selectedCategory] !== undefined && (
+              <span className="text-[10px] tabular-nums px-1.5 py-0.5 rounded-full bg-white/10 text-[#8E8E93] shrink-0 font-bold">
+                {counts[selectedCategory]}
               </span>
-            ) : null;
-
-          return (
-            <motion.button
-              key={cat}
-              type="button"
-              role="tab"
-              aria-selected={isSelected}
-              whileTap={{ scale: 0.88, rotate: -2 }}
-              whileHover={{ scale: 1.04 }}
-              transition={CARTOON_SPRINGS.bouncy}
-              onClick={() => {
-                triggerHaptic("light");
-                onSelectCategory(cat);
-              }}
-              className={`shrink-0 inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
-                isSelected
-                  ? "bg-[#30D158] text-black font-extrabold shadow-[0_2px_12px_rgba(48,209,88,0.3)] scale-[1.02]"
-                  : "bg-white/6 hover:bg-white/12 text-[#8E8E93] hover:text-white border border-white/8 font-semibold"
-              }`}
-            >
-              <span>{cat === "All" ? (t("all") || "Tutti") : (t(cat.toLowerCase()) || cat)}</span>
-              {countBadge}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Optional Equipment Row (Barbell, Dumbbell, Cable, Machine, Bodyweight) */}
-      {equipments && onSelectEquipment && (
-        <div
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 px-0.5 select-none touch-pan-x"
-          role="tablist"
-          aria-label="Filter exercises by equipment"
+            )}
+          </div>
+          <ChevronDown className="w-4 h-4 text-[#8E8E93] shrink-0 transition-transform group-focus-within:rotate-180" />
+        </div>
+        <select
+          aria-label={t("filter_by_muscle") || "Filtra per gruppo muscolare"}
+          value={selectedCategory}
+          onChange={(e) => {
+            triggerHaptic("selection");
+            onSelectCategory(e.target.value);
+          }}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-base bg-transparent z-10"
         >
-          {equipments.map((eq) => {
-            const isSelected =
-              (selectedEquipment || "All").toLowerCase() === eq.toLowerCase();
+          {categories.map((cat) => {
+            const count = counts ? counts[cat] : undefined;
+            const label = formatCategory(cat) + (count !== undefined ? ` (${count})` : "");
             return (
-              <motion.button
-                key={eq}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                whileTap={{ scale: 0.88, rotate: 2 }}
-                whileHover={{ scale: 1.04 }}
-                transition={CARTOON_SPRINGS.bouncy}
-                onClick={() => {
-                  triggerHaptic("light");
-                  onSelectEquipment(eq);
-                }}
-                className={`shrink-0 inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] transition-colors cursor-pointer ${
-                  isSelected
-                    ? "bg-white text-black font-extrabold shadow-sm"
-                    : "bg-white/4 hover:bg-white/8 text-[#8E8E93] hover:text-white border border-white/6 font-medium"
-                }`}
-              >
-                <span>{eq === "All" ? (t("all") || "Tutti") : (t(eq.toLowerCase()) || eq)}</span>
-              </motion.button>
+              <option key={cat} value={cat} className="bg-[#1C1C1E] text-white py-1">
+                {label}
+              </option>
             );
           })}
+        </select>
+      </div>
+
+      {/* Equipment Dropdown */}
+      {hasEquipment && (
+        <div className="relative group">
+          <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-[#1C1C1E] active:bg-[#2C2C2E] border border-white/10 rounded-xl text-xs font-semibold text-white shadow-sm transition-all pointer-events-none group-focus-within:border-[#0A84FF] group-focus-within:ring-1 group-focus-within:ring-[#0A84FF]/40">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Layers className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+              <span className="truncate">
+                {formatEquipment(selectedEquipment || "All")}
+              </span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#8E8E93] shrink-0 transition-transform group-focus-within:rotate-180" />
+          </div>
+          <select
+            aria-label={t("filter_by_equipment") || "Filtra per attrezzatura"}
+            value={selectedEquipment || "All"}
+            onChange={(e) => {
+              triggerHaptic("selection");
+              onSelectEquipment!(e.target.value);
+            }}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-base bg-transparent z-10"
+          >
+            {equipments!.map((eq) => (
+              <option key={eq} value={eq} className="bg-[#1C1C1E] text-white py-1">
+                {formatEquipment(eq)}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </div>

@@ -800,6 +800,7 @@ export function RoutineEditor({
   const [isHeaderFinishVisible, setIsHeaderFinishVisible] = useState(true);
   const headerFinishButtonRef = useRef<HTMLButtonElement | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [warmupModalExercise, setWarmupModalExercise] = useState<ExerciseData | null>(null);
 
   const [isCustomExerciseOpen, setIsCustomExerciseOpen] = useState(false);
   const [exerciseSearch, setExerciseSearch] = useState("");
@@ -1313,18 +1314,32 @@ export function RoutineEditor({
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex flex-col justify-center min-w-0 max-w-[180px] sm:max-w-xs truncate">
-            {routine.title && routine.title.trim().toLowerCase() !== (mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")).trim().toLowerCase() ? (
+            {routine.title ? (
               <>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-primary truncate">
-                  {mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine")}
+                <span className="text-[10px] uppercase font-bold tracking-wider text-primary truncate flex items-center gap-1.5">
+                  {mode === "live" ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-[#30D158] animate-pulse shrink-0 inline-block" />
+                      {t("active_session") || "Sessione Attiva"}
+                    </>
+                  ) : (
+                    t("edit_routine") || "Routine"
+                  )}
                 </span>
                 <span className="text-sm font-semibold text-on-surface truncate">
                   {routine.title}
                 </span>
               </>
             ) : (
-              <span className="text-sm font-bold text-on-surface truncate">
-                {routine.title || (mode === "live" ? (t("live_workout") || "Allenamento") : (t("edit_routine") || "Routine"))}
+              <span className="text-sm font-bold text-on-surface truncate flex items-center gap-1.5">
+                {mode === "live" ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#30D158] animate-pulse shrink-0 inline-block" />
+                    {t("active_session") || "Sessione Attiva"}
+                  </>
+                ) : (
+                  t("edit_routine") || "Routine"
+                )}
               </span>
             )}
           </div>
@@ -1561,17 +1576,255 @@ export function RoutineEditor({
             if (currentGroup.length > 0) {
               groups.push(currentGroup);
             }
-            return groups.map((group, groupIdx) => (
-              <div
-                key={`group-${groupIdx}`}
-                className={`md:col-span-12 flex flex-col gap-4 relative ${group.length > 1 ? "pl-4 border-l-2 border-primary-fixed/50 py-2" : ""}`}
-              >
-                {group.length > 1 && (
-                  <div className="absolute -left-[14px] top-1/2 -translate-y-1/2 -rotate-90 text-[10px] uppercase font-black tracking-widest text-primary-fixed drop-shadow-sm whitespace-nowrap bg-background px-2 z-20 shadow-sm rounded-full border border-primary-fixed/30">
-                    {t("superset")}
+            return groups.map((group, groupIdx) => {
+              if (group.length > 1) {
+                const maxRounds = Math.max(...group.map((e) => e.sets?.length || 0));
+                return (
+                  <div
+                    key={`superset-group-${groupIdx}`}
+                    className="md:col-span-12 relative w-full"
+                  >
+                    <div className="apple-glass-card rounded-3xl p-4 md:p-6 relative border border-[#30D158]/35 bg-gradient-to-b from-[#1C201D] via-[#16171A] to-[#121315] shadow-[0_16px_50px_rgba(0,0,0,0.5)]">
+                      {/* Superset Top Header */}
+                      <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-full bg-[#30D158]/20 border border-[#30D158]/40 text-[#30D158] text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                            <LinkIcon className="w-3.5 h-3.5" />
+                            {t("superset")} • {group.map((_, i) => `A${i + 1}`).join(" + ")}
+                          </span>
+                          <span className="text-xs text-white/80 font-bold truncate max-w-[220px] sm:max-w-md">
+                            {group.map((e) => t(e.title) || e.title).join(" + ")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => removeSuperset(group[0].id)}
+                            className="text-xs font-semibold text-[#8E8E93] hover:text-white px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
+                          >
+                            {t("remove_from_superset") || "Separa"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Exercises Mini Badges */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                        {group.map((ex, exIdx) => {
+                          const labelLetter = `A${exIdx + 1}`;
+                          return (
+                            <div
+                              key={ex.id}
+                              className="bg-black/40 border border-white/8 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="w-7 h-7 rounded-xl bg-[#30D158]/20 text-[#30D158] font-black text-xs flex items-center justify-center shrink-0 border border-[#30D158]/30">
+                                  {labelLetter}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic("light");
+                                    onOpenDetail?.(ex);
+                                  }}
+                                  className="w-10 h-10 bg-black/50 rounded-xl overflow-hidden shrink-0 border border-white/10 cursor-pointer"
+                                  title={t("view_exercise_details") || "Dettagli esercizio"}
+                                >
+                                  <ExerciseMedia exercise={ex} className="w-full h-full" />
+                                </button>
+                                <div className="min-w-0">
+                                  <h4 className="text-sm font-bold text-white truncate">
+                                    {t(ex.title) || ex.title}
+                                  </h4>
+                                  <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider">
+                                    {ex.category || "General"} • {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s rest
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic("light");
+                                    openPlateCalculator(ex);
+                                  }}
+                                  className="p-2 text-[#8E8E93] hover:text-white rounded-lg hover:bg-white/5 cursor-pointer"
+                                  title={t("plate_calculator") || "Plate Calculator"}
+                                >
+                                  <Disc className="w-4 h-4 text-[#30D158]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setWarmupModalExercise(ex)}
+                                  className="p-2 text-amber-400 hover:text-amber-300 rounded-lg hover:bg-white/5 cursor-pointer"
+                                  title={t("warmup") || "Warmup"}
+                                >
+                                  <Flame className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Round by Round Paired Rows */}
+                      <div className="space-y-4 mb-4">
+                        {Array.from({ length: maxRounds }).map((_, rIdx) => {
+                          return (
+                            <div
+                              key={`round-${rIdx}`}
+                              className="bg-black/30 border border-white/8 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-inner"
+                            >
+                              <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-[#30D158] pb-1 border-b border-white/6">
+                                <span>{t("superset_round") || "Giro"} {rIdx + 1}</span>
+                                <span className="text-[10px] text-[#8E8E93] font-normal normal-case">
+                                  {group.map((_, i) => `A${i + 1}`).join(" ➔ ")}
+                                </span>
+                              </div>
+
+                              {group.map((ex, exIdx) => {
+                                const set = ex.sets[rIdx];
+                                if (!set) return null;
+                                const labelLetter = `A${exIdx + 1}`;
+
+                                return (
+                                  <div
+                                    key={set.id}
+                                    className={`grid grid-cols-12 gap-2 items-center p-2 rounded-xl transition-all duration-150 border ${
+                                      set.completed
+                                        ? "bg-[#30D158]/10 border-[#30D158]/40 shadow-sm"
+                                        : "bg-black/40 border-white/6"
+                                    }`}
+                                  >
+                                    {/* Set Badge & Ex tag */}
+                                    <div className="col-span-3 sm:col-span-2 flex items-center gap-1.5">
+                                      <span className="px-1.5 py-0.5 rounded-md bg-[#30D158]/20 text-[#30D158] text-[10px] font-black shrink-0">
+                                        {labelLetter}
+                                      </span>
+                                      {mode === "live" ? (
+                                        <motion.button
+                                          type="button"
+                                          onClick={() => toggleSetCompletion(ex.id, set.id, set.completed)}
+                                          whileTap={{ scale: 0.82, rotate: -3 }}
+                                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 cursor-pointer select-none transition-all ${
+                                            set.completed
+                                              ? "bg-[#30D158] text-black font-extrabold shadow-sm"
+                                              : "bg-white/6 border border-white/10 text-white/80 hover:bg-white/10"
+                                          }`}
+                                        >
+                                          {set.completed ? (
+                                            <Check className="w-4 h-4 stroke-[3]" />
+                                          ) : (
+                                            <span className="text-xs font-bold">{rIdx + 1}</span>
+                                          )}
+                                        </motion.button>
+                                      ) : (
+                                        <span className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                                          {rIdx + 1}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Previous Performance */}
+                                    <div className="col-span-2 text-center hidden sm:flex flex-col items-center justify-center">
+                                      {(() => {
+                                        const prev = prevSetsMap[ex.id]?.[rIdx];
+                                        if (prev?.weight && prev?.reps) {
+                                          return (
+                                            <span className="text-[11px] font-bold text-[#8E8E93] tabular-nums">
+                                              {prev.weight}×{prev.reps}
+                                            </span>
+                                          );
+                                        }
+                                        return <span className="text-[10px] text-[#8E8E93]/60">—</span>;
+                                      })()}
+                                    </div>
+
+                                    {/* Weight Input */}
+                                    <div className="col-span-4 sm:col-span-3 relative flex items-center">
+                                      <input
+                                        className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-10 py-1.5 px-2 text-sm font-extrabold tabular-nums tracking-tight focus:border-[#30D158] focus:outline-none transition-all shadow-inner"
+                                        placeholder={isBodyweightExercise(ex) ? "BW" : unit}
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={set.weight === "" || set.weight === undefined ? "" : String(set.weight)}
+                                        onFocus={(e) => e.target.select()}
+                                        onChange={(e) => updateSet(ex.id, set.id, { weight: e.target.value })}
+                                        onBlur={(e) => updateSet(ex.id, set.id, { weight: finalizeLiveNumericInput(e.target.value) })}
+                                      />
+                                    </div>
+
+                                    {/* Reps Input */}
+                                    <div className="col-span-4 sm:col-span-3 relative flex items-center">
+                                      <input
+                                        className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-10 py-1.5 px-2 text-sm font-extrabold tabular-nums tracking-tight focus:border-[#30D158] focus:outline-none transition-all shadow-inner"
+                                        placeholder={isTimedExercise(ex) ? "Secs" : (t("reps_upper") || "Ripet.")}
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={set.reps === "" || set.reps === undefined ? "" : String(set.reps)}
+                                        onFocus={(e) => e.target.select()}
+                                        onChange={(e) => updateSet(ex.id, set.id, { reps: e.target.value })}
+                                        onBlur={(e) => updateSet(ex.id, set.id, { reps: finalizeLiveNumericInput(e.target.value) })}
+                                      />
+                                    </div>
+
+                                    {/* Delete Set */}
+                                    <div className="col-span-1 flex justify-center text-error">
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteSet(ex.id, set.id)}
+                                        className="p-1.5 hover:bg-error/10 active:scale-90 transition-all rounded-lg cursor-pointer"
+                                        title="Delete Set"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Card Footer Actions */}
+                      <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-white/8">
+                        <motion.button
+                          whileTap={{ scale: 0.9, rotate: -1.5 }}
+                          whileHover={{ scale: 1.04 }}
+                          transition={CARTOON_SPRINGS.bouncy}
+                          onClick={() => {
+                            group.forEach((ex) => addSet(ex.id));
+                          }}
+                          className="text-xs font-bold text-black bg-[#30D158] hover:brightness-110 flex items-center gap-1.5 px-4 py-2.5 rounded-full cursor-pointer shadow-sm"
+                        >
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
+                          {t("add_superset_round") || "Aggiungi Giro (A1 + A2)"}
+                        </motion.button>
+
+                        {group.map((ex, exIdx) => (
+                          <button
+                            key={ex.id}
+                            type="button"
+                            onClick={() => addSet(ex.id)}
+                            className="text-xs font-semibold text-[#8E8E93] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-full cursor-pointer border border-white/5"
+                          >
+                            + {t("add_set") || "Serie"} A{exIdx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                )}
-                {group.map((ex, idx) => (
+                );
+              }
+
+              return (
+                <div
+                  key={`group-${groupIdx}`}
+                  className="md:col-span-12 flex flex-col gap-4 relative"
+                >
+                  {group.map((ex, idx) => (
                   <motion.div
                     key={ex.id}
                     initial={{ opacity: 0, y: 12 }}
@@ -2144,7 +2397,7 @@ export function RoutineEditor({
                           whileTap={{ scale: 0.88, rotate: -1.5 }}
                           whileHover={{ scale: 1.05 }}
                           transition={CARTOON_SPRINGS.bouncy}
-                          onClick={() => handleGenerateWarmup(ex.id)}
+                          onClick={() => setWarmupModalExercise(ex)}
                           className="text-sm font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-full hover:bg-amber-500/20 cursor-pointer"
                         >
                           <Flame className="w-4 h-4 text-amber-400" /> {t("warmup") || "Warmup"}
@@ -2163,7 +2416,8 @@ export function RoutineEditor({
                   </motion.div>
                 ))}
               </div>
-            ));
+            );
+          });
           })()}
 
           {/* Add Exercise Button */}
@@ -2456,19 +2710,7 @@ export function RoutineEditor({
                 </div>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-2 font-bold text-sm">
-                <motion.button
-                  whileTap={{ scale: 0.9, rotate: -1.5 }}
-                  whileHover={{ scale: 1.03 }}
-                  transition={CARTOON_SPRINGS.bouncy}
-                  onClick={() => {
-                    triggerHaptic("medium");
-                    setIsFinishConfirmOpen(true);
-                  }}
-                  className="h-10 px-4 bg-[#30D158] text-black rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer shadow-[0_4px_14px_rgba(48,209,88,0.3)]"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {t("finish_workout")}
-                </motion.button>
+                
                 <motion.button
                   whileTap={{ scale: 0.88, rotate: -2 }}
                   whileHover={{ scale: 1.05 }}
@@ -2535,30 +2777,88 @@ export function RoutineEditor({
         </div>
       )}
 
-      {/* Floating Finish Workout button (live mode) */}
+      
+
+      {/* Apple-style Warmup Confirmation Modal */}
       <AnimatePresence>
-        {mode === "live" && !isHeaderFinishVisible && activeRestLeft === null && (
-          <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={CARTOON_SPRINGS.bouncy}
-            className="fixed bottom-6 right-6 z-[140] pointer-events-auto"
-          >
-            <motion.button
-              type="button"
-              data-testid="floating-finish-workout-btn"
-              onClick={handleRoutineSave}
-              whileTap={{ scale: 0.9, rotate: -1.5 }}
-              whileHover={{ scale: 1.04 }}
-              transition={CARTOON_SPRINGS.bouncy}
-              className="premium-cta font-black text-sm px-5 py-3.5 rounded-full transition-all uppercase tracking-widest flex items-center gap-2 hover:brightness-110 shadow-xl cursor-pointer"
+        {warmupModalExercise && (() => {
+          const firstSetWeight = Number(warmupModalExercise.sets[0]?.weight);
+          const workingWeight = Number.isFinite(firstSetWeight) && firstSetWeight > 0 ? firstSetWeight : 60;
+          const barWeight = getEquipmentBarWeight(warmupModalExercise.equipment, warmupModalExercise.title, unit);
+          const previewSets = generateWarmupSets(workingWeight, barWeight, warmupModalExercise.equipment);
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-4"
+              onClick={() => setWarmupModalExercise(null)}
             >
-              <Check className="w-5 h-5" strokeWidth={2.5} />
-              {t("finish_workout") || "Finish Workout"}
-            </motion.button>
-          </motion.div>
-        )}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 20 }}
+                transition={appleSpringDefault}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#1C1C1E] border border-white/12 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                    <Flame className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base text-white tracking-tight">
+                      {t("warmup_sets") || "Serie di Riscaldamento"}
+                    </h3>
+                    <p className="text-xs text-[#8E8E93] truncate font-medium">
+                      {warmupModalExercise.title}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#8E8E93] leading-relaxed">
+                  {t("warmup_modal_desc") || "Genera 3 serie di riscaldamento progressive (40%, 60%, 80%) basate sul tuo carico target per preparare muscoli e articolazioni."}
+                </p>
+
+                <div className="bg-black/40 border border-white/8 rounded-2xl p-3 space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex justify-between">
+                    <span>Target: {workingWeight} {unit}</span>
+                    <span>3 Serie Piramidali</span>
+                  </div>
+                  <div className="space-y-1.5 text-xs font-mono">
+                    {previewSets.map((s, sIdx) => (
+                      <div key={sIdx} className="flex justify-between items-center text-white/90 bg-white/5 px-2.5 py-1.5 rounded-xl">
+                        <span className="text-[#8E8E93] text-[11px] font-sans">Set {sIdx + 1}</span>
+                        <span className="font-bold">{s.weight} {unit} × {s.reps} reps</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setWarmupModalExercise(null)}
+                    className="flex-1 min-h-[44px] py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-semibold text-xs transition-all cursor-pointer active:scale-95 flex items-center justify-center"
+                  >
+                    {t("cancel") || "Annulla"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleGenerateWarmup(warmupModalExercise.id);
+                      setWarmupModalExercise(null);
+                    }}
+                    className="flex-1 min-h-[44px] py-3 bg-amber-500 text-black rounded-full font-bold text-xs hover:brightness-105 transition-all cursor-pointer active:scale-95 shadow-sm flex items-center justify-center"
+                  >
+                    {t("add_warmup_sets") || "Aggiungi serie"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* Confirm Finish Workout Modal */}

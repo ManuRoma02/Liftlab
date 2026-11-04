@@ -12,9 +12,11 @@ import { useModalDismiss } from "../../lib/modalStack";
 export function ShareRoutineModal({
   routine,
   onClose,
+  t = (k: string) => k,
 }: {
   routine: RoutineData;
   onClose: () => void;
+  t?: (key: string) => string;
 }) {
   useModalDismiss(true, onClose);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -73,9 +75,9 @@ export function ShareRoutineModal({
         field.remove();
         if (!copied) throw new Error("Copy command was rejected");
       }
-      showToast("Routine code copied to clipboard.", "success");
+      showToast(t("routine_code_copied") || "Codice scheda copiato negli appunti.", "success");
     } catch {
-      showToast("Clipboard access failed. Please try again.", "error");
+      showToast(t("clipboard_copy_failed") || "Accesso agli appunti non riuscito. Riprova.", "error");
     }
   };
 
@@ -88,59 +90,61 @@ export function ShareRoutineModal({
       className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
       onClick={onClose}
     >
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="share-routine-title"
-          initial={{ opacity: 0, scale: 0.92, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 15 }}
-          transition={APPLE_SPRINGS.criticallyDamped}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col p-6 gap-4"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <div className="flex justify-between items-center border-b border-white/8 pb-3">
-            <h3 id="share-routine-title" className="font-bold text-base text-white tracking-tight">Share Routine</h3>
-            <button
-              onClick={() => {
-                triggerHaptic("light");
-                onClose();
-              }}
-              aria-label="Close share dialog"
-              className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <p className="text-xs text-[#8E8E93] text-center">
-            Let your training partner scan this code to import <strong className="text-white">{routine.name}</strong> offline.
-          </p>
-          <div className="flex justify-center bg-white p-3.5 rounded-2xl mx-auto shadow-md">
-            {qrCodeUrl ? (
-              <img src={qrCodeUrl} alt="Routine QR Code" className="w-48 h-48 rounded-lg" />
-            ) : (
-              <div className="w-48 h-48 bg-zinc-100 animate-pulse rounded-lg flex items-center justify-center text-xs text-zinc-400">
-                Generating QR...
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2.5 pt-1">
-            <button
-              onClick={handleCopyText}
-              className="flex-1 min-h-[44px] py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-            >
-              <Copy className="w-4 h-4" />
-              Copy Code
-            </button>
-            <button
-              onPointerDown={hapticPress("light")}
-              onClick={onClose}
-              className="flex-1 min-h-[44px] py-3 bg-[#30D158] text-black rounded-full font-bold text-xs hover:brightness-105 transition-all cursor-pointer active:scale-95 shadow-sm flex items-center justify-center"
-            >
-              Close
-            </button>
-          </div>
-        </motion.div>
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-routine-title"
+        initial={{ opacity: 0, scale: 0.92, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 15 }}
+        transition={APPLE_SPRINGS.criticallyDamped}
+        className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col p-6 gap-4"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex justify-between items-center border-b border-white/8 pb-3">
+          <h3 id="share-routine-title" className="font-bold text-base text-white tracking-tight">
+            {t("share_routine") || "Condividi Scheda"}
+          </h3>
+          <button
+            onClick={() => {
+              triggerHaptic("light");
+              onClose();
+            }}
+            aria-label="Close share dialog"
+            className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-[#8E8E93] hover:text-white transition-all cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-xs text-[#8E8E93] text-center">
+          {(t("scan_qr_desc") || "Inquadra questo QR code da un altro telefono per importare {name} offline.").replace("{name}", routine.name)}
+        </p>
+        <div className="flex justify-center bg-white p-3.5 rounded-2xl mx-auto shadow-md">
+          {qrCodeUrl ? (
+            <img src={qrCodeUrl} alt="Routine QR Code" className="w-48 h-48 rounded-lg" />
+          ) : (
+            <div className="w-48 h-48 bg-zinc-100 animate-pulse rounded-lg flex items-center justify-center text-xs text-zinc-400">
+              {t("generating_qr") || "Generazione QR..."}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2.5 pt-1">
+          <button
+            onClick={handleCopyText}
+            className="flex-1 min-h-[44px] py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          >
+            <Copy className="w-4 h-4" />
+            {t("copy_code") || "Copia Codice"}
+          </button>
+          <button
+            onPointerDown={hapticPress("light")}
+            onClick={onClose}
+            className="flex-1 min-h-[44px] py-3 bg-[#30D158] text-black rounded-full font-bold text-xs hover:brightness-105 transition-all cursor-pointer active:scale-95 shadow-sm flex items-center justify-center"
+          >
+            {t("close") || "Chiudi"}
+          </button>
+        </div>
       </motion.div>
+    </motion.div>
   );
 }

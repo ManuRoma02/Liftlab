@@ -426,7 +426,7 @@ export function useWorkoutData() {
       setIsImportBackupConfirmOpen(true);
     } catch (error) {
       console.error("Import failed:", error);
-      showToast("Could not import this file. Please choose a valid LiftLab JSON export.", "error");
+      showToast(t("invalid_import_file") || "File non valido. Scegli un'esportazione LiftLab valida.", "error");
     }
   };
 
@@ -518,14 +518,14 @@ export function useWorkoutData() {
       showToast(`Imported ${importedRoutines.length} routine(s) and ${importedLogs.length} workout log(s).`, "success");
     } catch (error) {
       console.error("Import failed:", error);
-      showToast("Could not import this file. Please choose a LiftLab JSON export.", "error");
+      showToast(t("invalid_import_file") || "File non valido. Scegli un'esportazione LiftLab valida.", "error");
     }
   };
 
   const handleRestorePreImportBackup = () => {
     const backup = readJson<any | null>("liftlab_backup_pre_import", null);
     if (!backup) {
-      showToast("No pre-import safety backup available.", "error");
+      showToast(t("no_safety_backup") || "Nessun backup di sicurezza disponibile.", "error");
       return;
     }
     if (Array.isArray(backup.routines)) {
@@ -560,7 +560,7 @@ export function useWorkoutData() {
       if (backup.userData.displayName) setUserName(backup.userData.displayName);
     }
     removeJsonAtomic("liftlab_backup_pre_import");
-    showToast("Restored safety snapshot prior to last import.", "success");
+    showToast(t("backup_restored_success") || "Snapshot di sicurezza ripristinato.", "success");
   };
 
   const handleDeleteAccount = () => {
@@ -716,7 +716,7 @@ export function useWorkoutData() {
 
   useEffect(() => {
     const handleStorageError = () => {
-      showToast("Storage quota warning. Consider exporting a backup.", "error");
+      showToast(t("storage_quota_warning") || "Spazio quasi esaurito. Esporta un backup dei dati.", "error");
     };
     window.addEventListener("liftlab:storage-error", handleStorageError);
     return () => window.removeEventListener("liftlab:storage-error", handleStorageError);
@@ -750,7 +750,7 @@ export function useWorkoutData() {
 
     const completedLog = buildCompletedWorkoutLog(updatedRoutine);
     if (completedLog.exercises.length === 0) {
-      showToast("Complete at least one set before finishing.", "error");
+      showToast(t("complete_at_least_one_set") || "Completa almeno una serie prima di terminare.", "error");
       return;
     }
 
@@ -797,7 +797,7 @@ export function useWorkoutData() {
     try {
       const completedLog = buildCompletedWorkoutLog(pendingLiveWorkoutToFinish);
       if (completedLog.exercises.length === 0) {
-        showToast("Complete at least one set before finishing.", "error");
+        showToast(t("complete_at_least_one_set") || "Completa almeno una serie prima di terminare.", "error");
         return;
       }
 
@@ -842,7 +842,7 @@ export function useWorkoutData() {
     try {
       const completedLog = buildCompletedWorkoutLog(pendingWorkout);
       if (completedLog.exercises.length === 0) {
-        showToast("Complete at least one set before finishing.", "error");
+        showToast(t("complete_at_least_one_set") || "Completa almeno una serie prima di terminare.", "error");
         return;
       }
       if (saveAsRoutine) {
@@ -1069,7 +1069,7 @@ export function useWorkoutData() {
       return;
     }
     if (isLiveWorkoutActive) {
-      showToast("Finish or discard the current workout first.", "info");
+      showToast(t("finish_or_discard_first") || "Termina o abbandona prima l'allenamento in corso.", "info");
       return;
     }
     const latest = [...workoutLogs]
@@ -1358,7 +1358,7 @@ export function useWorkoutData() {
       const text = await file.text();
       const parsedRoutines = parseLiftLabRoutineText(text, exercises) as RoutineData[];
       if (parsedRoutines.length === 0) {
-        showToast("No routines found to import.", "error");
+        showToast(t("no_routines_found") || "Nessuna scheda trovata da importare.", "error");
         return;
       }
 
@@ -1383,13 +1383,13 @@ export function useWorkoutData() {
       );
     } catch (error) {
       console.error("Routine import failed:", error);
-      showToast(error instanceof Error ? error.message : "Import failed. Check the JSON file.", "error");
+      showToast(error instanceof Error ? error.message : (t("import_failed_check_file") || "Importazione fallita. Controlla il file o codice."), "error");
     }
   };
 
   const handleDeleteRoutine = async (id: string) => {
     if (isLiveWorkoutActive && activeRoutineId === id) {
-      showToast("Cannot delete routine while workout is in progress.", "error");
+      showToast(t("cannot_delete_active_routine") || "Impossibile eliminare una scheda durante un allenamento attivo.", "error");
       return;
     }
     setRoutines((prev) => prev.filter((r) => r.id !== id));

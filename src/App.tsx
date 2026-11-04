@@ -435,16 +435,18 @@ export default function App() {
           <ShareRoutineModal
             routine={sharingRoutine}
             onClose={() => setSharingRoutine(null)}
+            t={t}
           />
         )}
         {isImportCodeOpen && (
           <ImportRoutineModal
             exercises={exercises}
             onClose={() => setIsImportCodeOpen(false)}
+            t={t}
             onImport={async (text) => {
               const parsedRoutines = parseLiftLabRoutineText(text, exercises) as RoutineData[];
               if (parsedRoutines.length === 0) {
-                throw new Error("No routines found in the code.");
+                throw new Error(t("no_routines_found") || "Nessuna routine trovata nel codice.");
               }
               let totalCustomCreated = 0;
               const importedNames: string[] = [];
@@ -459,8 +461,8 @@ export default function App() {
               const namesStr = importedNames.map((n) => `"${n}"`).join(", ");
               showToast(
                 totalCustomCreated > 0
-                  ? `Imported: ${namesStr}. Created ${totalCustomCreated} custom exercise(s).`
-                  : `Imported: ${namesStr}`,
+                  ? `${t("routine_imported") || "Scheda importata"}: ${namesStr} (+${totalCustomCreated})`
+                  : `${t("routine_imported") || "Scheda importata"}: ${namesStr}`,
                 "success",
               );
             }}

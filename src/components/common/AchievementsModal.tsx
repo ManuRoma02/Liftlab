@@ -161,7 +161,7 @@ export function AchievementsModal({
             </div>
 
             {/* Filter tabs */}
-            <div className="flex gap-1 bg-black/40 p-1 rounded-full border border-white/10 overflow-x-auto scrollbar-none shrink-0 items-center">
+            <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-2xl border border-white/10 shrink-0 items-center">
               {filterTabs.map((tab) => {
                 const isActive = filter === tab.id;
                 return (
@@ -171,7 +171,7 @@ export function AchievementsModal({
                       triggerHaptic("light");
                       setFilter(tab.id);
                     }}
-                    className={`px-3.5 py-1.5 min-h-[36px] rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center justify-center ${
+                    className={`px-1 py-1.5 min-h-[36px] rounded-xl text-[11px] font-semibold transition-all truncate text-center cursor-pointer flex items-center justify-center ${
                       isActive
                         ? "bg-[#30D158] text-black shadow-sm font-bold"
                         : "text-[#8E8E93] hover:text-white"

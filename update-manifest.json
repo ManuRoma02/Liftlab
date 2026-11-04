@@ -1,8 +1,8 @@
 {
-  "version": "1.0.13",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.13.zip",
-  "checksum": "7747b3a5107e3d87996fbc4397abce2fbb83cd6ea9dd1a4cfefd5be962fd6b5b",
-  "releaseDate": "2026-11-04T16:10:59.791Z",
-  "notes": "Griglia 2x2 grafici, swipe orizzontale sezioni, eliminazione overscroll, logo unico doppia L e splash nativo modernizzato",
-  "bundleSizeMb": "1.61"
+  "version": "1.0.14",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.14.zip",
+  "checksum": "175ffdb55648326a18b8c0230cec82cf4b00fc63cbab952db7adad4ec11be167",
+  "releaseDate": "2026-11-04T16:43:36.190Z",
+  "notes": "LiftLab v1.0.14: Scheda superset unificata round-by-round senza scroll, filtri muscolo ed equipaggiamento a tendina nativa, popup riscaldamento stile Apple, rimozione bottoni duplicati e internazionalizzazione completa.",
+  "bundleSizeMb": "2.01"
 }
