@@ -1,8 +1,8 @@
 {
-  "version": "1.0.10",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.10.zip",
-  "checksum": "f0590ee6eb9a1eb47ac03a323139d1ce6a3535b60b03a29567cce91d0d4dae72",
-  "releaseDate": "2026-11-03T18:20:30.853Z",
-  "notes": "• Rimossi titoli ed eyebrow duplicati nelle sezioni (Allenamento, Impostazioni, Libreria, Risultati)\n• Eliminata dicitura ridondante del calendario sotto il logo LiftLab, sostituita con la data reale odierna\n• Header e navigazione puliti in stile Apple",
+  "version": "1.0.11",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.11.zip",
+  "checksum": "e8befce2570e17e05bf93e51b0066cb94696a500c1f7faa29839441d10ea37e2",
+  "releaseDate": "2026-11-04T14:57:05.323Z",
+  "notes": "• Loading: Skeleton shimmer placeholder in Library invece di schermata vuota (Concept 1)\n• Switch vs Segmented: Switch solo per On/Off e Segmented Controls per scelte opposte (Concept 2)\n• Bottoni d'azione specifici invece di generici OK/Conferma (Concept 3)\n• Intera riga cliccabile per tutti gli switch (Concept 4)\n• Tagliate parole riempitive da dialoghi e messaggi di stato (Concept 5)",
   "bundleSizeMb": "1.61"
 }

@@ -467,7 +467,7 @@ export function Workout({
       {routineToDelete && (
         <ConfirmModal
           message={`Delete "${routines.find(r => r.id === routineToDelete)?.name?.trim() || "Unnamed Routine"}"? This cannot be undone.`}
-          confirmLabel="Delete"
+          confirmLabel={t("delete_routine_btn") || "Delete Routine"}
           cancelLabel="Cancel"
           destructive
           onConfirm={() => { onDeleteRoutine(routineToDelete); setRoutineToDelete(null); }}

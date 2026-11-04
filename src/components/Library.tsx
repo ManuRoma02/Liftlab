@@ -339,7 +339,22 @@ export function Library({
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
         aria-busy={search !== deferredSearch || isCatalogLoading}
       >
-        {displayedExercises.map((ex) => (
+        {isCatalogLoading ? (
+          Array.from({ length: 6 }).map((_, idx) => (
+            <div
+              key={`skeleton-${idx}`}
+              className="w-full text-left apple-glass-card rounded-3xl overflow-hidden flex shadow-sm animate-pulse border border-white/5 bg-[#1C1C1E]/60 p-3"
+            >
+              <div className="w-24 h-24 rounded-2xl bg-white/6 shrink-0" />
+              <div className="p-3 flex flex-col justify-center flex-grow min-w-0 gap-2.5">
+                <div className="h-4 bg-white/10 rounded-md w-3/4" />
+                <div className="h-3 bg-white/5 rounded-md w-1/2" />
+                <div className="h-3 bg-white/5 rounded-full w-16 mt-1" />
+              </div>
+            </div>
+          ))
+        ) : (
+          displayedExercises.map((ex) => (
           <motion.button
             type="button"
             key={ex.id}
@@ -374,13 +389,13 @@ export function Library({
               <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" />
             </div>
           </motion.button>
-        ))}
+        )))}
         {isSearching && filteredExercises.length > resultLimit && (
           <p className="col-span-full text-center text-sm text-on-surface-variant" role="status">
             Showing the best {resultLimit} of {filteredExercises.length} matches. Refine your search for a shorter list.
           </p>
         )}
-        {filteredExercises.length === 0 && (
+        {!isCatalogLoading && filteredExercises.length === 0 && (
           <div
             data-testid="library-empty-state"
             className="col-span-full flex flex-col items-center justify-center gap-4 py-16 px-6 border border-white/10 rounded-3xl bg-[#121418]/90 text-center shadow-[0_16px_40px_rgba(0,0,0,0.4)]"

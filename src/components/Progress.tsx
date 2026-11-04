@@ -1546,8 +1546,8 @@ export function Progress({
       {/* Delete confirmation modal */}
       {pendingDeleteLogId && onDeleteWorkoutLog && (
         <ConfirmModal
-          message="Sei sicuro di voler eliminare questa sessione dal tuo storico? L'azione è irreversibile."
-          confirmLabel={t("delete") || "Elimina"}
+          message={t("delete_log_confirm") || "Eliminare questa sessione dallo storico?"}
+          confirmLabel={t("delete_log_btn") || "Elimina Sessione"}
           cancelLabel={t("cancel") || "Annulla"}
           destructive
           onConfirm={() => {

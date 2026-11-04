@@ -1659,9 +1659,9 @@ export const Dashboard = React.memo(
         <AnimatePresence>
           {pendingDeleteLogId && onDeleteLog && (
             <ConfirmModal
-              title="Delete workout log?"
-              message="This removes the session from your history and progress calculations. This action cannot be undone."
-              confirmLabel={t("delete") || "Delete"}
+              title={language === "it" ? "Eliminare l'allenamento?" : language === "es" ? "¿Eliminar entrenamiento?" : "Delete workout log?"}
+              message={language === "it" ? "La sessione verrà rimossa dallo storico e dai calcoli dei progressi." : "This removes the session from your history and progress calculations."}
+              confirmLabel={language === "it" ? "Elimina Sessione" : language === "es" ? "Eliminar Sesión" : "Delete Workout"}
               cancelLabel={t("cancel") || "Cancel"}
               destructive
               onConfirm={() => {

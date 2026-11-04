@@ -656,7 +656,7 @@ export default function App() {
           {isDeleteAccountConfirmOpen && (
             <ConfirmModal
               message={t("deleteAccountConfirm") || "Are you sure you want to delete your account?"}
-              confirmLabel={t("delete") || "Delete"}
+              confirmLabel={language === "it" ? "Elimina Account" : language === "es" ? "Eliminar Cuenta" : "Delete Account"}
               cancelLabel={t("cancel") || "Cancel"}
               destructive
               onConfirm={handleDeleteAccountConfirmed}
@@ -675,7 +675,7 @@ export default function App() {
                     ? `¿Deseas sobrescribir tus datos con esta copia (${pendingBackupData?.routines?.length || 0} rutinas, ${pendingBackupData?.logs?.length || 0} entrenamientos)? Se creará una instantánea de seguridad.`
                     : `Overwrite your current data with this backup (${pendingBackupData?.routines?.length || 0} routines, ${pendingBackupData?.logs?.length || 0} workouts)? An automatic safety snapshot will be saved.`
               }
-              confirmLabel={t("import") || "Import"}
+              confirmLabel={language === "it" ? "Ripristina Backup" : language === "es" ? "Restaurar Copia" : "Restore Backup"}
               cancelLabel={t("cancel") || "Cancel"}
               destructive
               onConfirm={handleConfirmImportBackup}

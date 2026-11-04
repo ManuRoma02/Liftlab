@@ -94,10 +94,10 @@ export const translations: Record<string, Record<string, string>> = {
     customize: "Customize",
     finish_workout: "Finish Workout",
     finish_workout_confirm:
-      "Finish and save this workout? Your completed sets, notes, and elapsed time will be added to your history.",
+      "Save this workout session to your history?",
     deleteAccount: "Delete All Local Data",
     deleteAccountConfirm:
-      "Are you sure you want to delete all local data? This action wipes all routines, logs, and settings from this device.",
+      "Permanently delete all local routines, logs, and settings from this device?",
     exportData: "Download My Data",
     privacyData: "Privacy & Data",
     privacyPolicy: "Privacy Policy",
@@ -128,7 +128,7 @@ export const translations: Record<string, Record<string, string>> = {
     routine_name: "Routine Name",
     discard: "Discard",
     discard_workout_confirm:
-      "All that sweat for nothing, {name}? Are you sure you want to discard this workout?",
+      "Discard current workout? Unsaved progress will be lost.",
     workout_in_progress:
       "Workout in progress. Track your sets and rest periods.",
     build_routine:
@@ -394,13 +394,13 @@ export const translations: Record<string, Record<string, string>> = {
     customize: "Personalizza",
     finish_workout: "Termina Allenamento",
     finish_workout_confirm:
-      "Vuoi terminare e salvare questo allenamento? Serie completate, note e durata verranno aggiunte alla cronologia.",
+      "Salvare questo allenamento nello storico?",
     save_routine: "Salva Routine",
     save_changes: "Salva Modifiche",
     routine_name: "Nome Routine",
     discard: "Annulla",
     discard_workout_confirm:
-      "Tutto questo sudore per niente, {name}? Sei sicuro di voler eliminare questo allenamento?",
+      "Eliminare l'allenamento in corso? I progressi non salvati andranno persi.",
     workout_in_progress: "Allenamento in corso. Registra serie e recuperi.",
     build_routine: "Crea la tua routine. Raggruppa gli esercizi in superset.",
     schedule_day: "Giorno Programmato",
@@ -518,7 +518,7 @@ export const translations: Record<string, Record<string, string>> = {
     "Stacco da terra": "Stacco da terra",
     deleteAccount: "Elimina Tutti i Dati Locali",
     deleteAccountConfirm:
-      "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile e tutti i tuoi dati andranno persi.",
+      "Eliminare definitivamente tutte le schede, lo storico e i dati locali?",
     exportData: "Scarica i Miei Dati",
     privacyData: "Privacy & Dati",
     privacyPolicy: "Informativa sulla Privacy",
@@ -759,10 +759,10 @@ export const translations: Record<string, Record<string, string>> = {
     customize: "Personalizar",
     finish_workout: "Terminar Entrenamiento",
     finish_workout_confirm:
-      "¿Quieres terminar y guardar este entrenamiento? Las series completadas, notas y duración se añadirán a tu historial.",
+      "¿Guardar este entrenamiento en el historial?",
     deleteAccount: "Eliminar Todos los Datos Locales",
     deleteAccountConfirm:
-      "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y todos tus datos se perderán.",
+      "¿Eliminar permanentemente todas las rutinas, registros y datos locales?",
     exportData: "Descargar Mis Datos",
     privacyData: "Privacidad y Datos",
     privacyPolicy: "Política de Privacidad",
@@ -794,7 +794,7 @@ export const translations: Record<string, Record<string, string>> = {
     routine_name: "Nombre de Rutina",
     discard: "Descartar",
     discard_workout_confirm:
-      "¿Todo ese sudor para nada, {name}? ¿Estás seguro de que quieres descartar este entrenamiento?",
+      "¿Descartar el entrenamiento actual? El progreso no guardado se perderá.",
     workout_in_progress:
       "Entrenamiento en curso. Registra tus series y descansos.",
     build_routine: "Crea tu rutina. Agrupa ejercicios en superseries.",

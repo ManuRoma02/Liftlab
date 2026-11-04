@@ -22,7 +22,8 @@ import {
   Radio,
   Sliders,
 } from "lucide-react";
-import { triggerHaptic } from "../lib/haptics";
+import { triggerHaptic, isHapticsEnabled, setHapticsEnabled } from "../lib/haptics";
+import { Vibrate } from "lucide-react";
 import { safeGetItem } from "../lib/storage";
 import { motion, AnimatePresence } from "motion/react";
 import { CARTOON_SPRINGS } from "../lib/motion";
@@ -54,7 +55,8 @@ function AppleSwitch({
       type="button"
       role="switch"
       aria-checked={checked}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         triggerHaptic("light");
         onChange(!checked);
       }}
@@ -127,6 +129,7 @@ export function Settings({
   const [autoCheckOta, setAutoCheckOta] = useState<boolean>(() => isOtaAutoCheckEnabled());
   const [showAdvancedOta, setShowAdvancedOta] = useState(false);
   const [manifestUrlInput, setManifestUrlInput] = useState<string>(() => getOtaManifestUrl());
+  const [hapticsOn, setHapticsOn] = useState<boolean>(() => isHapticsEnabled());
 
   useEffect(() => {
     getCurrentOtaVersion().then(setOtaStatus).catch(() => {});
@@ -340,8 +343,23 @@ export function Settings({
               </div>
             </div>
 
-            {/* Preference Item: Show RPE */}
-            <div className="flex items-center justify-between gap-3 p-4">
+            {/* Preference Item: Show RPE (Whole row taps) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                triggerHaptic("light");
+                setShowRpe(!showRpe);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  triggerHaptic("light");
+                  setShowRpe(!showRpe);
+                }
+              }}
+              className="flex items-center justify-between gap-3 p-4 hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer select-none"
+            >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-[#BF5AF2] flex items-center justify-center text-white shrink-0">
                   <Activity className="w-4 h-4" />
@@ -357,6 +375,51 @@ export function Settings({
               </div>
 
               <AppleSwitch checked={showRpe} onChange={setShowRpe} />
+            </div>
+
+            {/* Preference Item: Haptic Feedback (Whole row taps) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                const next = !hapticsOn;
+                setHapticsEnabled(next);
+                setHapticsOn(next);
+                if (next) triggerHaptic("medium");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  const next = !hapticsOn;
+                  setHapticsEnabled(next);
+                  setHapticsOn(next);
+                  if (next) triggerHaptic("medium");
+                }
+              }}
+              className="flex items-center justify-between gap-3 p-4 hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer select-none"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#30D158]/20 flex items-center justify-center text-[#30D158] shrink-0">
+                  <Vibrate className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white">
+                    {t("haptic_feedback") || "Feedback Aptico"}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] truncate">
+                    {t("haptic_feedback_desc") || "Vibrazioni tattili sui pulsanti e azioni"}
+                  </span>
+                </div>
+              </div>
+
+              <AppleSwitch
+                checked={hapticsOn}
+                onChange={(enabled) => {
+                  setHapticsEnabled(enabled);
+                  setHapticsOn(enabled);
+                  if (enabled) triggerHaptic("medium");
+                }}
+              />
             </div>
 
             {/* Preference Item: 1RM Formula */}
@@ -576,8 +639,27 @@ export function Settings({
               </span>
             </div>
 
-            {/* Auto-check switch */}
-            <div className="p-4 flex items-center justify-between">
+            {/* Auto-check switch (Whole row taps) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                triggerHaptic("light");
+                const next = !autoCheckOta;
+                setAutoCheckOta(next);
+                setOtaAutoCheckEnabled(next);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  triggerHaptic("light");
+                  const next = !autoCheckOta;
+                  setAutoCheckOta(next);
+                  setOtaAutoCheckEnabled(next);
+                }
+              }}
+              className="p-4 flex items-center justify-between hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer select-none"
+            >
               <div className="flex items-center gap-3.5">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
                   <CloudDownload className="w-4 h-4" />
@@ -587,7 +669,7 @@ export function Settings({
                     {t("ota_autocheck") || "Controllo automatico all'avvio"}
                   </span>
                   <span className="text-xs text-[#8E8E93]">
-                    Cerca aggiornamenti OTA in background
+                    {t("ota_autocheck_desc") || "Cerca aggiornamenti OTA in background"}
                   </span>
                 </div>
               </div>

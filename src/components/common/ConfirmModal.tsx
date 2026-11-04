@@ -21,7 +21,7 @@ export function ConfirmModal({
   message,
   onConfirm,
   onCancel,
-  confirmLabel = "Confirm",
+  confirmLabel,
   cancelLabel = "Cancel",
   destructive = false,
   title,
@@ -36,6 +36,7 @@ export function ConfirmModal({
     : CheckCircle2;
 
   useModalDismiss(true, onCancel);
+  const finalConfirmLabel = confirmLabel || (destructive ? "Delete" : "Save");
 
   return (
     <motion.div
@@ -112,7 +113,7 @@ export function ConfirmModal({
                   : "bg-[#30D158] text-black hover:brightness-105 shadow-[0_4px_16px_rgba(48,209,88,0.3)]"
               }`}
             >
-              {confirmLabel}
+              {finalConfirmLabel}
             </motion.button>
           </div>
         </motion.div>

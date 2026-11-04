@@ -2570,7 +2570,7 @@ export function RoutineEditor({
               ? (t("update_template_confirm") || "Do you want to update the original routine template with these changes?")
               : (t("finish_workout_confirm") || "Finish and save this workout?")
           }
-          confirmLabel={t("finish_workout") || "Finish"}
+          confirmLabel={t("save_and_finish") || "Termina e Salva"}
           cancelLabel={t("cancel") || "Cancel"}
           icon="finish"
           onConfirm={async () => {
