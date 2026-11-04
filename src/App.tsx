@@ -603,25 +603,23 @@ export default function App() {
                       {/* Active glowing capsule backdrop */}
                       <motion.div
                         layoutId="apple-nav-active-pill"
-                        className="absolute inset-1 rounded-2xl sm:rounded-full bg-[#30D158]/14 border border-[#30D158]/35 shadow-[0_0_16px_rgba(48,209,88,0.22)]"
+                        className="absolute inset-1 rounded-2xl sm:rounded-full bg-[#30D158]/14 border border-[#30D158]/35 shadow-[0_0_12px_rgba(48,209,88,0.2)]"
                         transition={{
                           type: "spring",
-                          stiffness: 380,
-                          damping: 20,
-                          mass: 0.7,
+                          stiffness: 450,
+                          damping: 32,
                         }}
                       />
                       
                     </>
                   )}
                   <motion.div
-                    whileTap={{ scale: 0.88, rotate: -2 }}
-                    transition={CARTOON_SPRINGS.pop}
+                    whileTap={{ scale: 0.94 }}
                     className="relative z-10 flex flex-col items-center justify-center pointer-events-none"
                   >
                     <motion.div
-                      animate={isActive ? { scale: [1, 1.25, 0.94, 1.05, 1], rotate: [0, -6, 6, -2, 0] } : { scale: 1, rotate: 0 }}
-                      transition={{ duration: 0.38, ease: [0.34, 1.56, 0.64, 1] }}
+                      animate={isActive ? { scale: 1.06 } : { scale: 1 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                     >
                       <Icon
                         className={`w-5 h-5 transition-colors duration-200 ${
@@ -655,12 +653,11 @@ export default function App() {
               exit={{
                 x: "100%",
                 opacity: 0.95,
-                transition: { duration: 0.25, ease: [0.32, 0.72, 0, 1] },
+                transition: { duration: 0.18, ease: [0.25, 1, 0.5, 1] },
               }}
               transition={{
-                type: "spring",
-                duration: 0.32,
-                bounce: 0,
+                duration: 0.22,
+                ease: [0.25, 1, 0.5, 1],
               }}
               className="fixed inset-0 z-[120] bg-background overflow-y-auto"
               style={{

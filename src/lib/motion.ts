@@ -189,27 +189,22 @@ export const appleTabVariants = {
 export const directionalTabVariants = {
   initial: (direction = 0) => ({
     opacity: 0,
-    x: direction > 0 ? 36 : direction < 0 ? -36 : 0,
-    filter: "blur(2px)",
+    x: direction > 0 ? 12 : direction < 0 ? -12 : 0,
   }),
   animate: {
     opacity: 1,
     x: 0,
-    filter: "blur(0px)",
     transition: {
-      type: "spring",
-      stiffness: 380,
-      damping: 30,
-      mass: 0.75,
+      duration: 0.12,
+      ease: [0.25, 1, 0.5, 1],
     },
   },
   exit: (direction = 0) => ({
     opacity: 0,
-    x: direction > 0 ? -36 : direction < 0 ? 36 : 0,
-    filter: "blur(2px)",
+    x: direction > 0 ? -12 : direction < 0 ? 12 : 0,
     transition: {
-      duration: 0.16,
-      ease: [0.32, 0.72, 0, 1],
+      duration: 0.08,
+      ease: [0.25, 1, 0.5, 1],
     },
   }),
 };
