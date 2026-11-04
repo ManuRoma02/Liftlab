@@ -452,17 +452,17 @@ export const Dashboard = React.memo(
     }, [workoutLogs]);
 
     return (
-      <main className="px-margin-mobile py-stack-lg pb-44 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
+      <main className="px-margin-mobile py-stack-lg pb-6 flex flex-col gap-stack-lg max-w-[1280px] mx-auto w-full">
         {/* Top Header Bar: Clean Apple Fitness+ aesthetic */}
         <header className="flex items-center justify-between px-1 pt-1 pb-1">
-          <div className="flex items-center gap-3">
-            <LiftLabMark sizeClass="w-10 h-10" withBackground={false} />
-            <div>
+          <div className="flex items-center gap-2.5">
+            <LiftLabMark sizeClass="w-11 h-11" withBackground={false} />
+            <div className="flex flex-col justify-center">
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-black tracking-tight text-white leading-none">LIFT</span>
                 <span className="text-xl font-black tracking-tight text-[#30D158] leading-none">LAB</span>
               </div>
-              <p className="text-xs text-[#8E8E93] font-medium mt-1">
+              <p className="text-xs text-[#8E8E93] font-medium mt-1 leading-none">
                 {todayFormattedDate}
               </p>
             </div>

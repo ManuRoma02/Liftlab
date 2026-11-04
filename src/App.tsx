@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useRef, useState, useEffect, type ReactNode } from "react";
+import React, { useRef, useState, useEffect, type ReactNode } from "react";
 import { Dumbbell, LayoutDashboard, Database, Scale, Save, LineChart as LucideLineChart, Sparkles, X } from "lucide-react";
 import { useWorkoutData } from "./hooks/useWorkoutData";
 import { subscribeOtaEvents, reloadOtaApp, type OtaManifest } from "./lib/otaUpdate";
@@ -146,6 +146,60 @@ export default function App() {
       ? prevTab
       : "dashboard";
   const lastSubviewRef = useRef<ReactNode>(null);
+  const MAIN_NAV_TABS = ["dashboard", "library", "workout", "progress"] as const;
+  const [tabDirection, setTabDirection] = useState<number>(0);
+  const prevNavTabRef = useRef<string>(effectiveTab);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const oldIdx = MAIN_NAV_TABS.indexOf(prevNavTabRef.current as any);
+    const newIdx = MAIN_NAV_TABS.indexOf(effectiveTab as any);
+    if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+      setTabDirection(newIdx > oldIdx ? 1 : -1);
+    }
+    prevNavTabRef.current = effectiveTab;
+  }, [effectiveTab]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMainTab || isSubview) return;
+    if (e.touches.length !== 1) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("input, textarea, select, [data-no-swipe], .overflow-x-auto, canvas, [role='slider']")) {
+      return;
+    }
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null || !isMainTab || isSubview) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartXRef.current;
+    const deltaY = touchEndY - touchStartYRef.current;
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+
+    if (Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      const currentIndex = MAIN_NAV_TABS.indexOf(effectiveTab as any);
+      if (currentIndex === -1) return;
+
+      if (deltaX < 0) {
+        if (currentIndex < MAIN_NAV_TABS.length - 1) {
+          triggerHaptic("selection");
+          navigateTo(MAIN_NAV_TABS[currentIndex + 1]);
+        }
+      } else {
+        if (currentIndex > 0) {
+          triggerHaptic("selection");
+          navigateTo(MAIN_NAV_TABS[currentIndex - 1]);
+        }
+      }
+    }
+  };
+
   const [pendingOtaUpdate, setPendingOtaUpdate] = useState<OtaManifest | null>(null);
   const [isOtaRestartConfirmOpen, setIsOtaRestartConfirmOpen] = useState(false);
 
@@ -275,7 +329,7 @@ export default function App() {
 
     return (
       <div
-        className="app-shell bg-background text-on-background min-h-[100dvh] pb-28 sm:pb-32 lg:pb-0 lg:pl-24 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container"
+        className="app-shell bg-background text-on-background min-h-[100dvh] pb-24 sm:pb-24 lg:pb-0 lg:pl-24 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
       >
         <a
@@ -286,10 +340,11 @@ export default function App() {
         </a>
         <div id="main-content" tabIndex={-1}>
         {/* Main Content Area */}
-        <div className="w-full">
-          <AnimatePresence initial={false}>
+        <div className="w-full touch-pan-y" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+          <AnimatePresence initial={false} custom={tabDirection} mode="wait">
             <motion.div
               key={effectiveTab}
+              custom={tabDirection}
               variants={cartoonTabVariants}
               initial="initial"
               animate="animate"
@@ -518,7 +573,7 @@ export default function App() {
             className="apple-floating-dock pointer-events-auto w-full max-w-[390px] sm:max-w-md h-[64px] px-2 py-1.5 rounded-[28px] sm:rounded-full flex items-center justify-around gap-1 lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:flex-col lg:justify-center lg:gap-3 lg:px-3 lg:py-4 gpu-accelerated"
           >
             <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
-              <LiftLabMark sizeClass="w-11 h-11" withBackground={true} className="rounded-2xl shadow-md" />
+              <LiftLabMark sizeClass="w-11 h-11" withBackground={false} className="rounded-2xl shadow-md" />
               <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
             </div>
 
@@ -553,17 +608,7 @@ export default function App() {
                           mass: 0.7,
                         }}
                       />
-                      {/* Gliding bouncy emerald bar */}
-                      <motion.div
-                        layoutId="apple-nav-active-bar"
-                        className="absolute bottom-1 w-7 sm:w-9 h-1 rounded-full bg-[#30D158] shadow-[0_0_10px_#30D158] z-20"
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 15,
-                          mass: 0.6,
-                        }}
-                      />
+                      
                     </>
                   )}
                   <motion.div

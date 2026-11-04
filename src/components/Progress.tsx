@@ -473,7 +473,7 @@ export function Progress({
   }, [weightDataForChart]);
 
   return (
-    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-44 flex flex-col gap-6 w-full">
+    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-6 flex flex-col gap-6 w-full">
       {/* iOS Header */}
       <TabHero
 
@@ -844,7 +844,7 @@ export function Progress({
         >
           {/* Sub-Segmented Control: Select Metric to Analyze */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-            <div className="flex p-1 bg-[#18191e] rounded-2xl border border-white/10 shadow-sm overflow-x-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full sm:w-auto p-1.5 bg-[#18191e] rounded-2xl border border-white/10 shadow-sm">
               {[
                 { id: "strength" as const, label: "Forza & 1RM", icon: Dumbbell },
                 { id: "volume" as const, label: "Volume Sessione", icon: Zap },
@@ -861,7 +861,7 @@ export function Progress({
                       triggerHaptic("selection");
                       setActiveChartMetric(m.id);
                     }}
-                    className={`relative px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                    className={`relative px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 text-center ${
                       isSelected ? "text-black" : "text-[#8E8E93] hover:text-white"
                     }`}
                   >

@@ -1,8 +1,8 @@
 {
-  "version": "1.0.12",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.12.zip",
-  "checksum": "781266c4e751088f0213330fe07aff707f04dabcf7ad1ebf123cd3acd829c671",
-  "releaseDate": "2026-11-04T15:29:22.208Z",
-  "notes": "Design System Dark Mode Elevation: gerarchia superficiale a 4 livelli (Canvas 0, Card 1, Elementi annidati 2, Modali e Bottom Sheet 3), specular highlight con doppi bordi Apple, contrasto tipografico off-white, palette accenti calibrata.",
+  "version": "1.0.13",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.13.zip",
+  "checksum": "7747b3a5107e3d87996fbc4397abce2fbb83cd6ea9dd1a4cfefd5be962fd6b5b",
+  "releaseDate": "2026-11-04T16:10:59.791Z",
+  "notes": "Griglia 2x2 grafici, swipe orizzontale sezioni, eliminazione overscroll, logo unico doppia L e splash nativo modernizzato",
   "bundleSizeMb": "1.61"
 }

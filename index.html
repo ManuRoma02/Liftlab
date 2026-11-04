@@ -44,11 +44,13 @@
       }
       .liftlab-splash-badge {
         position: relative;
-        width: 96px;
-        height: 96px;
-        border-radius: 22px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75), 0 0 32px rgba(48, 209, 88, 0.22);
-        animation: splashBadgePulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+        width: 88px;
+        height: 88px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 0 28px rgba(48, 209, 88, 0.45));
+        animation: splashBadgePulse 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
       }
       .liftlab-splash-badge svg {
         width: 100%;
@@ -56,52 +58,22 @@
         display: block;
       }
       .liftlab-splash-title {
-        margin-top: 24px;
-        font-size: 16px;
-        font-weight: 800;
-        letter-spacing: 0.32em;
-        text-indent: 0.32em;
-        color: rgba(255, 255, 255, 0.95);
-      }
-      .liftlab-splash-subtitle {
-        margin-top: 6px;
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.22em;
-        text-indent: 0.22em;
-        color: #30D158;
-        opacity: 0.9;
-      }
-      .liftlab-splash-bar-track {
-        margin-top: 28px;
-        width: 108px;
-        height: 3px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 9999px;
-        overflow: hidden;
-        position: relative;
-      }
-      .liftlab-splash-bar-indicator {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: -40%;
-        width: 40%;
-        background: linear-gradient(90deg, transparent, #30D158, #30D158, transparent);
-        border-radius: 9999px;
-        animation: splashBarSlide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        margin-top: 20px;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        color: #ffffff;
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
       }
       @keyframes splashGlowPulse {
-        0% { transform: scale(0.9); opacity: 0.45; }
-        100% { transform: scale(1.25); opacity: 0.85; }
+        0% { transform: scale(0.9); opacity: 0.4; }
+        100% { transform: scale(1.2); opacity: 0.8; }
       }
       @keyframes splashBadgePulse {
-        0% { transform: scale(0.97); }
-        100% { transform: scale(1.03); }
-      }
-      @keyframes splashBarSlide {
-        0% { left: -40%; }
-        100% { left: 100%; }
+        0% { transform: scale(0.96); }
+        100% { transform: scale(1.04); }
       }
     </style>
   </head>
@@ -110,24 +82,8 @@
       <div class="liftlab-splash-wrap">
         <div class="liftlab-splash-glow"></div>
         <div class="liftlab-splash-badge">
-          <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="136 136 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="spl-bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#151722" />
-                <stop offset="45%" stop-color="#090A0E" />
-                <stop offset="100%" stop-color="#030406" />
-              </linearGradient>
-              <linearGradient id="spl-bezel" x1="40" y1="20" x2="472" y2="492" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="rgba(255,255,255,0.28)" />
-                <stop offset="25%" stop-color="rgba(255,255,255,0.08)" />
-                <stop offset="70%" stop-color="rgba(255,255,255,0.02)" />
-                <stop offset="100%" stop-color="rgba(255,255,255,0.16)" />
-              </linearGradient>
-              <radialGradient id="spl-aura" cx="256" cy="256" r="210" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="rgba(48,209,88,0.30)" />
-                <stop offset="50%" stop-color="rgba(48,209,88,0.07)" />
-                <stop offset="100%" stop-color="rgba(48,209,88,0)" />
-              </radialGradient>
               <linearGradient id="spl-em" x1="136" y1="136" x2="376" y2="376" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#47F880" />
                 <stop offset="35%" stop-color="#30D158" />
@@ -144,22 +100,16 @@
                 <stop offset="100%" stop-color="#D2D8E4" />
               </linearGradient>
             </defs>
-            <rect width="512" height="512" rx="116" fill="url(#spl-bg)" />
-            <rect x="2" y="2" width="508" height="508" rx="114" fill="none" stroke="url(#spl-bezel)" stroke-width="2.5" />
-            <circle cx="256" cy="256" r="180" fill="url(#spl-aura)" />
-            <g>
-              <path d="M 154 136 C 144 136 136 144 136 154 L 136 348 C 136 363 148 376 164 376 L 358 376 C 368 376 376 368 376 358 L 376 306 C 376 296 368 288 358 288 L 236 288 C 229 288 224 283 224 276 L 224 154 C 224 144 216 136 206 136 Z" fill="url(#spl-em)" />
-              <path d="M 154 136 C 144 136 136 144 136 154 L 136 164 L 224 164 L 224 154 C 224 144 216 136 206 136 Z" fill="url(#spl-crest)" opacity="0.4" />
-              <path d="M 276 136 C 269 136 264 141 264 148 L 264 232 C 264 241 271 248 280 248 L 364 248 C 371 248 376 243 376 236 L 376 216 C 376 209 371 204 364 204 L 316 204 C 312 204 308 200 308 196 L 308 148 C 308 141 303 136 296 136 Z" fill="url(#spl-white)" />
-            </g>
+            <path d="M 154 136 C 144 136 136 144 136 154 L 136 348 C 136 363 148 376 164 376 L 358 376 C 368 376 376 368 376 358 L 376 306 C 376 296 368 288 358 288 L 236 288 C 229 288 224 283 224 276 L 224 154 C 224 144 216 136 206 136 Z" fill="url(#spl-em)" />
+            <path d="M 154 136 C 144 136 136 144 136 154 L 136 164 L 224 164 L 224 154 C 224 144 216 136 206 136 Z" fill="url(#spl-crest)" opacity="0.4" />
+            <path d="M 276 136 C 269 136 264 141 264 148 L 264 232 C 264 241 271 248 280 248 L 364 248 C 371 248 376 243 376 236 L 376 216 C 376 209 371 204 364 204 L 316 204 C 312 204 308 200 308 196 L 308 148 C 308 141 303 136 296 136 Z" fill="url(#spl-white)" />
           </svg>
         </div>
-        <div class="liftlab-splash-title">LIFTLAB</div>
-        <div class="liftlab-splash-subtitle">ATHLETIC INTELLIGENCE</div>
-        <div class="liftlab-splash-bar-track">
-          <div class="liftlab-splash-bar-indicator"></div>
+        <div class="liftlab-splash-title">
+          <span>LIFT</span><span style="color: #30D158;">LAB</span>
         </div>
       </div>
+    </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

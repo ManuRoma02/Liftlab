@@ -840,7 +840,7 @@ export function Settings({
         )}
         {/* Brand Footer */}
         <div className="flex flex-col items-center justify-center pt-6 pb-12 gap-2 text-center select-none">
-          <LiftLabBrand variant="lockup" size="md" withBackground={true} />
+          <LiftLabBrand variant="lockup" size="md" withBackground={false} />
           <p className="text-xs text-[#8E8E93] font-medium mt-1">
             LiftLab v{otaStatus?.currentVersion || "1.0.7"} &bull; 100% Offline & Private
           </p>

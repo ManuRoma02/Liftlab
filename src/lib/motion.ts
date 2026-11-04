@@ -186,6 +186,34 @@ export const appleTabVariants = {
   },
 };
 
-export const cartoonTabVariants = appleTabVariants;
+export const directionalTabVariants = {
+  initial: (direction = 0) => ({
+    opacity: 0,
+    x: direction > 0 ? 36 : direction < 0 ? -36 : 0,
+    filter: "blur(2px)",
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 380,
+      damping: 30,
+      mass: 0.75,
+    },
+  },
+  exit: (direction = 0) => ({
+    opacity: 0,
+    x: direction > 0 ? -36 : direction < 0 ? 36 : 0,
+    filter: "blur(2px)",
+    transition: {
+      duration: 0.16,
+      ease: [0.32, 0.72, 0, 1],
+    },
+  }),
+};
+
+export const cartoonTabVariants = directionalTabVariants;
 
 

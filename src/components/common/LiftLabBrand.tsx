@@ -20,7 +20,7 @@ export const LiftLabMark: React.FC<{
 }> = ({
   sizeClass = "w-8 h-8",
   className = "",
-  withBackground = true,
+  withBackground = false,
 }) => {
   // Pure SVG Master (100% vector fidelity, no raster dependencies)
   return (

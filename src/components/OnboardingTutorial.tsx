@@ -135,7 +135,7 @@ export function OnboardingTutorial({
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center text-center gap-4 relative z-10 pt-2"
             >
-              <LiftLabMark sizeClass="w-16 h-16" withBackground={true} className="rounded-2xl shadow-xl mb-2" />
+              <LiftLabMark sizeClass="w-16 h-16" withBackground={false} className="rounded-2xl shadow-xl mb-2" />
 
               <h2 id="onboarding-title" className="text-2xl font-black text-white tracking-tight">
                 {i18n.step1Title}

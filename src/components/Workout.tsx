@@ -120,7 +120,7 @@ export function Workout({
   }, [sortedRoutines, routineSearch, t]);
 
   return (
-    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-36 flex flex-col gap-stack-lg w-full">
+    <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-6 flex flex-col gap-stack-lg w-full">
       <TabHero
 
         title={t("workout")}
