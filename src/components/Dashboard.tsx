@@ -1034,7 +1034,7 @@ export const Dashboard = React.memo(
                 {userName ? `${welcomeBase}, ${userName}!` : (t("welcome_title") || "Benvenuto su LiftLab!")}
               </h2>
               <p className="text-xs sm:text-sm text-[#8E8E93] max-w-xl">
-                  {t("welcome_subtitle") || "Il tuo percorso inizia oggi. Scegli come svolgere il tuo primo allenamento:"}
+                  {t("welcome_subtitle") || "Pronto ad allenarti? Scegli come iniziare:"}
                 </p>
               </div>
               <button
@@ -1255,7 +1255,7 @@ export const Dashboard = React.memo(
                   {t("progress_preview_title") || "I tuoi progressi appariranno qui"}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#8E8E93] mt-1 max-w-xl">
-                  {t("progress_preview_desc") || "Volume totale, serie settimanali, massimali stimati e record personali si popoleranno automaticamente non appena completerai la tua prima sessione."}
+                  {t("progress_preview_desc") || "Appena salvi il primo allenamento, qui vedrai volume, serie completate e record personali."}
                 </p>
               </div>
               <button

@@ -1,8 +1,8 @@
 {
-  "version": "1.0.22",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.22.zip",
-  "checksum": "49c3a7eedb8a06d923c1d59b9f0d7bb5dd8edc67ee22a8ffb01263a153132a6f",
-  "releaseDate": "2026-11-04T23:01:40.450Z",
-  "notes": "• Transizioni tra sezioni velocizzate e alleggerite: eliminato effetto blur GPU, ridotta la durata a 120ms istantanei e rimosso il blocco sequenziale per un cambio schermata immediato e reattivo.\n• Animazioni dock navigation semplificate: rimosso l'effetto rotazione/oscillazione continuo sulle icone, transizione secca e pulita in stile Apple nativo.\n• Subview push/pop ottimizzate a 220ms per la massima reattività.",
-  "bundleSizeMb": "4.01"
+  "version": "1.0.23",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.23.zip",
+  "checksum": "9d8399826d65c0f13c663b0d1509318787613753f9e1ee84a0417f64a4736f1a",
+  "releaseDate": "2026-11-04T23:14:13.862Z",
+  "notes": "De-AI copy humanization and authentic tone across entire app via unslop",
+  "bundleSizeMb": "4.21"
 }

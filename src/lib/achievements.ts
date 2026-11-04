@@ -123,7 +123,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "volume_50k",
-    title: "Powerhouse",
+    title: "50k Volume Club",
     description: "Move 50,000 unit volume",
     icon: Zap,
     level: "silver",
