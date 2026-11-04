@@ -845,7 +845,7 @@ export function RoutineEditor({
       sets: [...warmupSets, ...(ex.sets || [])],
     });
 
-    showToast("Warmup sets generated!", "success");
+    showToast(t("warmup_sets_generated") || "Riscaldamento pronto", "success");
   };
 
   // Debounce exercise search to avoid lag on large exercise list
@@ -2871,7 +2871,7 @@ export function RoutineEditor({
               : (t("finish_workout_confirm") || "Finish and save this workout?")
           }
           confirmLabel={t("save_and_finish") || "Termina e Salva"}
-          cancelLabel={t("cancel") || "Cancel"}
+          cancelLabel={t("keep_workout_btn") || "Continua Sessione"}
           icon="finish"
           onConfirm={async () => {
             setIsFinishConfirmOpen(false);

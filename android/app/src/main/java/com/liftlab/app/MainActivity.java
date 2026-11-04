@@ -19,6 +19,9 @@ public class MainActivity extends BridgeActivity {
         getWindow().getDecorView().post(this::applyEdgeToEdge);
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().clearCache(true);
+            getBridge().getWebView().setVerticalScrollBarEnabled(false);
+            getBridge().getWebView().setHorizontalScrollBarEnabled(false);
+            getBridge().getWebView().setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
         }
     }
 

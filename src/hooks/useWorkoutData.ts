@@ -515,7 +515,7 @@ export function useWorkoutData() {
         setActiveTab("dashboard");
       }
 
-      showToast(`Imported ${importedRoutines.length} routine(s) and ${importedLogs.length} workout log(s).`, "success");
+      showToast(language === "it" ? `${importedRoutines.length} schede e ${importedLogs.length} allenamenti importati` : `Imported ${importedRoutines.length} routines, ${importedLogs.length} logs`, "success");
     } catch (error) {
       console.error("Import failed:", error);
       showToast(t("invalid_import_file") || "File non valido. Scegli un'esportazione LiftLab valida.", "error");
@@ -560,7 +560,7 @@ export function useWorkoutData() {
       if (backup.userData.displayName) setUserName(backup.userData.displayName);
     }
     removeJsonAtomic("liftlab_backup_pre_import");
-    showToast(t("backup_restored_success") || "Snapshot di sicurezza ripristinato.", "success");
+    showToast(t("backup_restored_success") || (language === "it" ? "Snapshot ripristinato" : "Snapshot restored"), "success");
   };
 
   const handleDeleteAccount = () => {
@@ -1646,7 +1646,7 @@ export function useWorkoutData() {
     loadStarterRoutines: () => {
       setRoutines(DEFAULT_STARTER_ROUTINES);
       writeJsonAtomic("liftlab_routines", DEFAULT_STARTER_ROUTINES);
-      showToast(t("restore_starter_routines") || "Starter routines loaded!", "success");
+      showToast(language === "it" ? "Schede iniziali caricate" : (t("restore_starter_routines") || "Starter routines loaded"), "success");
     },
   };
 }

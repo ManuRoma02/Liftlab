@@ -396,6 +396,7 @@ export default function App() {
 
                 unit={unit}
                 routines={routines}
+                workoutLogs={workoutLogs}
                 onDuplicateRoutine={handleDuplicateRoutine}
                 onDeleteRoutine={handleDeleteRoutine}
                 navigateTo={navigateTo}

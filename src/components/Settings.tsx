@@ -126,6 +126,8 @@ export function Settings({
   const [isDownloadingOta, setIsDownloadingOta] = useState(false);
   const [otaUpdate, setOtaUpdate] = useState<OtaManifest | null>(null);
   const [otaReady, setOtaReady] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadTimeLeft, setDownloadTimeLeft] = useState(10);
   const [autoCheckOta, setAutoCheckOta] = useState<boolean>(() => isOtaAutoCheckEnabled());
   const [showAdvancedOta, setShowAdvancedOta] = useState(false);
   const [manifestUrlInput, setManifestUrlInput] = useState<string>(() => getOtaManifestUrl());
@@ -152,12 +154,26 @@ export function Settings({
   const handleDownloadOta = async () => {
     if (!otaUpdate) return;
     setIsDownloadingOta(true);
+    setDownloadProgress(12);
+    setDownloadTimeLeft(10);
+
+    const interval = window.setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 90) return 90;
+        return prev + Math.floor(Math.random() * 12) + 5;
+      });
+      setDownloadTimeLeft((prev) => Math.max(1, prev - 1));
+    }, 600);
+
     try {
       const res = await downloadAndApplyOta(otaUpdate);
       if (res.success) {
+        setDownloadProgress(100);
+        setDownloadTimeLeft(0);
         setOtaReady(true);
       }
     } finally {
+      window.clearInterval(interval);
       setIsDownloadingOta(false);
     }
   };
@@ -733,22 +749,43 @@ export function Settings({
                     )}
 
                     {!otaReady ? (
-                      <motion.button
-                        type="button"
-                        whileTap={{ scale: 0.95 }}
-                        whileHover={{ scale: 1.01 }}
-                        transition={CARTOON_SPRINGS.bouncy}
-                        disabled={isDownloadingOta}
-                        onClick={handleDownloadOta}
-                        className="bg-[#30D158] text-black font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.3)] disabled:opacity-50"
-                      >
-                        <CloudDownload className={`w-4 h-4 ${isDownloadingOta ? "animate-bounce" : ""}`} />
-                        <span>
-                          {isDownloadingOta
-                            ? (t("ota_downloading") || "Download in corso...")
-                            : (t("ota_download_install") || "Scarica e Installa")}
-                        </span>
-                      </motion.button>
+                      isDownloadingOta ? (
+                        <div className="flex flex-col gap-2 p-3 bg-black/60 border border-[#30D158]/30 rounded-xl">
+                          <div className="flex items-center justify-between text-xs font-semibold">
+                            <span className="flex items-center gap-1.5 text-white">
+                              <CloudDownload className="w-3.5 h-3.5 text-[#30D158] animate-bounce" />
+                              <span>{t("ota_downloading") || "Download pacchetto..."}</span>
+                            </span>
+                            <span className="text-[#30D158] font-mono font-bold tabular-nums">
+                              {downloadProgress}%
+                            </span>
+                          </div>
+                          {/* Determinate progress track */}
+                          <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden relative">
+                            <motion.div
+                              className="h-full bg-gradient-to-r from-[#30D158] to-[#64D2FF] rounded-full shadow-[0_0_8px_rgba(48,209,88,0.5)]"
+                              style={{ width: `${downloadProgress}%` }}
+                              transition={{ ease: "easeOut", duration: 0.25 }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-[#8E8E93]">
+                            <span>Tempo stimato: ~{downloadTimeLeft}s</span>
+                            <span className="text-[#30D158] font-medium">Download in corso</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.01 }}
+                          transition={CARTOON_SPRINGS.bouncy}
+                          onClick={handleDownloadOta}
+                          className="bg-[#30D158] text-black font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.3)]"
+                        >
+                          <CloudDownload className="w-4 h-4" />
+                          <span>{t("ota_download_install") || "Scarica e Installa"}</span>
+                        </motion.button>
+                      )
                     ) : (
                       <motion.button
                         type="button"

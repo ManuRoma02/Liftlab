@@ -131,7 +131,7 @@ export function setOtaManifestUrl(url: string | null): void {
     } else if (isValidManifestUrl(url)) {
       localStorage.setItem(OTA_MANIFEST_URL_STORAGE_KEY, url.trim());
     } else {
-      showToast("L'URL del manifest deve utilizzare il protocollo sicuro HTTPS.", "error");
+      showToast("URL non valido: richiede protocollo HTTPS", "error");
     }
   } catch {}
 }
@@ -347,7 +347,7 @@ export async function checkForOtaUpdate(
 
       if (available) {
         if (!options.silent) {
-          showToast(`Nuova versione LiftLab v${manifest.version} disponibile!`, "success");
+          showToast(`Nuova versione v${manifest.version} disponibile`, "success");
         }
         return {
           available: true,
@@ -356,7 +356,7 @@ export async function checkForOtaUpdate(
         };
       } else {
         if (!options.silent) {
-          showToast(`LiftLab è già aggiornato all'ultima versione (v${currentVersion}).`, "info");
+          showToast(`App già aggiornata (v${currentVersion})`, "info");
         }
         return {
           available: false,
@@ -421,7 +421,7 @@ export async function downloadAndApplyOta(
         if (options.reloadImmediately) {
           if (!options.silent) {
             triggerHaptic("success");
-            showToast(`Aggiornamento completato. Riavvio in corso...`, "success");
+            showToast(`Aggiornamento pronto. Riavvio...`, "success");
           }
           await CapacitorUpdater.set({ id: cached.id });
         } else {
@@ -442,7 +442,7 @@ export async function downloadAndApplyOta(
 
     if (!options.silent) {
       triggerHaptic("medium");
-      showToast(`Download aggiornamento v${manifest.version} in corso...`, "info");
+      showToast(`Download v${manifest.version} in corso...`, "info");
     }
 
     const bundle: BundleInfo = await CapacitorUpdater.download({

@@ -16,15 +16,32 @@ import {
   Play,
   Pencil,
   ChevronRight,
+  ArrowUpDown,
+  ChevronDown,
+  Calendar,
 } from "lucide-react";
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { AppleBottomSheet } from "./common/AppleBottomSheet";
 import { getExerciseSearchScore } from "../lib/searchUtils";
+import { getLogDate } from "../lib/workoutUtils";
 import type { RoutineData } from "../types/workout";
 import { motion } from "motion/react";
 import { triggerHaptic } from "../lib/haptics";
 import { CARTOON_SPRINGS, CARTOON_KEYFRAMES, appleSpringDefault } from "../lib/motion";
+
+function formatRelativeDays(timestamp: number, t: (k: string) => string): string {
+  const now = Date.now();
+  const diffDays = Math.floor((now - timestamp) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return t("done_today") || "Svolta oggi";
+  if (diffDays === 1) return t("done_yesterday") || "Svolta ieri";
+  if (diffDays < 7) return `${diffDays} ${t("days_ago") || "giorni fa"}`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks === 1) return t("done_one_week_ago") || "1 sett. fa";
+  return `${diffWeeks} ${t("weeks_ago") || "sett. fa"}`;
+}
+
+type RoutineSortOption = "today" | "recent" | "favorites" | "alpha" | "duration";
 
 export function Workout({
   t,
@@ -42,7 +59,9 @@ export function Workout({
   onShareRoutine,
   onOpenImportCode,
   onLoadStarterRoutines,
+  workoutLogs = [],
 }: {
+  workoutLogs?: any[];
   t: any;
   unit: string;
   routines: RoutineData[];
@@ -60,6 +79,44 @@ export function Workout({
   onLoadStarterRoutines?: () => void;
 }) {
   const [routineSearch, setRoutineSearch] = useState("");
+  const [sortBy, setSortBy] = useState<RoutineSortOption>(() => {
+    try {
+      return (localStorage.getItem("liftlab_routines_sort") as RoutineSortOption) || "today";
+    } catch {
+      return "today";
+    }
+  });
+
+  const handleSortChange = (newSort: RoutineSortOption) => {
+    triggerHaptic("selection");
+    setSortBy(newSort);
+    try {
+      localStorage.setItem("liftlab_routines_sort", newSort);
+    } catch {}
+  };
+
+  const lastDoneMap = useMemo(() => {
+    const map = new Map<string, number>();
+    (workoutLogs || []).forEach((log) => {
+      if (!log || !log.date) return;
+      const time = getLogDate(log).getTime();
+      if (log.routineId) {
+        const existing = map.get(log.routineId) || 0;
+        if (time > existing) map.set(log.routineId, time);
+      }
+      if (log.routineName) {
+        const key = log.routineName.trim().toLowerCase();
+        const existing = map.get(key) || 0;
+        if (time > existing) map.set(key, time);
+      }
+      if (log.name) {
+        const key = log.name.trim().toLowerCase();
+        const existing = map.get(key) || 0;
+        if (time > existing) map.set(key, time);
+      }
+    });
+    return map;
+  }, [workoutLogs]);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
@@ -95,16 +152,42 @@ export function Workout({
   const todayIndex = (new Date().getDay() + 6) % 7;
   const routinesToday = routines.filter((routine) => routine.scheduledDay != null && Number(routine.scheduledDay) === todayIndex).length;
 
-  const sortedRoutines = useMemo(
-    () =>
-      [...routines].sort((a, b) => {
-        const aToday = (a.scheduledDay != null && Number(a.scheduledDay) === todayIndex) ? 1 : 0;
-        const bToday = (b.scheduledDay != null && Number(b.scheduledDay) === todayIndex) ? 1 : 0;
+  const sortedRoutines = useMemo(() => {
+    return [...routines].sort((a, b) => {
+      const aToday = a.scheduledDay != null && Number(a.scheduledDay) === todayIndex ? 1 : 0;
+      const bToday = b.scheduledDay != null && Number(b.scheduledDay) === todayIndex ? 1 : 0;
+
+      if (sortBy === "today") {
         if (aToday !== bToday) return bToday - aToday;
-        return Number(!!b.favorite) - Number(!!a.favorite);
-      }),
-    [routines, todayIndex],
-  );
+        if (Boolean(b.favorite) !== Boolean(a.favorite)) return Number(!!b.favorite) - Number(!!a.favorite);
+        return (a.name || "").localeCompare(b.name || "");
+      }
+
+      if (sortBy === "recent") {
+        const aTime = lastDoneMap.get(a.id) || lastDoneMap.get((a.name || "").trim().toLowerCase()) || 0;
+        const bTime = lastDoneMap.get(b.id) || lastDoneMap.get((b.name || "").trim().toLowerCase()) || 0;
+        if (aTime !== bTime) return bTime - aTime;
+        if (aToday !== bToday) return bToday - aToday;
+        return (a.name || "").localeCompare(b.name || "");
+      }
+
+      if (sortBy === "favorites") {
+        if (Boolean(b.favorite) !== Boolean(a.favorite)) return Number(!!b.favorite) - Number(!!a.favorite);
+        if (aToday !== bToday) return bToday - aToday;
+        return (a.name || "").localeCompare(b.name || "");
+      }
+
+      if (sortBy === "alpha") {
+        return (a.name || "").localeCompare(b.name || "");
+      }
+
+      if (sortBy === "duration") {
+        return (Number(a.duration) || 0) - (Number(b.duration) || 0);
+      }
+
+      return 0;
+    });
+  }, [routines, todayIndex, sortBy, lastDoneMap]);
 
   const filteredRoutines = useMemo(() => {
     if (!routineSearch.trim()) return sortedRoutines;
@@ -192,32 +275,77 @@ export function Workout({
       />
 
       {/* Routine Search Input */}
-      {routines.length > 2 && (
-        <div className="relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
-          <input
-            type="text"
-            value={routineSearch}
-            onChange={(e) => setRoutineSearch(e.target.value)}
-            placeholder={t("search") || "Cerca schede o esercizi..."}
-            aria-label={t("search") || "Cerca schede o esercizi"}
-            className="w-full bg-[#18191e] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
-          />
-          {routineSearch.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                setRoutineSearch("");
-              }}
-              aria-label={t("clear_search") || "Azzera ricerca"}
-              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
-                <X className="w-3.5 h-3.5" />
+      {routines.length > 1 && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
+            <input
+              type="text"
+              value={routineSearch}
+              onChange={(e) => setRoutineSearch(e.target.value)}
+              placeholder={t("search") || "Cerca schede o esercizi..."}
+              aria-label={t("search") || "Cerca schede o esercizi"}
+              className="w-full bg-[#18191e] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
+            />
+            {routineSearch.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  setRoutineSearch("");
+                }}
+                aria-label={t("clear_search") || "Azzera ricerca"}
+                className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                  <X className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Sort Selector Dropdown (Tendina) */}
+          <div className="relative group shrink-0">
+            <div className="flex items-center justify-between gap-2 px-3.5 py-3 bg-[#18191e] border border-white/10 rounded-2xl text-xs font-bold text-white shadow-sm pointer-events-none group-focus-within:border-[#30D158] transition-all">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-3.5 h-3.5 text-[#30D158]" />
+                <span className="truncate max-w-[140px] sm:max-w-none">
+                  {sortBy === "today"
+                    ? (t("sort_today") || "In programma oggi")
+                    : sortBy === "recent"
+                    ? (t("sort_recent") || "Più recenti svolte")
+                    : sortBy === "favorites"
+                    ? (t("sort_favorites") || "Preferite prima")
+                    : sortBy === "alpha"
+                    ? (t("sort_alpha") || "Alfabetico (A - Z)")
+                    : (t("sort_duration") || "Durata stimata")}
+                </span>
               </div>
-            </button>
-          )}
+              <ChevronDown className="w-4 h-4 text-[#8E8E93] shrink-0" />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => handleSortChange(e.target.value as RoutineSortOption)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-base bg-transparent z-10"
+              aria-label={t("sort_routines") || "Ordina schede"}
+            >
+              <option value="today" className="bg-[#1C1C1E] text-white py-1">
+                📅 {t("sort_today") || "In programma oggi"}
+              </option>
+              <option value="recent" className="bg-[#1C1C1E] text-white py-1">
+                ⏱ {t("sort_recent") || "Più recenti svolte"}
+              </option>
+              <option value="favorites" className="bg-[#1C1C1E] text-white py-1">
+                ⭐ {t("sort_favorites") || "Preferite prima"}
+              </option>
+              <option value="alpha" className="bg-[#1C1C1E] text-white py-1">
+                🔤 {t("sort_alpha") || "Alfabetico (A - Z)"}
+              </option>
+              <option value="duration" className="bg-[#1C1C1E] text-white py-1">
+                ⏳ {t("sort_duration") || "Durata stimata"}
+              </option>
+            </select>
+          </div>
         </div>
       )}
 
@@ -302,15 +430,20 @@ export function Workout({
         ) : (
           filteredRoutines.map((routine) => {
             const isMenuActive = activeMenuId === routine.id;
+            const isToday = routine.scheduledDay != null && Number(routine.scheduledDay) === todayIndex;
+            const lastDoneTime = lastDoneMap.get(routine.id) || lastDoneMap.get((routine.name || "").trim().toLowerCase()) || 0;
+
             return (
               <motion.article
                 key={routine.id}
                 whileHover={{ scale: 1.01 }}
                 transition={appleSpringDefault}
-                className={`apple-glass-card rounded-3xl flex flex-col justify-between p-5 hover:border-white/20 transition-all duration-150 relative group shadow-[0_4px_20px_rgba(0,0,0,0.3)] ${
-                  isMenuActive ? "z-40" : "z-10"
-                } ${
-                  activeRoutineId === routine.id ? "ring-1 ring-[#30D158]/50 border-[#30D158]/50" : ""
+                className={`rounded-3xl flex flex-col justify-between p-5 transition-all duration-200 relative group ${
+                  isToday
+                    ? "border-2 border-[#30D158] ring-1 ring-[#30D158]/60 shadow-[0_8px_32px_rgba(48,209,88,0.25)] bg-gradient-to-br from-[#1b261e]/95 via-[#15171a]/98 to-[#111214]"
+                    : "apple-glass-card hover:border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                } ${isMenuActive ? "z-40" : "z-10"} ${
+                  activeRoutineId === routine.id ? "ring-2 ring-[#30D158]" : ""
                 }`}
               >
               <div className="flex flex-col gap-3">
@@ -322,12 +455,19 @@ export function Workout({
                         {routine.name || "Unnamed Routine"}
                       </h3>
                       {routine.scheduledDay != null && (
-                        <span className="bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase shrink-0">
-                          {scheduleLabels[Number(routine.scheduledDay)].toUpperCase()}
-                        </span>
+                        isToday ? (
+                          <span className="bg-[#30D158] text-black border border-[#30D158] rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse shrink-0" />
+                            {t("today") || "OGGI"} • {scheduleLabels[Number(routine.scheduledDay)].toUpperCase()}
+                          </span>
+                        ) : (
+                          <span className="bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase shrink-0">
+                            {scheduleLabels[Number(routine.scheduledDay)].toUpperCase()}
+                          </span>
+                        )
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-[#8E8E93] font-medium">
+                    <div className="flex items-center gap-1.5 text-xs text-[#8E8E93] font-medium flex-wrap">
                       <span>{routine.duration} min</span>
                       <span className="text-white/20">•</span>
                       <span>
@@ -335,6 +475,14 @@ export function Workout({
                           ? (t("one_exercise") || "1 exercise")
                           : `${routine.exercises?.length ?? 0} ${t("exercises") || "exercises"}`}
                       </span>
+                      {lastDoneTime > 0 && (
+                        <>
+                          <span className="text-white/20">•</span>
+                          <span className="text-emerald-400 font-semibold">
+                            {formatRelativeDays(lastDoneTime, t)}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -452,10 +600,14 @@ export function Workout({
                     triggerHaptic("medium");
                     onStartLiveWorkout(routine.id);
                   }}
-                  className="min-h-[44px] bg-[#30D158] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(48,209,88,0.25)]"
+                  className={`min-h-[44px] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    isToday
+                      ? "bg-[#30D158] font-black shadow-[0_4px_18px_rgba(48,209,88,0.45)] scale-[1.02]"
+                      : "bg-[#30D158] shadow-[0_4px_14px_rgba(48,209,88,0.25)]"
+                  }`}
                 >
                   <Play className="w-3.5 h-3.5 fill-black" />
-                  <span>{t("start") || "Inizia"}</span>
+                  <span>{isToday ? (t("start_today_routine") || "Avvia Oggi") : (t("start") || "Inizia")}</span>
                 </motion.button>
               </div>
             </motion.article>

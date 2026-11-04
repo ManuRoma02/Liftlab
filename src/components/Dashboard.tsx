@@ -98,6 +98,17 @@ export const Dashboard = React.memo(
         : undefined;
     const welcomeBase = (t("welcome_title") || "Benvenuto su LiftLab").replace(/[!¡]/g, "").trim();
 
+    const hasUserCreatedRoutines = useMemo(() => {
+      return (routines || []).some((r) => r && !r.id?.startsWith("starter_"));
+    }, [routines]);
+
+    const [isWelcomeDismissed, setIsWelcomeDismissed] = useState(false);
+
+    const handleDismissWelcome = () => {
+      triggerHaptic("light");
+      setIsWelcomeDismissed(true);
+    };
+
     const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
     const todayFormattedDate = useMemo(() => {
       const now = new Date();
@@ -134,6 +145,12 @@ export const Dashboard = React.memo(
 
     // Week navigation state
     const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
+
+    const isWelcomeHubVisible =
+      workoutLogs.length === 0 &&
+      selectedDayIndex === todayIndex &&
+      !hasUserCreatedRoutines &&
+      !isWelcomeDismissed;
 
     const weekStartMonday = useMemo(() => {
       const m = new Date();
@@ -990,11 +1007,12 @@ export const Dashboard = React.memo(
           )}
         </AppleBottomSheet>
 
-        {/* Day One Welcome Hub when workoutLogs.length === 0 */}
-        {workoutLogs.length === 0 && selectedDayIndex === todayIndex && (
+        {/* Day One Welcome Hub when workoutLogs.length === 0 and user has NOT created their own routines */}
+        {isWelcomeHubVisible && (
           <section className="bg-gradient-to-br from-[#16161a] via-[#141417] to-[#101013] border border-white/[0.09] rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 w-72 h-72 bg-[#30D158]/10 blur-[90px] rounded-full pointer-events-none" />
-            <div className="relative z-10 flex flex-col gap-1.5">
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1.5">
               <span className="w-fit text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">
                 LiftLab Starter
               </span>
@@ -1002,8 +1020,17 @@ export const Dashboard = React.memo(
                 {userName ? `${welcomeBase}, ${userName}!` : (t("welcome_title") || "Benvenuto su LiftLab!")}
               </h2>
               <p className="text-xs sm:text-sm text-[#8E8E93] max-w-xl">
-                {t("welcome_subtitle") || "Il tuo percorso inizia oggi. Scegli come svolgere il tuo primo allenamento:"}
-              </p>
+                  {t("welcome_subtitle") || "Il tuo percorso inizia oggi. Scegli come svolgere il tuo primo allenamento:"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDismissWelcome}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-[#8E8E93] hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                aria-label={t("dismiss") || "Nascondi"}
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
@@ -1080,7 +1107,7 @@ export const Dashboard = React.memo(
         )}
 
         {/* Next Workout Card */}
-        {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
+        {!isWelcomeHubVisible && selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
           <section className="bg-[#141417] border border-white/[0.08] rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
             <button
               onClick={() => {
@@ -1136,7 +1163,7 @@ export const Dashboard = React.memo(
         )}
 
         {/* Quick Start Hero when no routine is scheduled */}
-        {workoutLogs.length > 0 && selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
+        {!isWelcomeHubVisible && selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
           <section className="bg-gradient-to-br from-[#16161a] to-[#0d0e11] border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
             <div className="relative z-10 flex flex-col gap-1">
