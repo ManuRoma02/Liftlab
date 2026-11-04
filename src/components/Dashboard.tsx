@@ -590,111 +590,322 @@ export const Dashboard = React.memo(
             </div>
           </div>
         </section>
-        {/* ── Streak & Goals Widget ──────────────────────────────────────── */}
-        <div
-          data-testid="streak-goals-widget"
-          className="grid grid-cols-2 gap-3"
+        {/* ── UNIFIED BENTO TRAINING COCKPIT (Next Workout + History + Weekly Goal) ── */}
+        <section
+          data-testid="bento-training-hub"
+          className="bg-[#141417] border border-white/[0.08] rounded-3xl p-3.5 sm:p-4.5 flex flex-col gap-3 shadow-[0_12px_36px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] relative overflow-hidden"
         >
-          {/* Streak card */}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95, rotate: -1 }}
-            whileHover={{ scale: 1.015 }}
-            transition={CARTOON_SPRINGS.bouncy}
-            onClick={() => {
-              triggerHaptic("light");
-              setIsStreakModalOpen(true);
-            }}
-            data-testid="streak-card"
-            className="bg-[#141417] border border-white/[0.08] rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#30D158]/10 to-transparent pointer-events-none" />
-            <div className="flex items-center justify-between z-10">
-              <div className="flex items-center gap-1.5 text-[#8E8E93]">
-                <Calendar className="w-4 h-4 text-[#30D158]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">{(t("history") !== "history" && t("history")) || "Storico"}</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
-            </div>
-            <div className="flex items-end gap-1.5 z-10 my-1">
-              <span
-                data-testid="streak-count"
-                className={`text-[40px] sm:text-[46px] font-extrabold leading-none tabular-nums ${workoutLogs.length > 0 ? "text-white" : "text-[#8E8E93]"}`}
-              >
-                {workoutLogs.length}
-              </span>
-              <span className="text-xs text-[#8E8E93] font-medium mb-1.5">
-                {workoutLogs.length === 1
-                  ? ((t("workout_singular") !== "workout_singular" && t("workout_singular")) || "allenamento")
-                  : ((t("workouts_plural") !== "workouts_plural" && t("workouts_plural")) || "allenamenti")}
-              </span>
-            </div>
-            
-          </motion.button>
+          {/* Subtle ambient lighting */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/6 blur-[80px] rounded-full pointer-events-none" />
 
-          {/* Weekly goal card */}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95, rotate: 1 }}
-            whileHover={{ scale: 1.015 }}
-            transition={CARTOON_SPRINGS.bouncy}
-            onClick={() => {
-              triggerHaptic("light");
-              setEditableGoal(weeklyGoal);
-              setIsGoalModalOpen(true);
-            }}
-            data-testid="weekly-goal-card"
-            className="bg-[#141417] border border-white/[0.08] rounded-3xl p-4 sm:p-5 flex flex-col gap-1 relative overflow-hidden cursor-pointer select-none text-left shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0A84FF]/10 to-transparent pointer-events-none" />
-            <div className="flex items-center justify-between z-10">
-              <div className="flex items-center gap-1.5 text-[#8E8E93]">
-                <Target className="w-4 h-4 text-[#0A84FF]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.06em]">{(t("weekly_goal") !== "weekly_goal" && t("weekly_goal")) || "Obiettivo Settimanale"}</span>
+          {/* 1. UPPER HERO BLOCK: Next Workout / Today Activity / Day View */}
+          {selectedActivities.length > 0 ? (
+            /* Case A: Workout completed on selected day */
+            <div className="relative z-10 bg-white/[0.035] border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className="w-fit border border-[#30D158]/40 text-[#30D158] text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#30D158]/10 uppercase tracking-wider flex items-center gap-1.5">
+                  <Check className="w-3 h-3 stroke-[2.5]" />
+                  {selectedDayIndex === todayIndex ? "Allenamento Completato Oggi" : (t("activity_summary") || "Riepilogo Sessione")}
+                </span>
+                <span className="text-xs font-semibold text-[#8E8E93] tabular-nums">
+                  {getWorkoutLogDurationMinutes(selectedActivities[0].duration)} min
+                </span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60" />
+
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {selectedActivities[0].title}
+                </h3>
+                <p className="text-xs text-[#8E8E93] mt-1 font-medium">
+                  {Number(selectedActivities[0]?.exercises?.length ?? 0) === 1
+                    ? (t("one_exercise") || "1 esercizio")
+                    : `${selectedActivities[0]?.exercises?.length ?? 0} ${t("exercises") || "esercizi"}`} completati
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setFocusedActivity(selectedActivities[0]);
+                    setIsSummaryModalOpen(true);
+                  }}
+                  className="text-xs font-bold text-[#30D158] hover:underline flex items-center gap-1 py-1 cursor-pointer"
+                >
+                  <span>Visualizza dettagli sessione</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                {selectedDayIndex === todayIndex && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("medium");
+                      onStartLiveWorkout("empty");
+                    }}
+                    className="text-[11px] font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1 py-1 cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Altra sessione</span>
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3 z-10 my-1">
-              {/* SVG progress ring */}
-              <div className="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-white/10" />
-                  <circle
-                    cx="28" cy="28" r="22" fill="none"
-                    stroke="#30D158" strokeWidth="5" strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference * (1 - goalProgress)}
-                    style={{ transition: "stroke-dashoffset 0.6s ease" }}
-                    opacity={goalProgress === 0 ? 0.25 : 1}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span data-testid="weekly-goal-progress" className="text-[12px] font-extrabold text-white tabular-nums">
-                    {workoutsThisWeek}/{weeklyGoal}
+          ) : selectedDayIndex !== todayIndex ? (
+            /* Case B: Past or future day with no workout */
+            <div className="relative z-10 bg-white/[0.025] border border-white/[0.06] rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-2">
+              <p className="text-xs text-[#8E8E93]">
+                {t("no_activity_logged_day") || "Nessun allenamento registrato in questa data"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  navigateTo("workout");
+                }}
+                className="text-xs font-bold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("start_empty") || "Inizia allenamento"}</span>
+              </button>
+            </div>
+          ) : nextRoutine ? (
+            /* Case C: Today, no workout yet, routine scheduled */
+            <div className="relative z-10 bg-gradient-to-br from-[#1b1c23] via-[#15161b] to-[#111215] border border-white/[0.09] rounded-2xl p-4 sm:p-5 flex flex-col gap-3 group">
+              <div className="flex justify-between items-start gap-2">
+                <span className="w-fit border border-[#30D158]/35 text-[#30D158] text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#30D158]/10 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
+                  {t("next_workout") || "Scheda di Oggi"}
+                </span>
+
+                <motion.button
+                  whileTap={{ scale: 0.94 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    onStartLiveWorkout(nextRoutine.id);
+                  }}
+                  className="bg-[#30D158] text-black font-black text-xs px-4 py-2 rounded-full hover:brightness-105 active:scale-95 transition-all shadow-[0_4px_14px_rgba(48,209,88,0.35)] flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Play className="w-3.5 h-3.5 fill-black" />
+                  <span>Avvia</span>
+                </motion.button>
+              </div>
+
+              <div
+                onClick={() => {
+                  triggerHaptic("medium");
+                  onStartLiveWorkout(nextRoutine.id);
+                }}
+                className="cursor-pointer"
+              >
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight group-hover:text-[#30D158] transition-colors">
+                  {nextRoutine.name}
+                </h3>
+                <div className="flex items-center gap-3 text-xs text-[#8E8E93] mt-1 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#30D158]" />
+                    {nextRoutine.duration} Min
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1.5">
+                    <ClipboardList className="w-3.5 h-3.5 text-[#30D158]" />
+                    {Number(nextRoutine?.exercises?.length ?? 0) === 1
+                      ? (t("one_exercise") || "1 esercizio")
+                      : `${nextRoutine?.exercises?.length ?? 0} ${t("exercises") || "esercizi"}`}
+                  </span>
+                </div>
+                {nextRoutine.exercises && nextRoutine.exercises.length > 0 && (
+                  <p className="text-[11px] text-[#8E8E93] line-clamp-1 mt-1.5 opacity-75">
+                    {nextRoutine.exercises.map((e) => t(e.title) || e.title).slice(0, 4).join(" • ")}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-[#8E8E93]">
+                <span>{t("prefer_empty_session") || "Oppure sessione libera:"}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    onStartLiveWorkout("empty");
+                  }}
+                  className="font-bold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>{t("start_empty") || "Allenamento Libero"}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Case D: Today, no routine scheduled */
+            <div className="relative z-10 bg-gradient-to-br from-[#1b1c23] via-[#15161b] to-[#111215] border border-white/[0.09] rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+              <span className="w-fit text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#30D158] bg-[#30D158]/15 px-2.5 py-0.5 rounded-full border border-[#30D158]/30">
+                {t("quick_start") || "Avvio Rapido"}
+              </span>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {t("ready_to_train") || "Pronto ad allenarti?"}
+                </h3>
+                <p className="text-xs text-[#8E8E93] mt-1 max-w-md">
+                  {t("quick_start_desc") || "Registra le serie al volo o scegli una delle tue schede."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 pt-1">
+                <motion.button
+                  whileTap={{ scale: 0.94 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    onStartLiveWorkout("empty");
+                  }}
+                  className="bg-[#30D158] text-black font-black text-xs px-4 py-2.5 rounded-full hover:brightness-105 transition-all shadow-[0_4px_14px_rgba(48,209,88,0.35)] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{t("start_empty") || "Allenamento Libero"}</span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.94 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={CARTOON_SPRINGS.bouncy}
+                  onClick={() => {
+                    triggerHaptic("light");
+                    navigateTo("workout");
+                  }}
+                  className="bg-white/8 hover:bg-white/12 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Dumbbell className="w-3.5 h-3.5 text-[#8E8E93]" />
+                  <span>{t("view_routines") || "Schede"}</span>
+                </motion.button>
+              </div>
+            </div>
+          )}
+
+          {/* 2. LOWER BENTO SUB-GRID: Storico & Obiettivo Settimanale */}
+          <div
+            data-testid="streak-goals-widget"
+            className="grid grid-cols-2 gap-2.5 sm:gap-3 relative z-10"
+          >
+            {/* Cell 1: Storico */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.015 }}
+              transition={CARTOON_SPRINGS.bouncy}
+              onClick={() => {
+                triggerHaptic("light");
+                setIsStreakModalOpen(true);
+              }}
+              data-testid="streak-card"
+              className="bg-white/[0.035] hover:bg-white/[0.065] border border-white/[0.07] rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between text-left cursor-pointer transition-all active:scale-[0.98] group relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-1.5 text-[#8E8E93]">
+                  <Calendar className="w-3.5 h-3.5 text-[#30D158]" />
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                    {(t("history") !== "history" && t("history")) || "Storico"}
+                  </span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+
+              <div className="my-2">
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    data-testid="streak-count"
+                    className={`text-3xl sm:text-4xl font-black leading-none tabular-nums ${
+                      workoutLogs.length > 0 ? "text-white" : "text-[#8E8E93]"
+                    }`}
+                  >
+                    {workoutLogs.length}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] font-semibold">
+                    {workoutLogs.length === 1
+                      ? ((t("workout_singular") !== "workout_singular" && t("workout_singular")) || "allenamento")
+                      : ((t("workouts_plural") !== "workouts_plural" && t("workouts_plural")) || "allenamenti")}
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-white">
-                  {goalProgress >= 1
-                    ? (t("goal_reached_badge") || "Obiettivo raggiunto!")
-                    : (t("workouts_left") || "{count} rimanenti").replace("{count}", String(weeklyGoal - workoutsThisWeek))}
-                </span>
-                <div className="flex gap-1">
-                  {Array.from({ length: weeklyGoal }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${i < workoutsThisWeek ? "bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.4)]" : "bg-white/10"}`}
-                    />
-                  ))}
+
+              <span className="text-[10px] text-[#8E8E93] font-medium opacity-75">
+                Vedi storico completo →
+              </span>
+            </motion.button>
+
+            {/* Cell 2: Obiettivo Settimanale */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.015 }}
+              transition={CARTOON_SPRINGS.bouncy}
+              onClick={() => {
+                triggerHaptic("light");
+                setEditableGoal(weeklyGoal);
+                setIsGoalModalOpen(true);
+              }}
+              data-testid="weekly-goal-card"
+              className="bg-white/[0.035] hover:bg-white/[0.065] border border-white/[0.07] rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between text-left cursor-pointer transition-all active:scale-[0.98] group relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-1.5 text-[#8E8E93]">
+                  <Target className="w-3.5 h-3.5 text-[#0A84FF]" />
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                    {(t("weekly_goal") !== "weekly_goal" && t("weekly_goal")) || "Obiettivo"}
+                  </span>
                 </div>
-                <span className="text-[10px] text-[#8E8E93]">
-                  {(t("percent_this_week") || "{percent}% questa settimana").replace("{percent}", String(Math.round(goalProgress * 100)))}
-                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#8E8E93] opacity-60 group-hover:translate-x-0.5 transition-transform" />
               </div>
-            </div>
-          </motion.button>
-        </div>
+
+              <div className="flex items-center gap-2.5 my-2">
+                {/* SVG Mini Ring */}
+                <div className="relative flex-shrink-0 w-10 h-10">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-white/10" />
+                    <circle
+                      cx="28" cy="28" r="22" fill="none"
+                      stroke="#30D158" strokeWidth="6" strokeLinecap="round"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={circumference * (1 - goalProgress)}
+                      style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                      opacity={goalProgress === 0 ? 0.25 : 1}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span data-testid="weekly-goal-progress" className="text-[11px] font-black text-white tabular-nums">
+                      {workoutsThisWeek}/{weeklyGoal}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-xs font-bold text-white truncate">
+                    {goalProgress >= 1
+                      ? (t("goal_reached_badge") || "Raggiunto! 🎉")
+                      : (t("workouts_left") || "{count} rimanenti").replace("{count}", String(weeklyGoal - workoutsThisWeek))}
+                  </span>
+                  <div className="flex gap-1 mt-0.5">
+                    {Array.from({ length: weeklyGoal }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2.5 sm:w-3 h-1 rounded-full transition-all duration-300 ${
+                          i < workoutsThisWeek
+                            ? "bg-[#30D158] shadow-[0_0_6px_rgba(48,209,88,0.5)]"
+                            : "bg-white/10"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <span className="text-[10px] text-[#8E8E93] font-medium opacity-75">
+                {(t("percent_this_week") || "{percent}% questa settimana").replace("{percent}", String(Math.round(goalProgress * 100)))}
+              </span>
+            </motion.button>
+          </div>
+        </section>
 
         {/* ── Streak History Modal ─────────────────────────────────────────── */}
         <AppleBottomSheet
@@ -881,63 +1092,7 @@ export const Dashboard = React.memo(
           })()}
         </AppleBottomSheet>
 
-        {/* Selected Day Summary */}
-        {selectedActivities.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {selectedActivities.map((activity, idx) => (
-              <section
-                key={idx}
-                onClick={() => {
-                  setFocusedActivity(activity);
-                  setIsSummaryModalOpen(true);
-                }}
-                className="bg-primary-container/10 border border-primary-container/30 rounded-xl p-stack-md flex flex-col gap-2 cursor-pointer hover:bg-primary-container/20 transition-all group"
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-label-bold text-primary uppercase">
-                    {t("activity_summary")}
-                  </h3>
-                  <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary-container rounded-lg">
-                    <Dumbbell className="w-6 h-6 text-on-primary-container" />
-                  </div>
-                  <div>
-                    <p className="text-headline-sm text-on-background">
-                      {activity.title}
-                    </p>
-                    <div className="flex gap-3 text-body-sm text-on-surface-variant">
-                      <span>{getWorkoutLogDurationMinutes(activity.duration)} min</span>
-                      <span>•</span>
-                      <span>
-                        {Number(activity?.exercises?.length ?? 0) === 1
-                          ? (t("one_exercise") || "1 exercise")
-                          : `${activity?.exercises?.length ?? 0} ${t("exercises") || "exercises"}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            ))}
-          </div>
-        ) : selectedDayIndex === todayIndex ? null : (
-          <section className="bg-surface-container border border-surface-variant border-dashed rounded-xl p-stack-md flex flex-col items-center justify-center gap-1">
-            <p className="text-body-md text-on-surface-variant">
-              {t("no_activity_logged_day") || "No activity logged for this day"}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                navigateTo("workout");
-              }}
-              className="text-label-bold text-primary-container text-xs cursor-pointer hover:underline bg-transparent border-none p-0 mt-0.5"
-            >
-              {t("start_empty") || "Inizia allenamento"}
-            </button>
-          </section>
-        )}
+
 
         {/* Summary Modal */}
         <AppleBottomSheet
@@ -1120,107 +1275,7 @@ export const Dashboard = React.memo(
           </section>
         )}
 
-        {/* Next Workout Card */}
-        {!isWelcomeHubVisible && selectedDayIndex === todayIndex && !hasTodayWorkout && nextRoutine && (
-          <section className="bg-[#141417] border border-white/[0.08] rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
-            <button
-              onClick={() => {
-                triggerHaptic("medium");
-                onStartLiveWorkout(nextRoutine.id);
-              }}
-              className="relative w-full overflow-hidden h-40 md:h-52 flex flex-col justify-end p-5 md:p-6 group cursor-pointer active:scale-[0.98] transition-all text-left"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDSD3OOEmD78fTaBnJqYilure6mY1McKJ6Jf1YUDBmD_tkwF4V9xcADKpFJ6mZC0WG9YzPbJjI9pkzHh5FvgbWxAynV0sOt5RRKb3pi0mBbsFseaaeOy2OcfvyTDKJe4VvXbd6dbF4k5K6iJ6dTH0whAiw-XxPrNtJzCQDiZKPndVIfzkohVpwQqQt93btkiwmYK63DcAS2kLXIq07sUSjjb9b7uieN1Y34-dGHL8doGbYa6rQ7H7M8mS5BgKCAXrfr-ZrYHVv-zoo')",
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-              <div className="relative z-10 flex flex-col gap-2">
-                <span className="w-fit border border-[#30D158]/40 text-[#30D158] text-[11px] font-bold px-3 py-1 rounded-full bg-black/40 backdrop-blur-md uppercase tracking-[0.06em]">
-                  {t("next_workout") || "Next Workout"}
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  {nextRoutine.name}
-                </h3>
-                <div className="flex items-center gap-4 text-[#8E8E93]">
-                  <p className="text-xs font-medium flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#30D158]" /> {nextRoutine.duration} Min
-                  </p>
-                  <p className="text-xs font-medium flex items-center gap-1.5">
-                    <ClipboardList className="w-3.5 h-3.5 text-[#30D158]" />{" "}
-                    {Number(nextRoutine?.exercises?.length ?? 0) === 1
-                      ? (t("one_exercise") || "1 Exercise")
-                      : `${nextRoutine?.exercises?.length ?? 0} ${t("exercises") || "Exercises"}`}
-                  </p>
-                </div>
-              </div>
-            </button>
-            <div className="bg-black/40 border-t border-white/5 px-4 py-2.5 flex items-center justify-between">
-              <span className="text-[11px] text-[#8E8E93]">
-                {t("prefer_empty_session") || "Oppure inizia una sessione libera:"}
-              </span>
-              <button
-                onClick={() => {
-                  triggerHaptic("light");
-                  onStartLiveWorkout("empty");
-                }}
-                className="text-xs font-bold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t("start_empty") || "Allenamento Libero"}</span>
-              </button>
-            </div>
-          </section>
-        )}
 
-        {/* Quick Start Hero when no routine is scheduled */}
-        {!isWelcomeHubVisible && selectedDayIndex === todayIndex && !hasTodayWorkout && !nextRoutine && (
-          <section className="bg-gradient-to-br from-[#16161a] to-[#0d0e11] border border-[#30D158]/30 rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] relative overflow-hidden flex flex-col gap-4">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
-            <div className="relative z-10 flex flex-col gap-1">
-              <span className="w-fit text-[11px] font-bold uppercase tracking-[0.06em] text-[#30D158] bg-[#30D158]/15 px-3 py-1 rounded-full border border-[#30D158]/30">
-                {t("quick_start") || "Avvio Rapido"}
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-1">
-                {t("ready_to_train") || "Pronto ad allenarti?"}
-              </h3>
-              <p className="text-sm text-[#8E8E93] max-w-md">
-                {t("quick_start_desc") || "Inizia subito registrando serie, carichi e recupero in tempo reale, oppure scegli una scheda."}
-              </p>
-            </div>
-            <div className="relative z-10 flex flex-col sm:flex-row gap-3 pt-2">
-              <motion.button
-                whileTap={{ scale: 0.9, rotate: -2 }}
-                whileHover={{ scale: 1.03 }}
-                transition={CARTOON_SPRINGS.bouncy}
-                onClick={() => {
-                  triggerHaptic("medium");
-                  onStartLiveWorkout("empty");
-                }}
-                className="bg-[#30D158] text-black font-extrabold text-xs px-6 py-3.5 rounded-full hover:brightness-105 transition-all shadow-[0_4px_16px_rgba(48,209,88,0.35)] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" strokeWidth={2.5} />
-                <span>{t("start_empty") || "Inizia Allenamento Libero"}</span>
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.92, rotate: 1.5 }}
-                whileHover={{ scale: 1.02 }}
-                transition={CARTOON_SPRINGS.bouncy}
-                onClick={() => {
-                  triggerHaptic("light");
-                  navigateTo("workout");
-                }}
-                className="bg-white/6 hover:bg-white/12 border border-white/10 text-white font-semibold text-xs px-6 py-3.5 rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Dumbbell className="w-4 h-4 text-[#8E8E93]" />
-                <span>{t("view_routines") || "Sfoglia Schede"}</span>
-              </motion.button>
-            </div>
-          </section>
-        )}
 
         {/* Reorganized Apple Fitness+ Statistics Hub */}
         <section className="flex flex-col gap-4">
