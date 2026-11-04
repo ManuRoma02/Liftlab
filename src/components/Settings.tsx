@@ -45,35 +45,23 @@ import {
 
 function AppleSwitch({
   checked,
-  onChange,
 }: {
   checked: boolean;
-  onChange: (val: boolean) => void;
+  onChange?: (val: boolean) => void;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={(e) => {
-        e.stopPropagation();
-        triggerHaptic("light");
-        onChange(!checked);
-      }}
-      className="min-w-[44px] min-h-[44px] flex items-center justify-center p-0 bg-transparent border-none cursor-pointer select-none"
+    <div
+      aria-hidden="true"
+      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative shrink-0 pointer-events-none select-none ${
+        checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
+      }`}
     >
       <div
-        className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative shrink-0 ${
-          checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
+        className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+          checked ? "translate-x-5" : "translate-x-0"
         }`}
-      >
-        <div
-          className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </div>
-    </button>
+      />
+    </div>
   );
 }
 
@@ -361,7 +349,8 @@ export function Settings({
 
             {/* Preference Item: Show RPE (Whole row taps) */}
             <div
-              role="button"
+              role="switch"
+              aria-checked={showRpe}
               tabIndex={0}
               onClick={() => {
                 triggerHaptic("light");
@@ -374,7 +363,7 @@ export function Settings({
                   setShowRpe(!showRpe);
                 }
               }}
-              className="flex items-center justify-between gap-3 p-4 hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer select-none"
+              className="flex items-center justify-between gap-3 p-4 hover:bg-white/5 active:bg-white/10 active:scale-[0.99] transition-all cursor-pointer select-none"
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-[#BF5AF2] flex items-center justify-center text-white shrink-0">
@@ -390,18 +379,20 @@ export function Settings({
                 </div>
               </div>
 
-              <AppleSwitch checked={showRpe} onChange={setShowRpe} />
+              <AppleSwitch checked={showRpe} />
             </div>
 
             {/* Preference Item: Haptic Feedback (Whole row taps) */}
             <div
-              role="button"
+              role="switch"
+              aria-checked={hapticsOn}
               tabIndex={0}
               onClick={() => {
                 const next = !hapticsOn;
                 setHapticsEnabled(next);
                 setHapticsOn(next);
                 if (next) triggerHaptic("medium");
+                else triggerHaptic("light");
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -428,14 +419,7 @@ export function Settings({
                 </div>
               </div>
 
-              <AppleSwitch
-                checked={hapticsOn}
-                onChange={(enabled) => {
-                  setHapticsEnabled(enabled);
-                  setHapticsOn(enabled);
-                  if (enabled) triggerHaptic("medium");
-                }}
-              />
+              <AppleSwitch checked={hapticsOn} />
             </div>
 
             {/* Preference Item: 1RM Formula */}
@@ -657,7 +641,8 @@ export function Settings({
 
             {/* Auto-check switch (Whole row taps) */}
             <div
-              role="button"
+              role="switch"
+              aria-checked={autoCheckOta}
               tabIndex={0}
               onClick={() => {
                 triggerHaptic("light");
@@ -689,13 +674,7 @@ export function Settings({
                   </span>
                 </div>
               </div>
-              <AppleSwitch
-                checked={autoCheckOta}
-                onChange={(enabled) => {
-                  setAutoCheckOta(enabled);
-                  setOtaAutoCheckEnabled(enabled);
-                }}
-              />
+              <AppleSwitch checked={autoCheckOta} />
             </div>
 
             {/* Check for updates CTA */}

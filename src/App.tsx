@@ -703,9 +703,10 @@ export default function App() {
         <AnimatePresence>
           {isDeleteAccountConfirmOpen && (
             <ConfirmModal
-              message={t("deleteAccountConfirm") || "Are you sure you want to delete your account?"}
-              confirmLabel={language === "it" ? "Elimina Account" : language === "es" ? "Eliminar Cuenta" : "Delete Account"}
-              cancelLabel={t("cancel") || "Cancel"}
+              title={language === "it" ? "Elimina Dati Locali" : language === "es" ? "Eliminar Datos" : "Delete Local Data"}
+              message={t("deleteAccountConfirm") || "Eliminare tutti i dati locali?"}
+              confirmLabel={language === "it" ? "Elimina Dati" : language === "es" ? "Eliminar Datos" : "Delete Data"}
+              cancelLabel={t("cancel") || "Annulla"}
               destructive
               onConfirm={handleDeleteAccountConfirmed}
               onCancel={() => setIsDeleteAccountConfirmOpen(false)}
@@ -716,15 +717,16 @@ export default function App() {
         <AnimatePresence>
           {isImportBackupConfirmOpen && (
             <ConfirmModal
+              title={language === "it" ? "Ripristina Backup" : language === "es" ? "Restaurar Copia" : "Restore Backup"}
               message={
                 language === "it"
-                  ? `Vuoi sovrascrivere i tuoi dati con questo backup (${pendingBackupData?.routines?.length || 0} schede, ${pendingBackupData?.logs?.length || 0} allenamenti)? Verrà creata una copia di sicurezza automatica.`
+                  ? `Sovrascrivere i dati con questo backup (${pendingBackupData?.routines?.length || 0} schede, ${pendingBackupData?.logs?.length || 0} allenamenti)? Copia di sicurezza automatica salvata.`
                   : language === "es"
-                    ? `¿Deseas sobrescribir tus datos con esta copia (${pendingBackupData?.routines?.length || 0} rutinas, ${pendingBackupData?.logs?.length || 0} entrenamientos)? Se creará una instantánea de seguridad.`
-                    : `Overwrite your current data with this backup (${pendingBackupData?.routines?.length || 0} routines, ${pendingBackupData?.logs?.length || 0} workouts)? An automatic safety snapshot will be saved.`
+                    ? `¿Sobrescribir datos con esta copia (${pendingBackupData?.routines?.length || 0} rutinas, ${pendingBackupData?.logs?.length || 0} entrenamientos)?`
+                    : `Overwrite data with this backup (${pendingBackupData?.routines?.length || 0} routines, ${pendingBackupData?.logs?.length || 0} workouts)?`
               }
               confirmLabel={language === "it" ? "Ripristina Backup" : language === "es" ? "Restaurar Copia" : "Restore Backup"}
-              cancelLabel={t("cancel") || "Cancel"}
+              cancelLabel={t("cancel") || "Annulla"}
               destructive
               onConfirm={handleConfirmImportBackup}
               onCancel={handleCancelImportBackup}
@@ -735,15 +737,16 @@ export default function App() {
         <AnimatePresence>
           {isReplaceWorkoutConfirmOpen && (
             <ConfirmModal
+              title={language === "it" ? "Sessione in Corso" : language === "es" ? "Sesión Activa" : "Active Workout"}
               message={
                 language === "it"
-                  ? `C'è già un allenamento in corso. Vuoi annullarlo e iniziarne uno nuovo?`
+                  ? "C'è un allenamento in corso. Annullarlo e iniziarne uno nuovo?"
                   : language === "es"
-                    ? `Ya hay un entrenamiento en curso. ¿Quieres descartarlo y empezar uno nuovo?`
-                    : `There's already an active workout. Discard it and start a new one?`
+                    ? "Hay un entrenamiento activo. ¿Descartarlo y empezar uno nuevo?"
+                    : "An active workout is in progress. Discard it and start a new one?"
               }
-              confirmLabel={t("discard") || "Discard"}
-              cancelLabel={t("cancel") || "Cancel"}
+              confirmLabel={language === "it" ? "Annulla e Avvia" : language === "es" ? "Descartar e Iniciar" : "Discard and Start"}
+              cancelLabel={language === "it" ? "Continua Sessione" : language === "es" ? "Mantener Sesión" : "Keep Session"}
               destructive
               onConfirm={handleConfirmReplaceWorkout}
               onCancel={() => {

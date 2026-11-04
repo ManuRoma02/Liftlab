@@ -1,8 +1,8 @@
 {
-  "version": "1.0.16",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.16.zip",
-  "checksum": "e055a53778b1d16bbb7adee389860b70669cc287c6f7537f922060da0fbef67f",
-  "releaseDate": "2026-11-04T17:53:09.584Z",
-  "notes": "LiftLab v1.0.16: Applicazione dei 5 principi UX. Progress bar ed ETA su download lunghi, skeleton e aggiornamento ottimistico al tap; controlli segmentati per scelte opposte e switch solo per on/off; verbi di azione specifici su tutti i pulsanti (niente OK/Conferma generici); tocco sull'intera riga nelle impostazioni; rimozione filler words da tutti i toast e notifiche.",
-  "bundleSizeMb": "2.75"
+  "version": "1.0.17",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.17.zip",
+  "checksum": "0729f0de08249a3cdf5f3a30e3312bf417dd2cc6ece25247eb35ff76bc60d22e",
+  "releaseDate": "2026-11-04T19:09:27.942Z",
+  "notes": "LiftLab v1.0.17: Applicazione dei 5 principi UX essenziali (Whole row taps per switch e impostazioni, verbi attivi nei bottoni senza OK generici, rimozione filler words, optimistic tap first, e controlli segmentati per scelte opposte).",
+  "bundleSizeMb": "3.28"
 }

@@ -330,32 +330,31 @@ public class LiveWorkoutService extends Service {
             int secs = restRemainingSeconds % 60;
             String timeFormatted = String.format("%02d:%02d", mins, secs);
 
-            subText = "Recupero";
-            title = "⏱️ " + timeFormatted + " • Recupero";
-            contentText = "Prossimo: " + currentExercise + " (" + currentSetInfo + ")";
-            bigText = "⏱️ Tempo di Recupero: " + timeFormatted + "\n"
-                    + "Prossimo: " + currentExercise + "\n"
-                    + "Obiettivo: " + currentSetInfo;
+            subText = "Recupero • Serie " + currentSetNumber + "/" + totalSets;
+            title = "Recupero " + timeFormatted;
+            contentText = currentExercise + (targetWeightReps.isEmpty() ? "" : " • " + targetWeightReps);
+            bigText = "Tempo rimanente: " + timeFormatted + "\n"
+                    + "Prossimo esercizio: " + currentExercise + (targetWeightReps.isEmpty() ? "" : "\nCarico target: " + targetWeightReps);
             shortChip = timeFormatted;
         } else if (isRestFinished) {
-            subText = "Inizia Ora";
-            title = "⚡ Recupero Terminato! Inizia la Serie";
-            contentText = currentExercise + " • " + currentSetInfo;
-            bigText = "⚡ Recupero Terminato! È il momento di spingere.\n"
-                    + "Esercizio: " + currentExercise + "\n"
-                    + "Serie: " + currentSetInfo;
-            shortChip = "VAI!";
+            subText = "Pronto • Serie " + currentSetNumber + "/" + totalSets;
+            title = "Recupero completato";
+            contentText = currentExercise + (targetWeightReps.isEmpty() ? "" : " • " + targetWeightReps);
+            bigText = "Inizia la serie su " + currentExercise + "\n"
+                    + (targetWeightReps.isEmpty() ? "" : "Carico target: " + targetWeightReps);
+            shortChip = "VIA";
         } else {
-            subText = "Serie Attiva";
-            title = "🏋️ " + currentExercise;
-            contentText = currentSetInfo;
+            subText = "Serie " + currentSetNumber + "/" + totalSets;
+            title = currentExercise;
+            contentText = targetWeightReps.isEmpty() ? "Serie attiva" : targetWeightReps;
             bigText = "Esercizio: " + currentExercise + "\n"
-                    + "Progresso: " + currentSetInfo;
-            shortChip = "SET";
+                    + "Serie: " + currentSetNumber + " di " + totalSets
+                    + (targetWeightReps.isEmpty() ? "" : "\nCarico: " + targetWeightReps);
+            shortChip = "S" + currentSetNumber;
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.splash_icon)
+                .setSmallIcon(R.drawable.ic_stat_liftlab)
                 .setColor(0xFF30D158) // Apple Emerald Green
                 .setContentTitle(title)
                 .setContentText(contentText)
@@ -396,7 +395,7 @@ public class LiveWorkoutService extends Service {
                     add30sIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
-            builder.addAction(0, "⏱️ +30s", add30sPending);
+            builder.addAction(0, "+30s", add30sPending);
 
             // Action Skip Rest
             Intent skipIntent = new Intent(this, LiveWorkoutReceiver.class);
@@ -407,7 +406,7 @@ public class LiveWorkoutService extends Service {
                     skipIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
-            builder.addAction(0, "⏩ Salta", skipPending);
+            builder.addAction(0, "Salta", skipPending);
         } else {
             // Action Complete Set (for active set or rest finished)
             Intent completeIntent = new Intent(this, LiveWorkoutReceiver.class);
@@ -418,7 +417,7 @@ public class LiveWorkoutService extends Service {
                     completeIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
-            builder.addAction(0, "✅ Completa Serie", completePending);
+            builder.addAction(0, "Completa Serie", completePending);
         }
 
         return builder.build();

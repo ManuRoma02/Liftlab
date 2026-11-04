@@ -1399,30 +1399,79 @@ export function RoutineEditor({
               {mode === "live" ? t("workout_in_progress") : t("build_routine")}
             </p>
             {mode === "live" && (
-              <div className="mt-4 grid grid-cols-3 gap-2 max-w-xl">
-                <div className="bg-black/25 border border-white/10 rounded-xl px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black">
-                    {t("set") || "Sets"}
-                  </p>
-                  <p className="text-xl font-black text-primary leading-none">
-                    {completedWorkoutSets}/{totalWorkoutSets}
-                  </p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
+                {/* 1. Hero Live Stopwatch */}
+                <div className="bg-black/40 border border-[#30D158]/35 rounded-2xl p-3 flex items-center justify-between shadow-[0_4px_16px_rgba(48,209,88,0.1)]">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8E8E93] flex items-center gap-1.5">
+                      <Clock className="w-3 h-3 text-[#30D158]" />
+                      {t("time_elapsed") || "Tempo Trascorso"}
+                    </span>
+                    <span className="text-2xl font-black text-white font-mono tracking-tight tabular-nums mt-0.5">
+                      {formatTime(elapsed)}
+                    </span>
+                  </div>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] animate-pulse" />
                 </div>
-                <div className="bg-black/25 border border-white/10 rounded-xl px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black">
-                    {t("progress") || "Progress"}
-                  </p>
-                  <p className="text-xl font-black text-primary-fixed leading-none">
-                    {workoutProgress}%
-                  </p>
+
+                {/* 2. Completed Sets Progress */}
+                <div className="bg-black/40 border border-white/10 rounded-2xl p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8E8E93]">
+                      {t("set") || "Serie"}
+                    </span>
+                    <span className="text-xs font-black text-[#30D158]">
+                      {workoutProgress}%
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between mt-0.5">
+                    <span className="text-xl font-black text-white tabular-nums">
+                      {completedWorkoutSets} <span className="text-xs text-[#8E8E93] font-normal">/ {totalWorkoutSets}</span>
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden mt-1.5">
+                    <div
+                      className="h-full bg-[#30D158] rounded-full transition-all duration-300"
+                      style={{ width: `${workoutProgress}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="bg-black/25 border border-white/10 rounded-xl px-3 py-2">
-                  <p className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black">
-                    {t("rest_timer") || "Rest"}
-                  </p>
-                  <p className="text-xl font-black text-primary leading-none tabular-nums">
-                    {activeRestLeft === null ? (t("off") || "Off") : formatTime(activeRestLeft)}
-                  </p>
+
+                {/* 3. Rest Timer Status & Steppers */}
+                <div className="bg-black/40 border border-white/10 rounded-2xl p-3 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#8E8E93]">
+                      {t("rest_timer") || "Recupero"}
+                    </span>
+                    <span className="text-xl font-black text-white tabular-nums mt-0.5">
+                      {activeRestLeft !== null ? formatTime(activeRestLeft) : `${restTimer}s`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-black/60 border border-white/10 rounded-full p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setRestTimer?.(Math.max(0, restTimer - 15));
+                      }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="font-bold text-xs min-w-6 text-center text-[#30D158] tabular-nums">
+                      {restTimer}s
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setRestTimer?.(restTimer + 15);
+                      }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1477,50 +1526,7 @@ export function RoutineEditor({
               </div>
             )}
           </div>
-          {mode === "live" && (
-            <div className="flex gap-x-stack-lg gap-y-2 items-center justify-between md:justify-end flex-wrap pt-2 md:pt-0 border-t border-white/5 md:border-t-0">
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                  {t("rest_duration")}
-                </span>
-                <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-full p-0.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic("light");
-                      setRestTimer?.(Math.max(0, restTimer - 15));
-                    }}
-                    aria-label="Decrease rest timer by 15 seconds"
-                    className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="font-bold text-xs min-w-8 text-center text-primary tabular-nums">
-                    {restTimer}s
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic("light");
-                      setRestTimer?.(restTimer + 15);
-                    }}
-                    aria-label="Increase rest timer by 15 seconds"
-                    className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-col items-end text-primary">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  {t("time_elapsed")}
-                </span>
-                <span className="font-[var(--font-stats-xl)] text-[24px] font-black tracking-tight leading-none h-8 tabular-nums">
-                  {formatTime(elapsed)}
-                </span>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Exercise List */}
@@ -1633,7 +1639,7 @@ export function RoutineEditor({
                                   <ExerciseMedia exercise={ex} className="w-full h-full" />
                                 </button>
                                 <div className="min-w-0">
-                                  <h4 className="text-sm font-bold text-white truncate">
+                                  <h4 className="text-sm font-bold text-white leading-tight break-words">
                                     {t(ex.title) || ex.title}
                                   </h4>
                                   <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider">
@@ -1833,191 +1839,173 @@ export function RoutineEditor({
                     className="relative z-10 w-full"
                   >
                     <div className="apple-glass-card rounded-3xl p-stack-lg relative transition-all duration-200 hover:border-white/20 hover:shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
-                      {/* Header */}
-                      <div className="flex justify-between items-start mb-stack-md">
-                        <div className="flex items-center gap-stack-md">
+                      {/* Exercise Header */}
+                      <div className="mb-stack-md flex flex-col gap-3">
+                        {/* Row 1: Full-width Exercise Header (NO TRUNCATION) */}
+                        <div className="flex items-start gap-3 w-full">
                           <button
                             type="button"
                             onClick={() => {
                               triggerHaptic("light");
                               onOpenDetail?.(ex);
                             }}
-                            className="w-16 h-16 bg-black/35 flex items-center justify-center rounded-2xl border border-white/10 flex-shrink-0 shadow-inner overflow-hidden cursor-pointer hover:border-primary-fixed/40 transition-colors active:scale-95"
+                            className="w-14 h-14 bg-black/40 flex items-center justify-center rounded-2xl border border-white/10 shrink-0 overflow-hidden cursor-pointer hover:border-[#30D158]/50 transition-colors active:scale-95 shadow-sm"
                             title={t("view_exercise_details") || "Dettagli esercizio"}
                             aria-label={`Visualizza dettagli per ${ex.title}`}
                           >
-                            <ExerciseMedia exercise={ex} className="w-full h-full" />
+                            <ExerciseMedia exercise={ex} className="w-full h-full object-cover" />
                           </button>
-                          <div>
-                            <div className="flex items-center gap-1.5">
+
+                          <div className="flex-1 min-w-0">
+                            {mode === "live" ? (
+                              <h3 className="font-extrabold text-base sm:text-lg text-white leading-tight break-words tracking-tight">
+                                {t(ex.title) || ex.title}
+                              </h3>
+                            ) : (
                               <input
-                                className={`font-black text-[16px] bg-transparent border-none text-primary mb-1 uppercase tracking-wide outline-none w-full max-w-xs ${mode === "live" ? "cursor-default select-none" : ""}`}
+                                className="font-extrabold text-base sm:text-lg bg-transparent border-b border-transparent focus:border-[#30D158]/60 text-white leading-tight break-words tracking-tight outline-none w-full"
                                 value={t(ex.title)}
                                 onChange={(e) =>
-                                  mode !== "live" && updateExercise(ex.id, { title: e.target.value })
+                                  updateExercise(ex.id, { title: e.target.value })
                                 }
-                                readOnly={mode === "live"}
                                 placeholder={t("exercise_name") || "Exercise Name"}
                               />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic("light");
-                                  openPlateCalculator(ex);
-                                }}
-                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary-fixed transition-colors active:scale-90 cursor-pointer rounded-xl hover:bg-white/5 shrink-0 mb-1"
-                                title={t("plate_calculator") || "Plate Calculator"}
-                                aria-label="Open plate calculator"
-                              >
-                                <Disc className="w-4 h-4 text-primary-fixed" />
-                              </button>
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-xs font-bold">
-                              <span className="text-primary-fixed uppercase tracking-wider">
+                            )}
+                            <div className="flex items-center gap-2 mt-1 text-xs font-bold">
+                              <span className="text-[#30D158] uppercase tracking-wider text-[11px]">
                                 {ex.category || "General"}
                               </span>
                               <span className="text-white/20">•</span>
-                              <span className="text-on-surface-variant font-sans font-semibold tabular-nums">
+                              <span className="text-[#8E8E93] text-[11px] font-sans font-semibold tabular-nums">
                                 ⏱ {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s rest
                               </span>
                             </div>
                           </div>
                         </div>
-                        <div className="relative flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => moveExercise(ex.id, "up")}
-                            className="text-on-surface-variant hover:text-primary-fixed p-1.5 transition-colors active:scale-90 cursor-pointer rounded-lg hover:bg-white/5"
-                            title="Move up"
-                            aria-label="Move exercise up"
-                          >
-                            <ChevronUp className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveExercise(ex.id, "down")}
-                            className="text-on-surface-variant hover:text-primary-fixed p-1.5 transition-colors active:scale-90 cursor-pointer rounded-lg hover:bg-white/5"
-                            title="Move down"
-                            aria-label="Move exercise down"
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openExerciseModal(undefined, ex.id)}
-                            className="text-on-surface-variant hover:text-primary-fixed p-1.5 transition-colors active:scale-90 cursor-pointer rounded-lg hover:bg-white/5"
-                            title="Replace Exercise"
-                            aria-label="Replace exercise"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActiveMenuId(
-                                activeMenuId === ex.id ? null : ex.id,
-                              )
-                            }
-                            className="text-on-surface-variant hover:text-primary-fixed transition-colors p-1.5 relative z-10 cursor-pointer rounded-lg hover:bg-white/5"
-                            aria-label="Exercise options"
-                          >
-                            <MoreVertical className="w-5 h-5" />
-                          </button>
-                          {activeMenuId === ex.id && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-[100]"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuId(null);
-                                }}
-                              />
-                              <div className="absolute right-0 top-full mt-2 w-56 bg-black border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,1)] z-[101] overflow-hidden animate-in fade-in zoom-in duration-150">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (ex.technique === "superset") {
-                                      removeSuperset(ex.id);
-                                    } else {
-                                      openExerciseModal(ex.id);
-                                    }
-                                    setActiveMenuId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-primary-fixed/20 flex items-center justify-between transition-colors group"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <LinkIcon
-                                      className={`w-4 h-4 ${ex.technique === "superset" ? "text-primary-fixed" : "text-on-surface-variant group-hover:text-primary-fixed"}`}
-                                    />
-                                    <span className="group-hover:text-primary-fixed transition-colors">
-                                      {ex.technique === "superset"
-                                        ? (t("remove_from_superset") || "Remove from Superset")
-                                        : (t("make_superset") || "Make Superset")}
-                                    </span>
-                                  </div>
-                                </button>
-                                {ex.technique === "superset" && (
-                                  <button
+
+                        {/* Row 2: Dedicated Command Toolbar placed underneath */}
+                        <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-white/6 w-full">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic("light");
+                                openPlateCalculator(ex);
+                              }}
+                              className="h-8 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold text-white/90 border border-white/8 cursor-pointer"
+                              title={t("plate_calculator") || "Calcola dischi"}
+                            >
+                              <Disc className="w-3.5 h-3.5 text-[#30D158]" />
+                              <span className="text-[11px] font-bold">Dischi</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic("light");
+                                setWarmupModalExercise(ex);
+                              }}
+                              className="h-8 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold text-amber-400 border border-amber-500/20 cursor-pointer"
+                              title={t("warmup") || "Riscaldamento"}
+                            >
+                              <Flame className="w-3.5 h-3.5" />
+                              <span className="text-[11px] font-bold">Warmup</span>
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveExercise(ex.id, "up")}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
+                              title="Sposta su"
+                              aria-label="Move exercise up"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveExercise(ex.id, "down")}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
+                              title="Sposta giù"
+                              aria-label="Move exercise down"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openExerciseModal(undefined, ex.id)}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-[#0A84FF] hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
+                              title="Sostituisci esercizio"
+                              aria-label="Replace exercise"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setActiveMenuId(activeMenuId === ex.id ? null : ex.id)
+                                }
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
+                                aria-label="Exercise options"
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
+                              {activeMenuId === ex.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-[100]"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      openExerciseModal(ex.id);
+                                      setActiveMenuId(null);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-primary-fixed/20 flex items-center justify-between transition-colors group"
-                                  >
-                                    <div className="flex items-center gap-3 pl-7">
-                                      <Plus className="w-4 h-4 text-on-surface-variant group-hover:text-primary-fixed" />
-                                      <span className="group-hover:text-primary-fixed transition-colors">
-                                        {t("add_to_superset")}
-                                      </span>
-                                    </div>
-                                  </button>
-                                )}
-                                <hr className="border-white/10" />
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openExerciseModal(undefined, ex.id);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-primary-fixed/20 flex items-center justify-between transition-colors group"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <RefreshCw className="w-4 h-4 text-on-surface-variant group-hover:text-primary-fixed transition-colors" />
-                                    <span className="group-hover:text-primary-fixed transition-colors">
-                                      {t("replace_exercise") || "Replace Exercise"}
-                                    </span>
+                                  />
+                                  <div className="absolute right-0 top-full mt-2 w-56 bg-[#18181b] border border-white/15 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,1)] z-[101] overflow-hidden animate-in fade-in zoom-in duration-150">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (ex.technique === "superset") {
+                                          removeSuperset(ex.id);
+                                        } else {
+                                          openExerciseModal(ex.id);
+                                        }
+                                        setActiveMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2 cursor-pointer transition-colors"
+                                    >
+                                      <LinkIcon className={`w-4 h-4 ${ex.technique === "superset" ? "text-[#30D158]" : "text-[#8E8E93]"}`} />
+                                      {ex.technique === "superset"
+                                        ? (t("remove_from_superset") || "Separa da Superset")
+                                        : (t("make_superset") || "Crea Superset")}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        duplicateExercise(ex.id);
+                                        setActiveMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2 cursor-pointer transition-colors border-t border-white/5"
+                                    >
+                                      <Copy className="w-4 h-4 text-[#8E8E93]" />
+                                      {t("duplicate") || "Duplica"}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteExercise(ex.id);
+                                        setActiveMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-xs font-bold text-[#FF453A] hover:bg-[#FF453A]/10 flex items-center gap-2 cursor-pointer transition-colors border-t border-white/5"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      {t("delete") || "Elimina Esercizio"}
+                                    </button>
                                   </div>
-                                  <ChevronRight className="w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    duplicateExercise(ex.id);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-primary-fixed/20 flex items-center justify-between transition-colors group"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Copy className="w-4 h-4 text-on-surface-variant group-hover:text-primary-fixed transition-colors" />
-                                    <span className="group-hover:text-primary-fixed transition-colors">
-                                      {t("duplicate")}
-                                    </span>
-                                  </div>
-                                  <ChevronRight className="w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteExercise(ex.id);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm font-bold text-error hover:bg-error/20 flex items-center justify-between transition-colors group"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Trash2 className="w-4 h-4" />
-                                    <span>{t("delete")}</span>
-                                  </div>
-                                </button>
-                              </div>
-                            </>
-                          )}
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -2684,68 +2672,61 @@ export function RoutineEditor({
             className="fixed bottom-0 left-0 w-full z-[150] px-margin-mobile py-3 pointer-events-auto"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
           >
-            <div className="bg-[#24252c]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-white/16 shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)]">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25 flex items-center justify-center relative shadow-sm">
-                  <Clock className="w-5 h-5 absolute" />
-                  <svg className="w-8 h-8 -rotate-90">
-                    <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.5" className="text-white/10" fill="none" />
+            <div className="bg-[#18181b]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-[#30D158]/40 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_25px_rgba(48,209,88,0.18)]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 flex items-center justify-center relative shadow-sm">
+                  <Clock className="w-5 h-5 absolute text-[#30D158]" />
+                  <svg className="w-10 h-10 -rotate-90">
+                    <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="2.5" className="text-white/10" fill="none" />
                     <circle
-                      cx="16" cy="16" r="13"
+                      cx="20" cy="20" r="16"
                       stroke="currentColor" strokeWidth="2.5"
                       className="text-[#30D158] transition-all duration-1000"
                       fill="none"
-                      strokeDasharray={81.68}
-                      strokeDashoffset={81.68 - (81.68 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
+                      strokeDasharray={100.53}
+                      strokeDashoffset={100.53 - (100.53 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
                     />
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#8E8E93]">
-                    {t("rest_timer") || "Rest Timer"}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                    {t("rest_timer") || "Recupero"}
                   </span>
-                  <span className="text-3xl font-extrabold tracking-tight tabular-nums text-white leading-none">
+                  <span className="text-3xl font-black tracking-tight tabular-nums text-white leading-none font-mono">
                     {formatTime(activeRestLeft)}
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-2 font-bold text-sm">
-                
                 <motion.button
-                  whileTap={{ scale: 0.88, rotate: -2 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => {
                     triggerHaptic("light");
                     startRestTimer(Math.max(0, activeRestLeft - 15));
                   }}
-                  className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer"
+                  className="h-10 px-3.5 bg-white/8 hover:bg-white/15 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer border border-white/10"
                 >
                   -15s
                 </motion.button>
                 <motion.button
-                  whileTap={{ scale: 0.88, rotate: 2 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => {
                     triggerHaptic("light");
-                    startRestTimer(activeRestLeft + 15);
+                    startRestTimer(activeRestLeft + 30);
                   }}
-                  className="h-10 px-3.5 bg-white/8 hover:bg-white/14 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer"
+                  className="h-10 px-3.5 bg-white/8 hover:bg-white/15 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer border border-white/10"
                 >
-                  +15s
+                  +30s
                 </motion.button>
                 <motion.button
-                  whileTap={{ scale: 0.82, rotate: 10 }}
-                  whileHover={{ scale: 1.08 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => {
-                    triggerHaptic("light");
+                    triggerHaptic("medium");
                     startRestTimer(0);
                   }}
-                  className="ml-1 w-10 h-10 bg-white/8 hover:bg-white/14 text-[#8E8E93] hover:text-white rounded-full flex items-center justify-center transition-all cursor-pointer"
+                  className="h-10 px-4 bg-[#30D158] text-black font-extrabold rounded-full flex items-center gap-1.5 transition-all text-xs cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.35)]"
                 >
-                  <X className="w-5 h-5" />
+                  <span>Salta</span>
                 </motion.button>
               </div>
             </div>

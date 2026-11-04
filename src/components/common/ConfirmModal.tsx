@@ -22,7 +22,7 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel = "Annulla",
   destructive = false,
   title,
   icon = "default",
@@ -36,7 +36,7 @@ export function ConfirmModal({
     : CheckCircle2;
 
   useModalDismiss(true, onCancel);
-  const finalConfirmLabel = confirmLabel || (destructive ? "Delete" : "Save");
+  const finalConfirmLabel = confirmLabel || (destructive ? "Elimina" : "Salva");
 
   return (
     <motion.div

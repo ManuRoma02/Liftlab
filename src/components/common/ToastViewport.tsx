@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import { Check, AlertTriangle, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { TOAST_EVENT, type ToastDetail } from "../../lib/toast";
 import { triggerHaptic } from "../../lib/haptics";
@@ -16,10 +16,10 @@ export function ToastViewport() {
       const { message, tone } = (event as CustomEvent<ToastDetail>).detail;
       const id = nextId.current++;
       triggerHaptic(tone === "error" ? "warning" : tone === "success" ? "success" : "light");
-      setToasts((current) => [...current.slice(-2), { id, message, tone }]);
+      setToasts((current) => [...current.slice(-1), { id, message, tone }]);
       window.setTimeout(() => {
         setToasts((current) => current.filter((toast) => toast.id !== id));
-      }, tone === "error" ? 5200 : 3600);
+      }, tone === "error" ? 4200 : 2800);
     };
 
     window.addEventListener(TOAST_EVENT, handleToast);
@@ -28,61 +28,49 @@ export function ToastViewport() {
 
   return (
     <div
-      className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-[500] flex flex-col items-center gap-2 pointer-events-none lg:left-28 lg:right-6 lg:items-end"
+      className="fixed left-0 right-0 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-[500] flex flex-col items-center gap-2 pointer-events-none px-4"
       aria-live="polite"
       aria-atomic="false"
     >
       <AnimatePresence>
         {toasts.map((toast) => {
-          const Icon = toast.tone === "success" ? CheckCircle2 : toast.tone === "error" ? AlertCircle : Info;
+          const isSuccess = toast.tone === "success";
+          const isError = toast.tone === "error";
+
           return (
             <motion.div
               key={toast.id}
-              role={toast.tone === "error" ? "alert" : "status"}
-              initial={{ opacity: 0, y: -24, scale: 0.88 }}
+              role={isError ? "alert" : "status"}
+              initial={{ opacity: 0, y: -20, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -16, scale: 0.92, transition: { duration: 0.2 } }}
+              exit={{ opacity: 0, y: -16, scale: 0.92, transition: { duration: 0.18 } }}
               transition={CARTOON_SPRINGS.pop}
-              className={`pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full border px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.6)] backdrop-blur-2xl bg-[#1C1C1E]/95 ${
-                toast.tone === "error"
-                  ? "border-[#FF453A]/30 text-white"
-                  : toast.tone === "success"
-                  ? "border-[#30D158]/30 text-white"
-                  : "border-white/10 text-white"
-              }`}
+              onClick={() => {
+                triggerHaptic("light");
+                setToasts((current) => current.filter((item) => item.id !== toast.id));
+              }}
+              className="pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 max-w-sm rounded-full border border-white/12 bg-[#161618]/92 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] cursor-pointer select-none active:scale-95 transition-transform"
             >
-              <motion.div
-                className="shrink-0"
-                animate={{
-                  scale: [0.7, 1.25, 0.95, 1],
-                  rotate: toast.tone === "error" ? [0, -10, 10, 0] : [0, 8, -8, 0],
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                  isError
+                    ? "bg-[#FF453A]/20 text-[#FF453A] border border-[#FF453A]/30"
+                    : isSuccess
+                    ? "bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30"
+                    : "bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30"
+                }`}
               >
-                <Icon
-                  className={`h-5 w-5 ${
-                    toast.tone === "error"
-                      ? "text-[#FF453A]"
-                      : toast.tone === "success"
-                      ? "text-[#30D158]"
-                      : "text-[#0A84FF]"
-                  }`}
-                  aria-hidden="true"
-                />
-              </motion.div>
-              <p className="min-w-0 flex-1 text-sm font-semibold text-white leading-snug">{toast.message}</p>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.8, rotate: 10 }}
-                onClick={() => {
-                  triggerHaptic("light");
-                  setToasts((current) => current.filter((item) => item.id !== toast.id));
-                }}
-                className="flex min-h-[44px] min-w-[44px] h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#8E8E93] hover:text-white hover:bg-white/10 transition-colors cursor-pointer -mr-1"
-                aria-label="Dismiss notification"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </motion.button>
+                {isError ? (
+                  <AlertTriangle className="w-3 h-3 stroke-[2.5]" />
+                ) : isSuccess ? (
+                  <Check className="w-3 h-3 stroke-[3]" />
+                ) : (
+                  <Info className="w-3 h-3 stroke-[2.5]" />
+                )}
+              </div>
+              <p className="text-xs font-semibold text-white tracking-tight leading-snug">
+                {toast.message}
+              </p>
             </motion.div>
           );
         })}
