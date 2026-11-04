@@ -3,13 +3,13 @@ import io
 from PIL import Image, ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AI_ICON_PATH = os.path.join(BASE_DIR, "assets", "liftlab_ai_icon_master.jpg")
+import resvg_py
 
-if not os.path.exists(AI_ICON_PATH):
-    raise FileNotFoundError(f"Master AI icon not found at {AI_ICON_PATH}")
-
-print("Loading master AI icon from Nano Banana...")
-master_raw = Image.open(AI_ICON_PATH).convert("RGBA")
+SVG_LOGO_PATH = os.path.join(BASE_DIR, "public", "logo.svg")
+with open(SVG_LOGO_PATH, "r", encoding="utf-8") as f:
+    svg_str = f.read()
+png_bytes = resvg_py.svg_to_bytes(svg_str, width=1024, height=1024)
+master_raw = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
 if master_raw.size != (1024, 1024):
     master_raw = master_raw.resize((1024, 1024), Image.Resampling.LANCZOS)
 

@@ -83,8 +83,7 @@ export function Workout({
   onOpenImportCode: () => void;
   onLoadStarterRoutines?: () => void;
 }) {
-  const [routineSearch, setRoutineSearch] = useState("");
-  const [sortBy, setSortBy] = useState<RoutineSortOption>(() => {
+    const [sortBy, setSortBy] = useState<RoutineSortOption>(() => {
     try {
       return (localStorage.getItem("liftlab_routines_sort") as RoutineSortOption) || "today";
     } catch {
@@ -145,6 +144,9 @@ export function Workout({
       } else {
         next.add(id);
       }
+      if (next.size === 0) {
+        setIsSelectionMode(false);
+      }
       return next;
     });
   };
@@ -161,6 +163,8 @@ export function Workout({
   const handleShareSelected = async () => {
     const selected = routines.filter((r) => selectedRoutineIds.has(r.id));
     if (selected.length === 0) return;
+    setIsSelectionMode(false);
+    setSelectedRoutineIds(new Set());
     const { success, fallbackNeeded } = await shareRoutinesNative(selected, t);
     if (!success && fallbackNeeded) {
       setSharingRoutinesList(selected);
@@ -184,6 +188,7 @@ export function Workout({
     longPressTimerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
       triggerHaptic("medium");
+      setActiveMenuId(null);
       setIsSelectionMode(true);
       setSelectedRoutineIds(new Set([routineId]));
     }, 450);
@@ -211,6 +216,7 @@ export function Workout({
     e.preventDefault();
     if (!isSelectionMode) {
       triggerHaptic("medium");
+      setActiveMenuId(null);
       setIsSelectionMode(true);
       setSelectedRoutineIds(new Set([routineId]));
     }
@@ -301,18 +307,7 @@ export function Workout({
     });
   }, [routines, todayIndex, sortBy, lastDoneMap]);
 
-  const filteredRoutines = useMemo(() => {
-    if (!routineSearch.trim()) return sortedRoutines;
-    const query = routineSearch.toLowerCase();
-    return sortedRoutines.filter((r) =>
-      r.name?.toLowerCase().includes(query) ||
-      (r.exercises || []).some((ex) =>
-        ex.title?.toLowerCase().includes(query) ||
-        (t && t(ex.title)?.toLowerCase().includes(query)) ||
-        getExerciseSearchScore(query, ex, t) > 0
-      )
-    );
-  }, [sortedRoutines, routineSearch, t]);
+  const filteredRoutines = sortedRoutines;
 
   return (
     <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-6 flex flex-col gap-stack-lg w-full">
@@ -357,25 +352,6 @@ export function Workout({
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 triggerHaptic("light");
-                setIsSelectionMode((prev) => {
-                  if (prev) setSelectedRoutineIds(new Set());
-                  return !prev;
-                });
-              }}
-              aria-pressed={isSelectionMode}
-              className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                isSelectionMode
-                  ? "bg-[#30D158] text-black border-[#30D158] shadow-[0_0_12px_rgba(48,209,88,0.4)]"
-                  : "bg-white/6 hover:bg-white/10 border-white/10 text-[#8E8E93] hover:text-white"
-              }`}
-              title={isSelectionMode ? "Fine selezione" : "Seleziona schede"}
-            >
-              <CheckSquare className="w-4 h-4" strokeWidth={2} />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                triggerHaptic("light");
                 setIsImportMenuOpen(true);
               }}
               aria-expanded={isImportMenuOpen}
@@ -405,37 +381,9 @@ export function Workout({
         }
       />
 
-      {/* Routine Search Input */}
+      {/* Sort Selector Dropdown (Tendina) */}
       {routines.length > 1 && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#30D158] transition-colors" />
-            <input
-              type="text"
-              value={routineSearch}
-              onChange={(e) => setRoutineSearch(e.target.value)}
-              placeholder={t("search") || "Cerca schede o esercizi..."}
-              aria-label={t("search") || "Cerca schede o esercizi"}
-              className="w-full bg-[#18191e] border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:border-[#30D158]/50 focus:outline-none transition-all placeholder:text-[#8E8E93]"
-            />
-            {routineSearch.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("light");
-                  setRoutineSearch("");
-                }}
-                aria-label={t("clear_search") || "Azzera ricerca"}
-                className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
-              >
-                <div className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
-                  <X className="w-3.5 h-3.5" />
-                </div>
-              </button>
-            )}
-          </div>
-
-          {/* Sort Selector Dropdown (Tendina) */}
+        <div className="flex justify-end w-full">
           <div className="relative group shrink-0">
             <div className="flex items-center justify-between gap-2 px-3.5 py-3 bg-[#18191e] border border-white/10 rounded-2xl text-xs font-bold text-white shadow-sm pointer-events-none group-focus-within:border-[#30D158] transition-all">
               <div className="flex items-center gap-2">
@@ -533,29 +481,6 @@ export function Workout({
                   </motion.button>
                 )}
               </div>
-            </div>
-          </div>
-        ) : filteredRoutines.length === 0 ? (
-          <div
-            data-testid="workout-search-empty-state"
-            className="md:col-span-3 flex flex-col items-center justify-center gap-4 py-16 px-6 border border-white/10 rounded-3xl bg-[#121418]/90 shadow-[0_16px_40px_rgba(0,0,0,0.4)]"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8E8E93]">
-              <Search className="w-7 h-7" />
-            </div>
-            <div className="text-center max-w-sm px-4">
-              <h3 className="text-lg font-bold text-white mb-1">
-                {t("no_routines_search") || "Nessuna scheda trovata"}
-              </h3>
-              <p className="text-sm text-[#8E8E93] mb-4">
-                {routineSearch ? `Nessun risultato per "${routineSearch}"` : "Nessun risultato corrispondente."}
-              </p>
-              <button
-                onClick={() => setRoutineSearch("")}
-                className="bg-white/10 text-white border border-white/15 px-4 py-2 rounded-full text-xs font-semibold hover:bg-white/15 transition-all cursor-pointer"
-              >
-                {t("clear_search") || "Azzera Ricerca"}
-              </button>
             </div>
           </div>
         ) : (
@@ -812,16 +737,16 @@ export function Workout({
         />
       )}
 
-      {/* Floating Multi-Selection Action Bar */}
+      {/* Floating Multi-Selection Action Bar (Top Header) */}
       <AnimatePresence>
         {isSelectionMode && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+            initial={{ opacity: 0, y: -40, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.98 }}
+            exit={{ opacity: 0, y: -40, scale: 0.98 }}
             transition={appleSpringDefault}
-            className="fixed bottom-0 left-0 right-0 z-[160] px-4 py-3 pointer-events-auto"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+            className="fixed top-0 left-0 right-0 z-[160] px-3 sm:px-4 pointer-events-auto"
+            style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)" }}
           >
             <div className="max-w-[640px] mx-auto bg-[#18181b]/95 backdrop-blur-2xl rounded-3xl p-3 sm:px-5 sm:py-3.5 flex items-center justify-between gap-2.5 border border-white/16 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_25px_rgba(48,209,88,0.15)]">
               {/* Left: Close & Count */}

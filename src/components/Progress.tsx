@@ -1723,59 +1723,59 @@ export function Progress({
         </div>
       )}
 
-      {/* Unlocked Achievement Celebration Dialog */}
+      {/* Unlocked Achievement Celebration Dialog - Compact Apple HIG Modal */}
       <AnimatePresence>
         {unlockedCelebration && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl touch-none select-none">
             <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              initial={{ scale: 0.85, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="bg-[#24252c] border border-white/16 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
+              exit={{ scale: 0.85, opacity: 0, y: 15 }}
+              transition={{ type: "spring", stiffness: 380, damping: 26 }}
+              className="bg-[#24252c] border border-white/16 rounded-3xl p-5 sm:p-6 max-w-[320px] w-full text-center flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
             >
-              <div className="relative mb-4">
+              <div className="relative mb-3">
                 {[...Array(6)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute w-2 h-2 rounded-full bg-[#30D158] blur-[1px]"
-                    initial={{ x: (i - 3) * 25, y: 0, opacity: 0.8, scale: 0.5 }}
+                    className="absolute w-1.5 h-1.5 rounded-full bg-[#30D158] blur-[0.5px]"
+                    initial={{ x: (i - 3) * 20, y: 0, opacity: 0.8, scale: 0.5 }}
                     animate={{
-                      y: [-10, -40, -10],
-                      x: [(i - 3) * 25, (i - 3) * 30 + (i % 2 === 0 ? 10 : -10), (i - 3) * 25],
+                      y: [-8, -28, -8],
+                      x: [(i - 3) * 20, (i - 3) * 24 + (i % 2 === 0 ? 8 : -8), (i - 3) * 20],
                       opacity: [0.3, 0.9, 0.3],
-                      scale: [0.6, 1.2, 0.6],
+                      scale: [0.6, 1.1, 0.6],
                     }}
                     transition={{
-                      duration: 2 + (i % 3) * 0.5,
+                      duration: 2 + (i % 3) * 0.4,
                       repeat: Infinity,
                       ease: "easeInOut",
-                      delay: i * 0.2,
+                      delay: i * 0.15,
                     }}
                   />
                 ))}
-                <div className="p-4 rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/40 shadow-[0_0_25px_rgba(48,209,88,0.4)]">
+                <div className="p-3 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/35 shadow-[0_0_20px_rgba(48,209,88,0.3)]">
                   {React.createElement(unlockedCelebration.icon || Trophy, {
-                    className: "w-12 h-12 text-[#30D158]",
+                    className: "w-8 h-8 text-[#30D158]",
                   })}
                 </div>
               </div>
 
-              <span className="text-xs font-bold tracking-wider text-[#30D158] uppercase mb-1">
-                TRAGUARDO SBLOCCATO!
+              <span className="text-[10px] font-black tracking-widest text-[#30D158] uppercase mb-0.5">
+                {t("achievement_unlocked") || "TRAGUARDO SBLOCCATO!"}
               </span>
 
-              <h3 className="text-xl font-extrabold text-white mb-1">
+              <h3 className="text-base sm:text-lg font-black text-white mb-1 tracking-tight">
                 {unlockedCelebration.title}
               </h3>
 
               {unlockedCelebration.level && (
-                <span className="inline-block px-3 py-1 mb-3 text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30">
+                <span className="inline-block px-2.5 py-0.5 mb-2 text-[9px] font-bold uppercase tracking-wider rounded-full bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30">
                   {unlockedCelebration.level}
                 </span>
               )}
 
-              <p className="text-xs text-[#8E8E93] mb-6 leading-relaxed">
+              <p className="text-xs text-[#8E8E93] mb-4 leading-relaxed line-clamp-3">
                 {unlockedCelebration.description}
               </p>
 
@@ -1784,7 +1784,7 @@ export function Progress({
                   triggerHaptic("success");
                   handleClaimCelebration();
                 }}
-                className="w-full py-3.5 bg-[#30D158] hover:brightness-105 active:scale-95 text-black font-bold rounded-full uppercase tracking-wider text-sm transition-all shadow-[0_8px_20px_rgba(48,209,88,0.25)] cursor-pointer"
+                className="w-full py-3 bg-[#30D158] hover:brightness-105 active:scale-95 text-black font-extrabold rounded-full uppercase tracking-wider text-xs transition-all shadow-[0_6px_16px_rgba(48,209,88,0.25)] cursor-pointer min-h-[44px]"
               >
                 Fantastico!
               </button>

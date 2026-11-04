@@ -10,50 +10,14 @@
         android:pivotX="256"
         android:pivotY="256">
 
-        <!-- Outer Bumper Rim -->
+        <!-- Primary Emerald 'L' (Lift) -->
         <path
-            android:pathData="M 256,62 a 194,194 0 1,0 0.001,0 Z"
-            android:strokeColor="#252A36"
-            android:strokeWidth="4" />
-
-        <!-- Chamfer Lip -->
-        <path
-            android:pathData="M 256,80 a 176,176 0 1,0 0.001,0 Z"
-            android:strokeColor="#2D3342"
-            android:strokeWidth="6" />
-
-        <!-- Inner Recessed Steel Hub -->
-        <path
-            android:pathData="M 256,86 a 170,170 0 1,0 0.001,0 Z"
-            android:fillColor="#0D0E14" />
-
-        <!-- Center Collar Ring -->
-        <path
-            android:pathData="M 256,88 a 168,168 0 1,0 0.001,0 Z"
-            android:strokeColor="#20242F"
-            android:strokeWidth="2" />
-
-        <!-- Plate Grip Arcs (Clean recessed handles, no crosshairs) -->
-        <path
-            android:pathData="M 120,220 A 150,150 0 0,1 120,180 M 392,220 A 150,150 0 0,0 392,180 M 120,292 A 150,150 0 0,0 120,332 M 392,292 A 150,150 0 0,1 392,332"
-            android:strokeColor="#20242F"
-            android:strokeWidth="6"
-            android:strokeLineCap="round" />
-
-        <!-- 3D Bevel Shadow -->
-        <path
-            android:pathData="M 172,144 C 172,136 178,130 186,130 L 242,130 C 250,130 256,136 256,144 L 256,308 C 256,314 261,319 267,319 L 348,319 C 356,319 362,325 362,333 L 362,366 C 362,374 356,380 348,380 L 186,380 C 178,380 172,374 172,366 Z"
-            android:fillColor="#1E8B3C" />
-
-        <!-- Main Sculpted Emerald L -->
-        <path
-            android:pathData="M 168,138 C 168,130 174,124 182,124 L 238,124 C 246,124 252,130 252,138 L 252,304 C 252,310 257,315 263,315 L 344,315 C 352,315 358,321 358,329 L 358,360 C 358,368 352,374 344,374 L 182,374 C 174,374 168,368 168,360 Z"
+            android:pathData="M 154,136 C 144,136 136,144 136,154 L 136,348 C 136,363 148,376 164,376 L 358,376 C 368,376 376,368 376,358 L 376,306 C 376,296 368,288 358,288 L 236,288 C 229,288 224,283 224,276 L 224,154 C 224,144 216,136 206,136 Z"
             android:fillColor="#30D158" />
 
-        <!-- Titanium Inset Accent -->
+        <!-- Interlocking Titanium White 'L' (Lab) -->
         <path
-            android:pathData="M 194,156 L 218,156 L 218,326 C 218,333 223,338 230,338 L 332,338 L 332,352 L 220,352 C 206,352 194,340 194,326 Z"
-            android:fillColor="#FFFFFF"
-            android:fillAlpha="0.4" />
+            android:pathData="M 276,136 C 269,136 264,141 264,148 L 264,232 C 264,241 271,248 280,248 L 364,248 C 371,248 376,243 376,236 L 376,216 C 376,209 371,204 364,204 L 316,204 C 312,204 308,200 308,196 L 308,148 C 308,141 303,136 296,136 Z"
+            android:fillColor="#FFFFFF" />
     </group>
 </vector>

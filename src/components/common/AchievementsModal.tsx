@@ -117,7 +117,7 @@ export function AchievementsModal({
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[82vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col"
         >
           {/* Header */}
           <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c] shrink-0">
