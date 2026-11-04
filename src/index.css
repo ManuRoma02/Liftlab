@@ -401,11 +401,21 @@ button, [role="button"], a, input, textarea, select {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Caret & Input Focus - Eliminates black box around typing cursor in Android WebView / Mobile browsers */
+input, textarea, [contenteditable="true"] {
+  caret-color: #30d158 !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+input:focus, textarea:focus, [contenteditable="true"]:focus {
+  outline: none !important;
+}
+
 button, [role="button"] {
   touch-action: manipulation;
 }
 
-:where(button, [role="button"], a, input, textarea, select):focus-visible {
+:where(button, [role="button"], a, select):focus-visible {
   outline: 2px solid #30d158;
   outline-offset: 2px;
 }
@@ -413,8 +423,13 @@ button, [role="button"] {
 button:disabled { pointer-events: none; }
 
 ::selection {
-  background: #30d158;
-  color: #000000;
+  background: rgba(48, 209, 88, 0.35);
+  color: #ffffff;
+}
+
+input::selection, textarea::selection {
+  background: rgba(48, 209, 88, 0.35);
+  color: #ffffff;
 }
 
 .safe-topbar {

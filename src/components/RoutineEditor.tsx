@@ -2228,7 +2228,7 @@ export function RoutineEditor({
                                 </div>
                                 <div className={`${showRpe ? "col-span-3" : "col-span-4"} relative flex items-center`}>
                                   <input
-                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
+                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-[#1f2026] caret-[#30D158] focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isBodyweightExercise(ex) ? "BW" : unit}
                                     type="text"
                                     inputMode="decimal"
@@ -2250,7 +2250,7 @@ export function RoutineEditor({
                                 </div>
                                 <div className={`${showRpe ? "col-span-2" : "col-span-3"} relative flex items-center`}>
                                   <input
-                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
+                                    className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-2 text-base font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-[#1f2026] caret-[#30D158] focus:ring-1 focus:ring-[#30D158]/50 focus:outline-none transition-all shadow-inner"
                                     placeholder={isTimedExercise(ex) ? "Secs" : (t("reps_upper") || "Ripet.")}
                                     type="text"
                                     inputMode="numeric"
@@ -2273,7 +2273,7 @@ export function RoutineEditor({
                                 {showRpe && (
                                   <div className="col-span-2">
                                     <input
-                                      className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-black/90 focus:outline-none transition-all shadow-inner"
+                                      className="w-full bg-[#18191e] border border-white/10 rounded-xl text-white text-center h-11 py-2 px-1 text-sm font-extrabold font-sans tabular-nums tracking-tight focus:border-[#30D158] focus:bg-[#1f2026] caret-[#30D158] focus:outline-none transition-all shadow-inner"
                                       placeholder="RPE"
                                       type="text"
                                       inputMode="decimal"

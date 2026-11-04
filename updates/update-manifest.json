@@ -1,8 +1,8 @@
 {
-  "version": "1.0.19",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.19.zip",
-  "checksum": "819f5e9157eab7fc323a11267a8e9a9db01695fa2d5b741bd6bd50c9e1806531",
-  "releaseDate": "2026-11-04T19:44:08.156Z",
-  "notes": "LiftLab v1.0.19: Calcolatore dischi riservato agli esercizi con bilanciere/dischi (esclusi cavi, macchine e corpo libero); rimosse le freccette e aggiunta funzione 'Riordina Esercizi' nei 3 puntini con popup e trascinamento fluido (drag-and-drop con Reorder gesture e feedback aptico).",
-  "bundleSizeMb": "3.96"
+  "version": "1.0.20",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.20.zip",
+  "checksum": "ab6a296758890e077d9a5fe5de522561c6f0b3a07e1b7381e932744c16b9fbb2",
+  "releaseDate": "2026-11-04T19:51:54.399Z",
+  "notes": "LiftLab v1.0.20: Risolto bug del blocco nero attorno al cursore/segnalino di digitazione (caret e insertion handle); configurati esplicitamente caret-color verde smeraldo e tinte native colorControlActivated per una digitazione pulita e nitida.",
+  "bundleSizeMb": "4.18"
 }

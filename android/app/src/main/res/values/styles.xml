@@ -14,6 +14,12 @@
         <item name="windowNoTitle">true</item>
         <item name="android:background">#090A0B</item>
         <item name="android:windowBackground">#090A0B</item>
+        <item name="colorAccent">#30D158</item>
+        <item name="android:colorAccent">#30D158</item>
+        <item name="colorControlActivated">#30D158</item>
+        <item name="android:colorControlActivated">#30D158</item>
+        <item name="colorControlHighlight">#3030D158</item>
+        <item name="android:colorControlHighlight">#3030D158</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
