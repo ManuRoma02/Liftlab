@@ -248,6 +248,95 @@ export function isBodyweightExercise(
   return bwKeywords.some((kw) => title.includes(kw));
 }
 
+/**
+ * Determines whether an exercise typically utilizes weight plates (Barbell, Olympic bar, Smith Machine / Multipower, Plate Loaded)
+ * as opposed to fixed-weight/selectorized/bodyweight exercises (Cables, Pin-loaded machines, Dumbbells, Calisthenics).
+ */
+export function usesWeightPlates(
+  exercise?: { title?: string; type?: string; category?: string; equipment?: string } | null,
+): boolean {
+  if (!exercise) return false;
+  const equip = String(exercise.equipment || "").toLowerCase().trim();
+  const category = String(exercise.category || "").toLowerCase().trim();
+  const title = String(exercise.title || "").toLowerCase().trim();
+
+  // 1. Explicit non-plate equipment types: Machine, Cable, Dumbbell, Bodyweight, Kettlebell, Band
+  if (
+    equip === "cable" || equip.includes("cable") || equip.includes("cavi") ||
+    equip === "machine" || equip.includes("machine") || equip.includes("macchin") ||
+    equip === "bodyweight" || equip.includes("bodyweight") || equip.includes("corpo libero") ||
+    equip === "dumbbell" || equip.includes("dumbbell") || equip.includes("manubri") ||
+    equip === "kettlebell" || equip.includes("kettlebell") ||
+    equip === "band" || equip.includes("band") || equip.includes("elastico") ||
+    category === "calisthenics" || category === "bodyweight" || category === "cardio"
+  ) {
+    // Exception: If title explicitly mentions plate loaded or barbell (e.g. "Plate Loaded Leg Press", "Smith Machine Bench Press")
+    if (
+      title.includes("plate loaded") ||
+      title.includes("a dischi") ||
+      title.includes("barbell") ||
+      title.includes("bilanciere") ||
+      title.includes("smith") ||
+      title.includes("multipower")
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  // 2. Explicit plate equipment types: Barbell, Multipower, Olympic Bar, Plate Loaded
+  if (
+    equip === "barbell" || equip.includes("barbell") || equip.includes("bilanciere") ||
+    equip === "multipower" || equip.includes("multipower") || equip.includes("smith") ||
+    equip.includes("plate") || equip.includes("dischi")
+  ) {
+    return true;
+  }
+
+  // 3. Fallback to title keywords
+  if (
+    title.includes("barbell") ||
+    title.includes("bilanciere") ||
+    title.includes("multipower") ||
+    title.includes("smith") ||
+    title.includes("plate loaded") ||
+    title.includes("a dischi") ||
+    title.includes("ez bar") ||
+    title.includes("trap bar") ||
+    title.includes("olympic")
+  ) {
+    return true;
+  }
+
+  // Title keywords that indicate non-plate
+  if (
+    title.includes("cable") || title.includes("cavi") ||
+    title.includes("machine") || title.includes("macchina") ||
+    title.includes("dumbbell") || title.includes("manubrio") || title.includes("manubri") ||
+    title.includes("kettlebell") ||
+    isBodyweightExercise(exercise)
+  ) {
+    return false;
+  }
+
+  // Known barbell exercises by common Italian/English names even if equipment string wasn't explicitly set
+  const plateExerciseKeywords = [
+    "bench press", "panca piana", "panca inclinata", "panca declinata",
+    "squat", "front squat", "back squat", "hack squat a dischi",
+    "deadlift", "stacco", "stacco da terra", "romanian deadlift", "rdl",
+    "overhead press", "military press", "lento avanti", "push press",
+    "barbell row", "rematore con bilanciere", "rematore bilanciere",
+    "hip thrust", "clean and jerk", "snatch", "pendlay row",
+    "good morning"
+  ];
+
+  if (plateExerciseKeywords.some((kw) => title.includes(kw))) {
+    return true;
+  }
+
+  return false;
+}
+
 export function parseGymNumber(value: number | string | "" | null | undefined): number | null {
   if (value === "" || value === undefined || value === null) return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;

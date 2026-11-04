@@ -22,6 +22,7 @@ import {
   Search,
   Disc,
   Flame,
+  ListOrdered,
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -35,6 +36,7 @@ import { ExerciseMedia } from "./common/ExerciseMedia";
 import { ExerciseFilterBar } from "./common/ExerciseFilterBar";
 import { AddExercise } from "./common/AddExercise";
 import { PlateCalculatorModal } from "./common/PlateCalculatorModal";
+import { ReorderExercisesModal } from "./common/ReorderExercisesModal";
 import {
   getExerciseRestPreset,
   buildPreviousSetsMap,
@@ -51,6 +53,7 @@ import {
   formatWeightUnit,
   roundToGymWeight,
   getEquipmentBarWeight,
+  usesWeightPlates,
 } from "../lib/workoutUtils";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import { readJson, removeJsonAtomic, writeJsonAtomic, writeJsonSafe } from "../lib/storage";
@@ -814,6 +817,7 @@ export function RoutineEditor({
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
 
   const [isPlateCalcOpen, setIsPlateCalcOpen] = useState(false);
+  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
   const [plateCalcInitialWeight, setPlateCalcInitialWeight] = useState<number | undefined>(undefined);
 
   const openPlateCalculator = (ex: ExerciseData) => {
@@ -1649,17 +1653,19 @@ export function RoutineEditor({
                               </div>
 
                               <div className="flex items-center gap-1 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    triggerHaptic("light");
-                                    openPlateCalculator(ex);
-                                  }}
-                                  className="p-2 text-[#8E8E93] hover:text-white rounded-lg hover:bg-white/5 cursor-pointer"
-                                  title={t("plate_calculator") || "Plate Calculator"}
-                                >
-                                  <Disc className="w-4 h-4 text-[#30D158]" />
-                                </button>
+                                {usesWeightPlates(ex) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic("light");
+                                      openPlateCalculator(ex);
+                                    }}
+                                    className="p-2 text-[#8E8E93] hover:text-white rounded-lg hover:bg-white/5 cursor-pointer"
+                                    title={t("plate_calculator") || "Plate Calculator"}
+                                  >
+                                    <Disc className="w-4 h-4 text-[#30D158]" />
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => setWarmupModalExercise(ex)}
@@ -1886,18 +1892,20 @@ export function RoutineEditor({
                         {/* Row 2: Dedicated Command Toolbar placed underneath */}
                         <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-white/6 w-full">
                           <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic("light");
-                                openPlateCalculator(ex);
-                              }}
-                              className="h-8 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold text-white/90 border border-white/8 cursor-pointer"
-                              title={t("plate_calculator") || "Calcola dischi"}
-                            >
-                              <Disc className="w-3.5 h-3.5 text-[#30D158]" />
-                              <span className="text-[11px] font-bold">Dischi</span>
-                            </button>
+                            {usesWeightPlates(ex) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic("light");
+                                  openPlateCalculator(ex);
+                                }}
+                                className="h-8 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold text-white/90 border border-white/8 cursor-pointer"
+                                title={t("plate_calculator") || "Calcola dischi"}
+                              >
+                                <Disc className="w-3.5 h-3.5 text-[#30D158]" />
+                                <span className="text-[11px] font-bold">Dischi</span>
+                              </button>
+                            )}
 
                             <button
                               type="button"
@@ -1914,24 +1922,6 @@ export function RoutineEditor({
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => moveExercise(ex.id, "up")}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
-                              title="Sposta su"
-                              aria-label="Move exercise up"
-                            >
-                              <ChevronUp className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => moveExercise(ex.id, "down")}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-white/5 active:scale-90 transition-all cursor-pointer"
-                              title="Sposta giù"
-                              aria-label="Move exercise down"
-                            >
-                              <ChevronDown className="w-4 h-4" />
-                            </button>
                             <button
                               type="button"
                               onClick={() => openExerciseModal(undefined, ex.id)}
@@ -1965,6 +1955,18 @@ export function RoutineEditor({
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        triggerHaptic("light");
+                                        setIsReorderModalOpen(true);
+                                        setActiveMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2.5 cursor-pointer transition-colors"
+                                    >
+                                      <ListOrdered className="w-4 h-4 text-[#30D158]" />
+                                      <span>{t("reorder_exercises") || "Riordina / Sposta"}</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         if (ex.technique === "superset") {
                                           removeSuperset(ex.id);
                                         } else {
@@ -1972,12 +1974,12 @@ export function RoutineEditor({
                                         }
                                         setActiveMenuId(null);
                                       }}
-                                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2 cursor-pointer transition-colors"
+                                      className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2.5 cursor-pointer transition-colors border-t border-white/5"
                                     >
                                       <LinkIcon className={`w-4 h-4 ${ex.technique === "superset" ? "text-[#30D158]" : "text-[#8E8E93]"}`} />
-                                      {ex.technique === "superset"
+                                      <span>{ex.technique === "superset"
                                         ? (t("remove_from_superset") || "Separa da Superset")
-                                        : (t("make_superset") || "Crea Superset")}
+                                        : (t("make_superset") || "Crea Superset")}</span>
                                     </button>
                                     <button
                                       onClick={(e) => {

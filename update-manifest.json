@@ -1,8 +1,8 @@
 {
-  "version": "1.0.18",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.18.zip",
-  "checksum": "3f7ba7723e449b8dec0fb4a9f1c30ca85344fbafb1134992b076761351417994",
-  "releaseDate": "2026-11-04T19:31:09.714Z",
-  "notes": "LiftLab v1.0.18: Selezione multipla routine con pressione prolungata (long-press), esportazione/condivisione completa con note, carichi, reps, recuperi e tecniche; allineamento ai 5 standard UX/UI (ottimizzazione latenza/UI ottimistica, controlli segmentati per scelte multiple, etichette azione sui bottoni, tap su intera riga e microcopy essenziale senza parole superflue).",
-  "bundleSizeMb": "3.62"
+  "version": "1.0.19",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.19.zip",
+  "checksum": "819f5e9157eab7fc323a11267a8e9a9db01695fa2d5b741bd6bd50c9e1806531",
+  "releaseDate": "2026-11-04T19:44:08.156Z",
+  "notes": "LiftLab v1.0.19: Calcolatore dischi riservato agli esercizi con bilanciere/dischi (esclusi cavi, macchine e corpo libero); rimosse le freccette e aggiunta funzione 'Riordina Esercizi' nei 3 puntini con popup e trascinamento fluido (drag-and-drop con Reorder gesture e feedback aptico).",
+  "bundleSizeMb": "3.96"
 }

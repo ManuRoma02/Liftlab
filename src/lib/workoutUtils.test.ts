@@ -21,6 +21,7 @@ import {
   generateWarmupSets,
   isTimedExercise,
   isBodyweightExercise,
+  usesWeightPlates,
   shouldRestoreLiveProgress,
   convertWeight,
   roundToGymWeight,
@@ -287,6 +288,18 @@ assert.equal(isBodyweightExercise({ title: "Pull Up" }), true);
 assert.equal(isBodyweightExercise({ title: "Dips", equipment: "Bodyweight" }), true);
 assert.equal(isBodyweightExercise({ title: "Trazioni" }), true);
 assert.equal(isBodyweightExercise({ title: "Panca Piana", equipment: "Barbell" }), false);
+
+assert.equal(usesWeightPlates({ title: "Barbell Bench Press", equipment: "Barbell" }), true, "Barbell Bench Press uses plates");
+assert.equal(usesWeightPlates({ title: "Barbell Squat", equipment: "Barbell" }), true, "Barbell Squat uses plates");
+assert.equal(usesWeightPlates({ title: "Deadlift", equipment: "Barbell" }), true, "Deadlift uses plates");
+assert.equal(usesWeightPlates({ title: "Leg Extension", equipment: "Machine" }), false, "Machine does not use plates");
+assert.equal(usesWeightPlates({ title: "Cable Crossover", equipment: "Cable" }), false, "Cable does not use plates");
+assert.equal(usesWeightPlates({ title: "Dumbbell Bicep Curl", equipment: "Dumbbell" }), false, "Dumbbell does not use plates");
+assert.equal(usesWeightPlates({ title: "Pull Up", equipment: "Bodyweight" }), false, "Bodyweight does not use plates");
+assert.equal(usesWeightPlates({ title: "Push Up" }), false, "Bodyweight title does not use plates");
+assert.equal(usesWeightPlates({ title: "Smith Machine Shoulder Press", equipment: "Multipower" }), true, "Multipower uses plates");
+assert.equal(usesWeightPlates({ title: "Plate Loaded Leg Press", equipment: "Machine" }), true, "Plate loaded machine uses plates");
+
 
 assert.equal(isTimedExercise({ title: "Barbell Walking Lunge", category: "Legs", type: "Compound" }), false);
 assert.equal(isTimedExercise({ title: "Walking, Treadmill", category: "Cardio" }), true);
