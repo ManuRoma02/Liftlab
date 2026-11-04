@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
+  Check,
+  CheckSquare,
+  Share2,
   Dumbbell,
   Plus,
   Upload,
@@ -23,10 +26,12 @@ import {
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { AppleBottomSheet } from "./common/AppleBottomSheet";
+import { ShareRoutineModal } from "./common/ShareRoutineModal";
+import { shareRoutinesNative } from "../lib/routineSharing";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import { getLogDate } from "../lib/workoutUtils";
 import type { RoutineData } from "../types/workout";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { triggerHaptic } from "../lib/haptics";
 import { CARTOON_SPRINGS, CARTOON_KEYFRAMES, appleSpringDefault } from "../lib/motion";
 
@@ -119,11 +124,118 @@ export function Workout({
   }, [workoutLogs]);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
+
+  // Multi-selection mode states
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedRoutineIds, setSelectedRoutineIds] = useState<Set<string>>(new Set());
+  const [sharingRoutinesList, setSharingRoutinesList] = useState<RoutineData[] | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+
+  // Long-press detection refs
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const toggleRoutineSelection = (id: string) => {
+    triggerHaptic("selection");
+    setSelectedRoutineIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    triggerHaptic("light");
+    if (selectedRoutineIds.size === filteredRoutines.length) {
+      setSelectedRoutineIds(new Set());
+    } else {
+      setSelectedRoutineIds(new Set(filteredRoutines.map((r) => r.id)));
+    }
+  };
+
+  const handleShareSelected = async () => {
+    const selected = routines.filter((r) => selectedRoutineIds.has(r.id));
+    if (selected.length === 0) return;
+    const { success, fallbackNeeded } = await shareRoutinesNative(selected, t);
+    if (!success && fallbackNeeded) {
+      setSharingRoutinesList(selected);
+    }
+  };
+
+  const handleConfirmBulkDelete = () => {
+    triggerHaptic("warning");
+    selectedRoutineIds.forEach((id) => onDeleteRoutine(id));
+    setIsBulkDeleteConfirmOpen(false);
+    setIsSelectionMode(false);
+    setSelectedRoutineIds(new Set());
+  };
+
+  const handleTouchStart = (routineId: string, e: React.TouchEvent) => {
+    if (isSelectionMode) return;
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTriggeredRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      triggerHaptic("medium");
+      setIsSelectionMode(true);
+      setSelectedRoutineIds(new Set([routineId]));
+    }, 450);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current || !longPressTimerRef.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    if (dx > 10 || dy > 10) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleContextMenu = (routineId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isSelectionMode) {
+      triggerHaptic("medium");
+      setIsSelectionMode(true);
+      setSelectedRoutineIds(new Set([routineId]));
+    }
+  };
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const handleBack = (event: Event) => {
+      if (sharingRoutinesList) {
+        event.preventDefault();
+        setSharingRoutinesList(null);
+        return;
+      }
+      if (isBulkDeleteConfirmOpen) {
+        event.preventDefault();
+        setIsBulkDeleteConfirmOpen(false);
+        return;
+      }
+      if (isSelectionMode) {
+        event.preventDefault();
+        setIsSelectionMode(false);
+        setSelectedRoutineIds(new Set());
+        return;
+      }
       if (routineToDelete) {
         event.preventDefault();
         setRoutineToDelete(null);
@@ -240,6 +352,25 @@ export function Workout({
             >
               <Plus className="w-3.5 h-3.5 shrink-0 text-[#8E8E93]" strokeWidth={2} />
               <span className="truncate whitespace-nowrap">{t("create_new") || "Nuova Scheda"}</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                triggerHaptic("light");
+                setIsSelectionMode((prev) => {
+                  if (prev) setSelectedRoutineIds(new Set());
+                  return !prev;
+                });
+              }}
+              aria-pressed={isSelectionMode}
+              className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                isSelectionMode
+                  ? "bg-[#30D158] text-black border-[#30D158] shadow-[0_0_12px_rgba(48,209,88,0.4)]"
+                  : "bg-white/6 hover:bg-white/10 border-white/10 text-[#8E8E93] hover:text-white"
+              }`}
+              title={isSelectionMode ? "Fine selezione" : "Seleziona schede"}
+            >
+              <CheckSquare className="w-4 h-4" strokeWidth={2} />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -432,18 +563,36 @@ export function Workout({
             const isMenuActive = activeMenuId === routine.id;
             const isToday = routine.scheduledDay != null && Number(routine.scheduledDay) === todayIndex;
             const lastDoneTime = lastDoneMap.get(routine.id) || lastDoneMap.get((routine.name || "").trim().toLowerCase()) || 0;
+            const isSelected = selectedRoutineIds.has(routine.id);
 
             return (
               <motion.article
                 key={routine.id}
-                whileHover={{ scale: 1.01 }}
+                whileHover={isSelectionMode ? undefined : { scale: 1.01 }}
                 transition={appleSpringDefault}
-                className={`rounded-3xl flex flex-col justify-between p-5 transition-all duration-200 relative group ${
-                  isToday
+                onTouchStart={(e) => handleTouchStart(routine.id, e)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onContextMenu={(e) => handleContextMenu(routine.id, e)}
+                onClick={() => {
+                  if (longPressTriggeredRef.current) {
+                    longPressTriggeredRef.current = false;
+                    return;
+                  }
+                  if (isSelectionMode) {
+                    toggleRoutineSelection(routine.id);
+                  }
+                }}
+                className={`rounded-3xl flex flex-col justify-between p-5 transition-all duration-200 relative group select-none ${
+                  isSelectionMode
+                    ? isSelected
+                      ? "border-2 border-[#30D158] bg-[#30D158]/10 ring-2 ring-[#30D158]/30 shadow-[0_8px_32px_rgba(48,209,88,0.25)] cursor-pointer"
+                      : "apple-glass-card hover:border-white/30 cursor-pointer"
+                    : isToday
                     ? "border-2 border-[#30D158] ring-1 ring-[#30D158]/60 shadow-[0_8px_32px_rgba(48,209,88,0.25)] bg-gradient-to-br from-[#1b261e]/95 via-[#15171a]/98 to-[#111214]"
                     : "apple-glass-card hover:border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
                 } ${isMenuActive ? "z-40" : "z-10"} ${
-                  activeRoutineId === routine.id ? "ring-2 ring-[#30D158]" : ""
+                  activeRoutineId === routine.id && !isSelectionMode ? "ring-2 ring-[#30D158]" : ""
                 }`}
               >
               <div className="flex flex-col gap-3">
@@ -486,135 +635,253 @@ export function Workout({
                     </div>
                   </div>
 
-                  {/* Options Menu & Favorite */}
-                  <div className="relative flex items-center gap-0.5 shrink-0">
-                    <motion.button
-                      whileTap={{ scale: 0.72, rotate: 20 }}
-                      animate={routine.favorite ? { scale: [0.8, 1.35, 0.95, 1], rotate: [0, -12, 12, 0] } : { scale: 1, rotate: 0 }}
-                      transition={routine.favorite ? CARTOON_KEYFRAMES.wobble : appleSpringDefault}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        triggerHaptic("light");
-                        onToggleFavoriteRoutine(routine.id);
-                      }}
-                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors cursor-pointer ${
-                        routine.favorite
-                          ? "text-[#30D158] bg-[#30D158]/15"
-                          : "text-[#8E8E93] hover:text-[#30D158] hover:bg-white/5"
-                      }`}
-                      aria-label={routine.favorite ? "Remove favorite" : "Favorite routine"}
-                    >
-                      <Star className="w-4 h-4" fill={routine.favorite ? "currentColor" : "none"} />
-                    </motion.button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        triggerHaptic("light");
-                        setActiveMenuId(
-                          activeMenuId === routine.id ? null : routine.id,
-                        );
-                      }}
-                      aria-label={`Actions for ${routine.name || "routine"}`}
-                      aria-expanded={activeMenuId === routine.id}
-                      aria-haspopup="menu"
-                      className="min-w-[44px] min-h-[44px] text-[#8E8E93] hover:text-white transition-colors relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                  {/* Options Menu & Favorite OR Selection Checkbox */}
+                  {isSelectionMode ? (
+                    <div className="flex items-center shrink-0">
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                          isSelected
+                            ? "bg-[#30D158] border-2 border-[#30D158] text-black shadow-[0_0_12px_rgba(48,209,88,0.5)] scale-105"
+                            : "border-2 border-white/25 bg-black/40 text-transparent hover:border-white/40"
+                        }`}
+                      >
+                        <Check className={`w-4 h-4 stroke-[3] transition-opacity ${isSelected ? "opacity-100" : "opacity-0"}`} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative flex items-center gap-0.5 shrink-0">
+                      <motion.button
+                        whileTap={{ scale: 0.72, rotate: 20 }}
+                        animate={routine.favorite ? { scale: [0.8, 1.35, 0.95, 1], rotate: [0, -12, 12, 0] } : { scale: 1, rotate: 0 }}
+                        transition={routine.favorite ? CARTOON_KEYFRAMES.wobble : appleSpringDefault}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic("light");
+                          onToggleFavoriteRoutine(routine.id);
+                        }}
+                        className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors cursor-pointer ${
+                          routine.favorite
+                            ? "text-[#30D158] bg-[#30D158]/15"
+                            : "text-[#8E8E93] hover:text-[#30D158] hover:bg-white/5"
+                        }`}
+                        aria-label={routine.favorite ? "Remove favorite" : "Favorite routine"}
+                      >
+                        <Star className="w-4 h-4" fill={routine.favorite ? "currentColor" : "none"} />
+                      </motion.button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic("light");
+                          setActiveMenuId(
+                            activeMenuId === routine.id ? null : routine.id,
+                          );
+                        }}
+                        aria-label={`Actions for ${routine.name || "routine"}`}
+                        aria-expanded={activeMenuId === routine.id}
+                        aria-haspopup="menu"
+                        className="min-w-[44px] min-h-[44px] text-[#8E8E93] hover:text-white transition-colors relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
 
-                    {isMenuActive && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-[999]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMenuId(null);
-                          }}
-                        />
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-[#24252c] border border-white/16 rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl z-[1000] overflow-hidden py-1.5">
-                          <button
+                      {isMenuActive && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-[999]"
                             onClick={(e) => {
                               e.stopPropagation();
-                              triggerHaptic("light");
-                              duplicateRoutine(routine);
-                            }}
-                            className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <Copy className="w-4 h-4 text-white/70" />
-                            <span>Duplicate</span>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              triggerHaptic("light");
-                              onShareRoutine(routine);
                               setActiveMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <LinkIcon className="w-4 h-4 text-white/70" />
-                            <span>Share QR / Code</span>
-                          </button>
-                          <div className="h-[1px] bg-white/8 my-1 mx-2" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              triggerHaptic("warning");
-                              deleteRoutine(routine.id);
-                            }}
-                            className="w-full text-left px-4 py-2 text-xs font-semibold text-[#FF453A] hover:bg-[#FF453A]/10 flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4 text-[#FF453A]" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                          />
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-[#24252c] border border-white/16 rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl z-[1000] overflow-hidden py-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerHaptic("light");
+                                duplicateRoutine(routine);
+                              }}
+                              className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
+                            >
+                              <Copy className="w-4 h-4 text-white/70" />
+                              <span>{t("duplicate") || "Duplica"}</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerHaptic("light");
+                                onShareRoutine(routine);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-xs font-semibold text-white hover:bg-white/8 flex items-center gap-2.5 transition-colors cursor-pointer"
+                            >
+                              <LinkIcon className="w-4 h-4 text-white/70" />
+                              <span>{t("share_qr_code") || "Condividi Scheda"}</span>
+                            </button>
+                            <div className="h-[1px] bg-white/8 my-1 mx-2" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerHaptic("warning");
+                                deleteRoutine(routine.id);
+                              }}
+                              className="w-full text-left px-4 py-2 text-xs font-semibold text-[#FF453A] hover:bg-[#FF453A]/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4 text-[#FF453A]" />
+                              <span>{t("delete") || "Elimina"}</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5">
-                <motion.button
-                  whileTap={{ scale: 0.88, rotate: -2 }}
-                  whileHover={{ scale: 1.03 }}
-                  transition={CARTOON_SPRINGS.bouncy}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic("light");
-                    onSelectRoutine(routine.id);
-                    navigateTo("routine_editor");
-                  }}
-                  className="min-h-[44px] border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Pencil className="w-3.5 h-3.5 text-[#8E8E93]" />
-                  <span>{t("edit") || "Modifica"}</span>
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.88, rotate: -2 }}
-                  whileHover={{ scale: 1.04 }}
-                  transition={CARTOON_SPRINGS.bouncy}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic("medium");
-                    onStartLiveWorkout(routine.id);
-                  }}
-                  className={`min-h-[44px] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    isToday
-                      ? "bg-[#30D158] font-black shadow-[0_4px_18px_rgba(48,209,88,0.45)] scale-[1.02]"
-                      : "bg-[#30D158] shadow-[0_4px_14px_rgba(48,209,88,0.25)]"
-                  }`}
-                >
-                  <Play className="w-3.5 h-3.5 fill-black" />
-                  <span>{isToday ? (t("start_today_routine") || "Avvia Oggi") : (t("start") || "Inizia")}</span>
-                </motion.button>
-              </div>
+              {/* Action Buttons OR Selection Row */}
+              {isSelectionMode ? (
+                <div className="flex items-center justify-between text-xs font-semibold mt-4 pt-3 border-t border-white/5 select-none">
+                  <span className={isSelected ? "text-[#30D158] font-bold" : "text-[#8E8E93]"}>
+                    {isSelected ? "Scheda selezionata" : "Tocca per selezionare"}
+                  </span>
+                  <span className="text-[11px] text-[#8E8E93]/70">
+                    {routine.exercises?.length || 0} es. &bull; {routine.duration || 60}m
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5">
+                  <motion.button
+                    whileTap={{ scale: 0.88, rotate: -2 }}
+                    whileHover={{ scale: 1.03 }}
+                    transition={CARTOON_SPRINGS.bouncy}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerHaptic("light");
+                      onSelectRoutine(routine.id);
+                      navigateTo("routine_editor");
+                    }}
+                    className="min-h-[44px] border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2 rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-[#8E8E93]" />
+                    <span>{t("edit") || "Modifica"}</span>
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.88, rotate: -2 }}
+                    whileHover={{ scale: 1.04 }}
+                    transition={CARTOON_SPRINGS.bouncy}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerHaptic("medium");
+                      onStartLiveWorkout(routine.id);
+                    }}
+                    className={`min-h-[44px] text-black text-xs font-bold py-2 rounded-full hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      isToday
+                        ? "bg-[#30D158] font-black shadow-[0_4px_18px_rgba(48,209,88,0.45)] scale-[1.02]"
+                        : "bg-[#30D158] shadow-[0_4px_14px_rgba(48,209,88,0.25)]"
+                    }`}
+                  >
+                    <Play className="w-3.5 h-3.5 fill-black" />
+                    <span>{isToday ? (t("start_today_routine") || "Avvia Oggi") : (t("start") || "Inizia")}</span>
+                  </motion.button>
+                </div>
+              )}
             </motion.article>
           );
         })
         )}
       </div>
+
+      {/* Bulk Delete Confirmation Modal */}
+      {isBulkDeleteConfirmOpen && (
+        <ConfirmModal
+          title="Elimina Schede"
+          message={`Eliminare le ${selectedRoutineIds.size} schede selezionate?`}
+          confirmLabel={`Elimina ${selectedRoutineIds.size} Schede`}
+          cancelLabel={t("cancel") || "Annulla"}
+          destructive
+          onConfirm={handleConfirmBulkDelete}
+          onCancel={() => setIsBulkDeleteConfirmOpen(false)}
+        />
+      )}
+
+      {/* Multi-routine Share Modal */}
+      {sharingRoutinesList && (
+        <ShareRoutineModal
+          routines={sharingRoutinesList}
+          onClose={() => setSharingRoutinesList(null)}
+          t={t}
+        />
+      )}
+
+      {/* Floating Multi-Selection Action Bar */}
+      <AnimatePresence>
+        {isSelectionMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.98 }}
+            transition={appleSpringDefault}
+            className="fixed bottom-0 left-0 right-0 z-[160] px-4 py-3 pointer-events-auto"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+          >
+            <div className="max-w-[640px] mx-auto bg-[#18181b]/95 backdrop-blur-2xl rounded-3xl p-3 sm:px-5 sm:py-3.5 flex items-center justify-between gap-2.5 border border-white/16 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_25px_rgba(48,209,88,0.15)]">
+              {/* Left: Close & Count */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setIsSelectionMode(false);
+                    setSelectedRoutineIds(new Set());
+                  }}
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer"
+                  title="Annulla selezione"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-white">
+                    {selectedRoutineIds.size === 0
+                      ? "Nessuna selezionata"
+                      : selectedRoutineIds.size === 1
+                      ? "1 scheda"
+                      : `${selectedRoutineIds.size} schede`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="text-[10px] text-[#30D158] hover:underline font-bold self-start cursor-pointer"
+                  >
+                    {selectedRoutineIds.size === filteredRoutines.length ? "Deseleziona tutte" : "Seleziona tutte"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  disabled={selectedRoutineIds.size === 0}
+                  onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                  className="h-10 px-3 sm:px-3.5 rounded-full bg-[#FF453A]/15 hover:bg-[#FF453A]/25 border border-[#FF453A]/30 text-[#FF453A] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Elimina</span>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  disabled={selectedRoutineIds.size === 0}
+                  onClick={handleShareSelected}
+                  className="h-10 px-4 sm:px-5 rounded-full bg-[#30D158] hover:brightness-105 active:scale-95 text-black font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.35)] disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Share2 className="w-4 h-4 stroke-[2.5]" />
+                  <span>Condividi ({selectedRoutineIds.size})</span>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {routineToDelete && (
         <ConfirmModal

@@ -1,8 +1,8 @@
 {
-  "version": "1.0.17",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.17.zip",
-  "checksum": "0729f0de08249a3cdf5f3a30e3312bf417dd2cc6ece25247eb35ff76bc60d22e",
-  "releaseDate": "2026-11-04T19:09:27.942Z",
-  "notes": "LiftLab v1.0.17: Applicazione dei 5 principi UX essenziali (Whole row taps per switch e impostazioni, verbi attivi nei bottoni senza OK generici, rimozione filler words, optimistic tap first, e controlli segmentati per scelte opposte).",
-  "bundleSizeMb": "3.28"
+  "version": "1.0.18",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.18.zip",
+  "checksum": "3f7ba7723e449b8dec0fb4a9f1c30ca85344fbafb1134992b076761351417994",
+  "releaseDate": "2026-11-04T19:31:09.714Z",
+  "notes": "LiftLab v1.0.18: Selezione multipla routine con pressione prolungata (long-press), esportazione/condivisione completa con note, carichi, reps, recuperi e tecniche; allineamento ai 5 standard UX/UI (ottimizzazione latenza/UI ottimistica, controlli segmentati per scelte multiple, etichette azione sui bottoni, tap su intera riga e microcopy essenziale senza parole superflue).",
+  "bundleSizeMb": "3.62"
 }
