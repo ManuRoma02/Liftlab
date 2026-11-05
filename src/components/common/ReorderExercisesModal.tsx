@@ -39,6 +39,7 @@ export function ReorderExercisesModal({
     const newItems = [...items];
     [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
     setItems(newItems);
+    onApply(newItems);
   };
 
   const handleSave = () => {
@@ -47,11 +48,10 @@ export function ReorderExercisesModal({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
+      {isOpen && (
+        <motion.div
         key="reorder-exercises-scrim"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -111,6 +111,7 @@ export function ReorderExercisesModal({
                 onReorder={(newOrder) => {
                   triggerHaptic("selection");
                   setItems(newOrder);
+                  onApply(newOrder);
                 }}
                 className="flex flex-col gap-2.5"
               >
@@ -207,7 +208,8 @@ export function ReorderExercisesModal({
             </motion.button>
           </div>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }

@@ -1,8 +1,8 @@
 {
-  "version": "1.0.28",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.28.zip",
-  "checksum": "1f104e537e6b99383bb6d33744c35306464924ce55047725b1cc45039f9cd0ec",
-  "releaseDate": "2026-11-05T17:41:12.279Z",
-  "notes": "• **Aggiornamento v1.0.28**: ottimizzazioni prestazioni e correzioni stabilità.",
-  "bundleSizeMb": "5.02"
+  "version": "1.0.30",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.30.zip",
+  "checksum": "14ae6193d1e8afbbd97288b3d546b50c7640866c0aaa84ac1d0b1038681fc660",
+  "releaseDate": "2026-11-05T18:02:04.238Z",
+  "notes": "• **Aggiornamento v1.0.30**: ottimizzazioni prestazioni e correzioni stabilità.",
+  "bundleSizeMb": "5.39"
 }

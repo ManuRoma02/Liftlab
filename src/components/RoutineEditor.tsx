@@ -818,6 +818,39 @@ export function RoutineEditor({
 
   const [isPlateCalcOpen, setIsPlateCalcOpen] = useState(false);
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+
+  // Smooth edge swipe back detection
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      // Only detect if swipe started near left edge (<= 44px)
+      if (touch.clientX <= 44) {
+        touchStartXRef.current = touch.clientX;
+        touchStartYRef.current = touch.clientY;
+      } else {
+        touchStartXRef.current = null;
+        touchStartYRef.current = null;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current !== null && e.changedTouches.length === 1) {
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartXRef.current;
+      const deltaY = Math.abs(touch.clientY - (touchStartYRef.current ?? touch.clientY));
+      // Left-to-right swipe with horizontal dominance
+      if (deltaX > 50 && deltaY < 80) {
+        triggerHaptic("light");
+        onBack?.();
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
   const [plateCalcInitialWeight, setPlateCalcInitialWeight] = useState<number | undefined>(undefined);
 
   const openPlateCalculator = (ex: ExerciseData) => {
@@ -1306,7 +1339,11 @@ export function RoutineEditor({
   }, [debouncedExerciseSearch, exercises, filterEquipment, filterMuscle, t]);
 
   return (
-    <div className={`app-shell bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full ${mode === "live" ? "pb-44" : "pb-24"}`}>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className={`app-shell bg-background text-on-surface antialiased min-h-[100dvh] flex flex-col font-[var(--font-body-md)] w-full ${mode === "live" ? "pb-44" : "pb-24"}`}
+    >
       {/* TopAppBar */}
       <header className="console-topbar safe-topbar flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop sticky top-0 z-50">
         <div className="flex items-center gap-stack-md">
@@ -2410,14 +2447,14 @@ export function RoutineEditor({
           });
           })()}
 
-          {/* Add Exercise Button */}
-          <div className="md:col-span-12 mt-stack-md">
+          {/* Add Exercise & Reorder Buttons */}
+          <div className="md:col-span-12 mt-stack-md flex flex-col sm:flex-row gap-3">
             <motion.button
               whileTap={{ scale: 0.96 }}
               whileHover={{ scale: 1.01 }}
               transition={CARTOON_SPRINGS.bouncy}
               onClick={() => openExerciseModal()}
-              className="w-full border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
+              className="flex-1 border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
             >
               <PlusCircle
                 className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform"
@@ -2427,6 +2464,26 @@ export function RoutineEditor({
                 {t("add_exercise")}
               </span>
             </motion.button>
+
+            {(routine?.exercises?.length || 0) >= 2 && (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.01 }}
+                transition={CARTOON_SPRINGS.bouncy}
+                onClick={() => {
+                  triggerHaptic("light");
+                  setIsReorderModalOpen(true);
+                }}
+                className="sm:w-auto px-6 border-2 border-dashed border-[#30D158]/30 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-[#30D158] hover:border-[#30D158] hover:bg-[#30D158]/5 transition-all group cursor-pointer"
+              >
+                <ListOrdered
+                  className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform stroke-[2]"
+                />
+                <span className="font-bold text-[14px] uppercase tracking-widest text-center whitespace-nowrap">
+                  {t("reorder_exercises") || "Riordina"}
+                </span>
+              </motion.button>
+            )}
           </div>
         </div>
       </main>
@@ -2660,6 +2717,19 @@ export function RoutineEditor({
         onClose={() => setIsPlateCalcOpen(false)}
         unit={unit}
         initialWeight={plateCalcInitialWeight}
+        t={t}
+      />
+
+      <ReorderExercisesModal
+        isOpen={isReorderModalOpen}
+        exercises={routine?.exercises || []}
+        onClose={() => setIsReorderModalOpen(false)}
+        onApply={(reordered) => {
+          setRoutine((curr) => ({
+            ...curr,
+            exercises: reordered,
+          }));
+        }}
         t={t}
       />
 

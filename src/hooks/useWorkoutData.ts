@@ -949,9 +949,7 @@ export function useWorkoutData() {
     if (backEvent.defaultPrevented) return;
     if (overlayBackHandlerRef.current?.()) return;
     if (current === "live_editor") {
-      try {
-        (CapacitorApp as any).minimizeApp?.();
-      } catch {}
+      setActiveTab("workout");
       return;
     }
     const isMainTab = ["dashboard", "library", "workout", "progress"].includes(current);
