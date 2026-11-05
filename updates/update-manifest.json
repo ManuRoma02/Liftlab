@@ -1,8 +1,8 @@
 {
-  "version": "1.0.24",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.24.zip",
-  "checksum": "c97d88f508dd5da5e88c820733db0abee2e552dc2e075ec62870af9a26ce10a2",
-  "releaseDate": "2026-11-04T23:25:56.266Z",
-  "notes": "Unified Bento Training Cockpit: Next Workout, History and Weekly Goal in a single cohesive bento card",
-  "bundleSizeMb": "4.43"
+  "version": "1.0.26",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.26.zip",
+  "checksum": "3fcb59f39781a4a3b59e726c7bed19d19877999760d8d78b33cc13b8290b3132",
+  "releaseDate": "2026-11-05T14:41:33.913Z",
+  "notes": "• **Aggiornamento v1.0.26**: ottimizzazioni prestazioni e correzioni stabilità.",
+  "bundleSizeMb": "4.62"
 }
