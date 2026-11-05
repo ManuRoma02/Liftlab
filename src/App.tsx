@@ -151,6 +151,16 @@ export default function App() {
   const prevNavTabRef = useRef<string>(effectiveTab);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const weightInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isWeightModalOpen) {
+      const timer = setTimeout(() => {
+        weightInputRef.current?.focus();
+      }, 240);
+      return () => clearTimeout(timer);
+    }
+  }, [isWeightModalOpen]);
 
   useEffect(() => {
     const oldIdx = MAIN_NAV_TABS.indexOf(prevNavTabRef.current as any);
@@ -494,7 +504,8 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.94, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 12 }}
-                transition={{ type: "spring", duration: 0.28, bounce: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                style={{ willChange: "transform", transform: "translateZ(0)" }}
                 className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] overflow-hidden relative will-change-transform transform-gpu"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -512,6 +523,7 @@ export default function App() {
 
                   <div className="relative w-full mb-7">
                     <input
+                      ref={weightInputRef}
                       type="number"
                       inputMode="decimal"
                       min="1"
@@ -522,7 +534,6 @@ export default function App() {
                       onChange={(e) => setWeightInput(e.target.value)}
                       className="w-full bg-transparent text-center text-6xl font-extrabold text-white tracking-tight tabular-nums focus:outline-none placeholder:text-neutral-700"
                       placeholder="00.0"
-                      autoFocus
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           triggerHaptic("success");
@@ -923,7 +934,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
           >
             <motion.div
               key="save-routine-card"
@@ -932,8 +943,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.94, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 12 }}
-              transition={{ type: "spring", duration: 0.28, bounce: 0 }}
-              className="bg-[#121418] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)]"
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform", transform: "translateZ(0)" }}
+              className="bg-[#121418] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)] will-change-transform transform-gpu"
             >
               <div className="p-7 text-center">
                 <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center text-[#30D158] mx-auto mb-4 border border-[#30D158]/25 shadow-[0_0_24px_rgba(48,209,88,0.2)]">
@@ -999,7 +1011,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[200] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
           >
             <motion.div
               key="update-template-card"
@@ -1008,8 +1020,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.94, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 12 }}
-              transition={{ type: "spring", duration: 0.28, bounce: 0 }}
-              className="bg-[#121418] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)]"
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform", transform: "translateZ(0)" }}
+              className="bg-[#121418] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.8)] will-change-transform transform-gpu"
             >
               <div className="p-7 text-center">
                 <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center text-[#30D158] mx-auto mb-4 border border-[#30D158]/25 shadow-[0_0_24px_rgba(48,209,88,0.2)]">

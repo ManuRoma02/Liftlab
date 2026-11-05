@@ -71,10 +71,10 @@ export function AppleBottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onPointerDown={hapticPress("light")}
             onClick={onClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-[2px] pointer-events-auto"
+            className="fixed inset-0 bg-black/80 opacity-100 pointer-events-auto"
             aria-hidden="true"
           />
 
@@ -87,7 +87,8 @@ export function AppleBottomSheet({
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={APPLE_SPRINGS.sheet}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform", transform: "translateZ(0)" }}
             drag="y"
             dragControls={dragControls}
             dragListener={false}

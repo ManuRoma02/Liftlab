@@ -102,23 +102,25 @@ export function AchievementsModal({
       {isOpen && (
         <motion.div
           key="achievements-modal-scrim"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-3 md:p-6"
-        onClick={onClose}
-      >
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-label={tr("achievements", "Legacy Achievements")}
-          initial={{ opacity: 0, scale: 0.94, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 15 }}
-          transition={APPLE_SPRINGS.criticallyDamped}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[82vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-3 md:p-6"
+          onClick={onClose}
         >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={tr("achievements", "Legacy Achievements")}
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform", transform: "translateZ(0)" }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[82vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col will-change-transform transform-gpu"
+          >
           {/* Header */}
           <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c] shrink-0">
             <div className="flex items-center gap-3">

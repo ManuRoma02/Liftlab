@@ -1592,13 +1592,14 @@ export function Progress({
 
       {/* Lift Picker Modal */}
       {isLiftPickerOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-lg flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] max-h-[85vh] overflow-hidden"
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform", transform: "translateZ(0)" }}
+            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-lg flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] max-h-[85vh] overflow-hidden will-change-transform transform-gpu"
           >
             <div className="p-5 border-b border-white/10 flex flex-col gap-3.5 bg-[#24252c]">
               <div className="flex justify-between items-center">
@@ -1749,13 +1750,14 @@ export function Progress({
       {/* Unlocked Achievement Celebration Dialog - Compact Apple HIG Modal */}
       <AnimatePresence>
         {unlockedCelebration && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl touch-none select-none">
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 touch-none select-none">
             <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 15 }}
+              initial={{ scale: 0.88, opacity: 0, y: 12 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 15 }}
-              transition={{ type: "spring", stiffness: 380, damping: 26 }}
-              className="bg-[#24252c] border border-white/16 rounded-3xl p-5 sm:p-6 max-w-[320px] w-full text-center flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
+              exit={{ scale: 0.88, opacity: 0, y: 12 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform", transform: "translateZ(0)" }}
+              className="bg-[#24252c] border border-white/16 rounded-3xl p-5 sm:p-6 max-w-[320px] w-full text-center flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] will-change-transform transform-gpu"
             >
               <div className="relative mb-3">
                 {[...Array(6)].map((_, i) => (

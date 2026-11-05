@@ -44,18 +44,20 @@ export function ConfirmModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[300] flex items-center justify-center p-4"
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4"
     >
         <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={title || (destructive ? "Confirm destructive action" : "Confirm action")}
           aria-describedby="confirm-modal-message"
-          initial={{ opacity: 0, scale: 0.9, y: 15 }}
+          initial={{ opacity: 0, scale: 0.92, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 15 }}
-          transition={{ type: "spring", ...CARTOON_SPRINGS.bouncy }}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden"
+          exit={{ opacity: 0, scale: 0.92, y: 12 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden will-change-transform transform-gpu"
         >
           {/* iOS Alert Icon */}
           <motion.div

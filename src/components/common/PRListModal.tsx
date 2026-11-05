@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Trophy, X, Search } from "lucide-react";
+import { Trophy, X, Search, Dumbbell } from "lucide-react";
 import { motion } from "motion/react";
-import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
 import { ExerciseFilterBar } from "./ExerciseFilterBar";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
@@ -23,6 +22,7 @@ export function PRListModal({
   useModalDismiss(true, onClose);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [visibleLimit, setVisibleLimit] = useState(24);
 
   const prCategoryCounts = useMemo(() => {
     const counts: Record<string, number> = { All: 0 };
@@ -72,10 +72,11 @@ export function PRListModal({
           role="dialog"
           aria-modal="true"
           aria-label={t("personal_records")}
-          initial={{ opacity: 0, scale: 0.94, y: 15 }}
+          initial={{ opacity: 0, scale: 0.94, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 15 }}
-          transition={APPLE_SPRINGS.criticallyDamped}
+          exit={{ opacity: 0, scale: 0.94, y: 12 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
           onClick={(e) => e.stopPropagation()}
           className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-md overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col max-h-[85vh] will-change-transform transform-gpu"
         >
@@ -164,59 +165,82 @@ export function PRListModal({
                 )}
               </div>
             ) : (
-              allDisplayExercises.map((ex) => (
-                <div
-                  key={ex.id}
-                  className="bg-black/40 border border-white/6 rounded-2xl p-3.5 flex flex-col gap-2.5"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/5 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
-                      <ExerciseMuscleVisual exercise={ex} className="w-8 h-8" />
+              <>
+                {allDisplayExercises.slice(0, visibleLimit).map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="bg-black/40 border border-white/6 rounded-2xl p-3.5 flex flex-col gap-2.5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/5 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                        {ex.image || ex.gifUrl ? (
+                          <img
+                            src={ex.image || ex.gifUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Dumbbell className="w-4 h-4 text-[#FF9F0A]" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-bold text-sm truncate">
+                          {t(ex.title)}
+                        </h4>
+                        <p className="text-[10px] text-[#8E8E93] uppercase font-semibold tracking-wider">
+                          {ex.category}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-bold text-sm truncate">
-                        {t(ex.title)}
-                      </h4>
-                      <p className="text-[10px] text-[#8E8E93] uppercase font-semibold tracking-wider">
-                        {ex.category}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-2 bg-black/30 rounded-xl p-2.5 text-center">
-                    <div>
-                      <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
-                        {t("est_1rm")}
-                      </p>
-                      <p className="text-sm font-extrabold text-[#30D158] tabular-nums">
-                        {ex.oneRepMax ? `${ex.oneRepMax} ${unit}` : "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
-                        {t("max_weight")}
-                      </p>
-                      <p className="text-sm font-bold text-white tabular-nums">
-                        {ex.prWeight ? `${ex.prWeight} ${unit}` : "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
-                        {t("max_reps")}
-                      </p>
-                      <p className="text-sm font-bold text-white tabular-nums">
-                        {isTimedExercise(ex)
-                          ? ex.prReps
-                            ? `${ex.prReps}s`
-                            : "-"
-                          : ex.prReps
-                            ? `${ex.prReps} reps`
-                            : "-"}
-                      </p>
+                    <div className="grid grid-cols-3 gap-2 bg-black/30 rounded-xl p-2.5 text-center">
+                      <div>
+                        <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
+                          {t("est_1rm")}
+                        </p>
+                        <p className="text-sm font-extrabold text-[#30D158] tabular-nums">
+                          {ex.oneRepMax ? `${ex.oneRepMax} ${unit}` : "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
+                          {t("max_weight")}
+                        </p>
+                        <p className="text-sm font-bold text-white tabular-nums">
+                          {ex.prWeight ? `${ex.prWeight} ${unit}` : "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mb-0.5">
+                          {t("max_reps")}
+                        </p>
+                        <p className="text-sm font-bold text-white tabular-nums">
+                          {isTimedExercise(ex)
+                            ? ex.prReps
+                              ? `${ex.prReps}s`
+                              : "-"
+                            : ex.prReps
+                              ? `${ex.prReps} reps`
+                              : "-"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+                {allDisplayExercises.length > visibleLimit && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setVisibleLimit((prev) => prev + 24);
+                    }}
+                    className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-98 text-xs font-semibold text-white/80 hover:text-white transition-all cursor-pointer text-center"
+                  >
+                    {t("load_more") || "Carica altri"} ({allDisplayExercises.length - visibleLimit} {t("remaining") || "rimanenti"})
+                  </button>
+                )}
+              </>
             )}
           </div>
         </motion.div>

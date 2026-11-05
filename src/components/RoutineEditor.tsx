@@ -2668,9 +2668,28 @@ export function RoutineEditor({
       </main>
 
       {/* Exercise Selection Modal */}
-      {isExerciseModalOpen && (
-        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
-          <div className="bg-surface-container-high border border-surface-variant rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl will-change-transform transform-gpu">
+      <AnimatePresence>
+        {isExerciseModalOpen && (
+          <motion.div
+            key="exercise-modal-scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
+            onClick={() => closeExerciseModal()}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform", transform: "translateZ(0)" }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-2xl max-h-[82vh] flex flex-col shadow-2xl will-change-transform transform-gpu overflow-hidden"
+            >
             <div className="p-4 border-b border-surface-variant space-y-4 bg-surface sticky top-0 rounded-t-xl z-10">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-primary font-[var(--font-headline-md)]">
@@ -2876,9 +2895,10 @@ export function RoutineEditor({
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+    </AnimatePresence>
 
       {isCustomExerciseOpen && (
         <div className="fixed inset-0 z-[200] bg-background overflow-y-auto">
@@ -3027,16 +3047,18 @@ export function RoutineEditor({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-4"
+              transition={{ duration: 0.18 }}
+              className="fixed inset-0 bg-black/80 z-[200] flex items-end sm:items-center justify-center p-4"
               onClick={() => setWarmupModalExercise(null)}
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.94, y: 20 }}
+                initial={{ opacity: 0, scale: 0.94, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 20 }}
-                transition={appleSpringDefault}
+                exit={{ opacity: 0, scale: 0.94, y: 15 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                style={{ willChange: "transform", transform: "translateZ(0)" }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#1C1C1E] border border-white/12 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 space-y-4"
+                className="bg-[#1C1C1E] border border-white/12 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 space-y-4 will-change-transform transform-gpu"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">

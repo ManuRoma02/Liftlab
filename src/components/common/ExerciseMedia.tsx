@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Dumbbell } from "lucide-react";
 import type { ExerciseData } from "../../types/workout";
 import { getExerciseMediaCandidates } from "../../lib/workoutUtils";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
@@ -51,8 +52,8 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   return (
     <div className={`relative overflow-hidden flex items-center justify-center bg-black/40 ${className}`}>
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <ExerciseMuscleVisual exercise={exercise} className="w-full h-full opacity-60" />
+        <div className="absolute inset-0 flex items-center justify-center bg-white/[0.04] animate-pulse">
+          <Dumbbell className="w-5 h-5 text-white/20" />
         </div>
       )}
       <img

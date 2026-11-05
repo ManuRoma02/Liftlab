@@ -105,9 +105,9 @@ export function OnboardingTutorial({
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
-      className="fixed inset-0 bg-black/85 backdrop-blur-2xl z-[200] flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200"
     >
-      <div className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col gap-6 relative overflow-hidden">
+      <div className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col gap-6 relative overflow-hidden will-change-transform transform-gpu">
         {/* Subtle glow effect */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[#30D158]/10 blur-[80px] rounded-full pointer-events-none" />
 
