@@ -1751,14 +1751,86 @@ export function RoutineEditor({
                                       <Flame className="w-3 h-3" />
                                       <span>Warmup</span>
                                     </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => openExerciseModal(undefined, ex.id)}
-                                      className="h-7 w-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 text-[#8E8E93] hover:text-[#0A84FF] flex items-center justify-center border border-white/8 cursor-pointer"
-                                      title={t("replace_exercise") || "Sostituisci"}
-                                    >
-                                      <RefreshCw className="w-3 h-3" />
-                                    </button>
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveMenuId(activeMenuId === ex.id ? null : ex.id)}
+                                        className="h-7 w-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 text-[#8E8E93] hover:text-white flex items-center justify-center border border-white/8 cursor-pointer transition-colors"
+                                        aria-label="Opzioni esercizio superset"
+                                        title="Altre opzioni"
+                                      >
+                                        <MoreVertical className="w-3.5 h-3.5" />
+                                      </button>
+                                      {activeMenuId === ex.id && (
+                                        <>
+                                          <div
+                                            className="fixed inset-0 z-[100]"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveMenuId(null);
+                                            }}
+                                          />
+                                          <div className="absolute right-0 top-full mt-2 w-56 bg-[#18181b] border border-white/15 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,1)] z-[101] overflow-hidden animate-in fade-in zoom-in duration-150">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                openExerciseModal(undefined, ex.id);
+                                                setActiveMenuId(null);
+                                              }}
+                                              className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2.5 cursor-pointer transition-colors"
+                                            >
+                                              <RefreshCw className="w-4 h-4 text-[#0A84FF]" />
+                                              <span>{t("replace_exercise") || "Sostituisci Esercizio"}</span>
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                triggerHaptic("light");
+                                                setIsReorderModalOpen(true);
+                                                setActiveMenuId(null);
+                                              }}
+                                              className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2.5 cursor-pointer transition-colors border-t border-white/5"
+                                            >
+                                              <ListOrdered className="w-4 h-4 text-[#30D158]" />
+                                              <span>{t("reorder_exercises") || "Riordina / Sposta"}</span>
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeSuperset(ex.id);
+                                                setActiveMenuId(null);
+                                              }}
+                                              className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2.5 cursor-pointer transition-colors border-t border-white/5"
+                                            >
+                                              <LinkIcon className="w-4 h-4 text-[#30D158]" />
+                                              <span>{t("remove_from_superset") || "Separa da Superset"}</span>
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                duplicateExercise(ex.id);
+                                                setActiveMenuId(null);
+                                              }}
+                                              className="w-full text-left px-4 py-3 text-xs font-bold text-white hover:bg-white/10 flex items-center gap-2 cursor-pointer transition-colors border-t border-white/5"
+                                            >
+                                              <Copy className="w-4 h-4 text-[#8E8E93]" />
+                                              <span>{t("duplicate") || "Duplica"}</span>
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteExercise(ex.id);
+                                                setActiveMenuId(null);
+                                              }}
+                                              className="w-full text-left px-4 py-3 text-xs font-bold text-[#FF453A] hover:bg-[#FF453A]/10 flex items-center gap-2.5 cursor-pointer transition-colors border-t border-white/5"
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                              <span>{t("delete") || "Elimina Esercizio"}</span>
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>

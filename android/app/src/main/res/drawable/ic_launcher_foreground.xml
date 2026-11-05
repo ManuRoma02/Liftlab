@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <group
+        android:scaleX="0.66"
+        android:scaleY="0.66"
+        android:pivotX="256"
+        android:pivotY="256">
+
+        <!-- Primary Emerald 'L' (Lift) -->
+        <path
+            android:pathData="M 154,136 C 144,136 136,144 136,154 L 136,348 C 136,363 148,376 164,376 L 358,376 C 368,376 376,368 376,358 L 376,306 C 376,296 368,288 358,288 L 236,288 C 229,288 224,283 224,276 L 224,154 C 224,144 216,136 206,136 Z"
+            android:fillColor="#30D158" />
+
+        <!-- Interlocking Titanium White 'L' (Lab) -->
+        <path
+            android:pathData="M 276,136 C 269,136 264,141 264,148 L 264,232 C 264,241 271,248 280,248 L 364,248 C 371,248 376,243 376,236 L 376,216 C 376,209 371,204 364,204 L 316,204 C 312,204 308,200 308,196 L 308,148 C 308,141 303,136 296,136 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+</vector>
