@@ -180,6 +180,8 @@ export function RoutineEditor({
   });
 
   const routineRef = useRef(routine);
+  const lastActiveExerciseIdRef = useRef<string | null>(null);
+  const [warmupSetsCount, setWarmupSetsCount] = useState<number>(2);
   const unitLabel = formatWeightUnit(unit);
 
   const readWallClockRestLeft = () => getRestTimerLeft(readJson<any>(LIVE_REST_TIMER_KEY, null));
@@ -199,33 +201,56 @@ export function RoutineEditor({
     let defaultRest = restTimer || 90;
     let weightRepsInfo = "";
 
-    for (const ex of source.exercises || []) {
+    const exercisesList = source.exercises || [];
+    let targetEx: ExerciseData | undefined = undefined;
+
+    // 1. Follow the exercise the user last interacted with, if it still has incomplete sets
+    if (lastActiveExerciseIdRef.current) {
+      const candidate = exercisesList.find((e) => e.id === lastActiveExerciseIdRef.current);
+      if (candidate && (candidate.sets || []).some((s) => !s.completed)) {
+        targetEx = candidate;
+      }
+    }
+
+    // 2. Fallback: check if any exercise in the routine is in-progress
+    if (!targetEx) {
+      targetEx = exercisesList.find(
+        (ex) => (ex.sets || []).some((s) => s.completed) && (ex.sets || []).some((s) => !s.completed)
+      );
+    }
+
+    // 3. Fallback: pick the FIRST unfinished exercise in routine order
+    // (If user started & finished Ex 2 before Ex 1, notification offers Ex 1 next, NOT Ex 3)
+    if (!targetEx) {
+      targetEx = exercisesList.find((ex) => (ex.sets || []).some((s) => !s.completed));
+    }
+
+    if (targetEx) {
       const isDrop = (s: SetData, idx: number) => idx > 0 && s.technique === "dropset";
-      const incompleteIdx = (ex.sets || []).findIndex((s) => !s.completed);
+      const incompleteIdx = (targetEx.sets || []).findIndex((s) => !s.completed);
       if (incompleteIdx !== -1) {
-        const targetSet = ex.sets[incompleteIdx];
-        activeExTitle = ex.title;
+        const targetSet = targetEx.sets[incompleteIdx];
+        activeExTitle = targetEx.title;
 
         // Count main sets only so drop sets are not counted as independent sets
-        const mainSets = (ex.sets || []).filter((s, idx) => !isDrop(s, idx));
+        const mainSets = (targetEx.sets || []).filter((s, idx) => !isDrop(s, idx));
         totalSets = Math.max(1, mainSets.length);
 
         let mainSetNum = 1;
         for (let i = 0; i <= incompleteIdx; i++) {
-          if (!isDrop(ex.sets[i], i)) {
-            mainSetNum = (ex.sets || []).slice(0, i + 1).filter((s, idx) => !isDrop(s, idx)).length;
+          if (!isDrop(targetEx.sets[i], i)) {
+            mainSetNum = (targetEx.sets || []).slice(0, i + 1).filter((s, idx) => !isDrop(s, idx)).length;
           }
         }
         setNumber = Math.max(1, mainSetNum);
-        defaultRest = getExerciseRestPreset(ex, exerciseRestPresets, restTimer) || 90;
+        defaultRest = getExerciseRestPreset(targetEx, exerciseRestPresets, restTimer) || 90;
         const weightText =
           targetSet.weight !== "" && targetSet.weight !== undefined
             ? `${targetSet.weight} ${unitLabel}`
             : "";
-        const repsText = targetSet.reps ? `${targetSet.reps} ${isTimedExercise(ex) ? "secs" : "reps"}` : "";
-        weightRepsInfo = weightText && repsText ? `${weightText} × ${repsText}` : (weightText || repsText);
+        const repsText = targetSet.reps ? `${targetSet.reps} ${isTimedExercise(targetEx) ? "secs" : "reps"}` : "";
+        weightRepsInfo = weightText && repsText ? `${weightText} ? ${repsText}` : (weightText || repsText);
         activeSetInfo = `Serie ${setNumber} di ${totalSets}${weightRepsInfo ? ` (${weightRepsInfo})` : ""}`;
-        break;
       }
     }
     const remaining = restLeft !== undefined ? restLeft : readWallClockRestLeft();
@@ -862,14 +887,15 @@ export function RoutineEditor({
     setIsPlateCalcOpen(true);
   };
 
-  const handleGenerateWarmup = (exId: string) => {
+  const handleGenerateWarmup = (exId: string, customCount?: number) => {
     const ex = (routine?.exercises ?? []).find((e) => e.id === exId);
     if (!ex) return;
     const firstSetWeight = Number(ex.sets[0]?.weight);
     const workingWeight = Number.isFinite(firstSetWeight) && firstSetWeight > 0 ? firstSetWeight : 60;
     const barWeight = getEquipmentBarWeight(ex.equipment, ex.title, unit);
 
-    const generated = generateWarmupSets(workingWeight, barWeight, ex.equipment);
+    const count = customCount !== undefined ? customCount : warmupSetsCount;
+    const generated = generateWarmupSets(workingWeight, barWeight, ex.equipment, undefined, count);
     const warmupSets: SetData[] = generated.map((wSet) => ({
       id: crypto.randomUUID(),
       weight: wSet.weight,
@@ -1168,6 +1194,7 @@ export function RoutineEditor({
     setId: string,
     updates: Partial<SetData>,
   ) => {
+    lastActiveExerciseIdRef.current = exId;
     const ex = (routine?.exercises ?? []).find((e) => e.id === exId);
     if (!ex) return;
     updateExercise(exId, {
@@ -1188,6 +1215,7 @@ export function RoutineEditor({
     setId: string,
     currentCompleted: boolean,
   ) => {
+    lastActiveExerciseIdRef.current = exId;
     const activeExercise = (routine?.exercises ?? []).find((ex) => ex.id === exId);
     if (!activeExercise) return;
     const targetSetIdx = activeExercise.sets.findIndex((s) => s.id === setId);
@@ -1655,62 +1683,95 @@ export function RoutineEditor({
                         </div>
                       </div>
 
-                      {/* Exercises Mini Badges */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                      {/* Bento Exercise Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-5">
                         {group.map((ex, exIdx) => {
                           const labelLetter = `A${exIdx + 1}`;
                           return (
                             <div
                               key={ex.id}
-                              className="bg-black/40 border border-white/8 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner"
+                              className="bg-black/50 border border-white/10 hover:border-[#30D158]/40 rounded-2xl p-3.5 flex flex-col justify-between gap-3 shadow-inner transition-all"
                             >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <span className="w-7 h-7 rounded-xl bg-[#30D158]/20 text-[#30D158] font-black text-xs flex items-center justify-center shrink-0 border border-[#30D158]/30">
-                                  {labelLetter}
-                                </span>
+                              <div className="flex items-start gap-3">
+                                {/* Large GIF / Animation Box */}
                                 <button
                                   type="button"
                                   onClick={() => {
                                     triggerHaptic("light");
                                     onOpenDetail?.(ex);
                                   }}
-                                  className="w-10 h-10 bg-black/50 rounded-xl overflow-hidden shrink-0 border border-white/10 cursor-pointer"
+                                  className="w-16 h-16 sm:w-20 sm:h-20 bg-black/70 rounded-2xl overflow-hidden shrink-0 border border-white/15 cursor-pointer hover:border-[#30D158]/60 transition-all shadow-md group relative"
                                   title={t("view_exercise_details") || "Dettagli esercizio"}
                                 >
-                                  <ExerciseMedia exercise={ex} className="w-full h-full" />
+                                  <ExerciseMedia exercise={ex} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                  <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-black/85 backdrop-blur-sm text-[#30D158] font-black text-xs border border-[#30D158]/40 shadow-sm">
+                                    {labelLetter}
+                                  </span>
                                 </button>
-                                <div className="min-w-0">
-                                  <h4 className="text-sm font-bold text-white leading-tight break-words">
+
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm sm:text-base font-extrabold text-white leading-tight break-words">
                                     {t(ex.title) || ex.title}
                                   </h4>
-                                  <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider">
-                                    {ex.category || "General"} • {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s rest
-                                  </p>
+                                  <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold">
+                                    <span className="text-[#30D158] uppercase tracking-wider text-[10px]">
+                                      {ex.category || "General"}
+                                    </span>
+                                    {ex.equipment && (
+                                      <>
+                                        <span className="text-white/20">?</span>
+                                        <span className="text-[#8E8E93] text-[10px]">{ex.equipment}</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Quick Toolbar */}
+                                  <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                                    {usesWeightPlates(ex) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          triggerHaptic("light");
+                                          openPlateCalculator(ex);
+                                        }}
+                                        className="h-7 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 text-[#8E8E93] hover:text-white flex items-center gap-1 text-[10px] font-bold border border-white/8 cursor-pointer"
+                                      >
+                                        <Disc className="w-3 h-3 text-[#30D158]" />
+                                        <span>Dischi</span>
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        triggerHaptic("light");
+                                        setWarmupModalExercise(ex);
+                                      }}
+                                      className="h-7 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-400 flex items-center gap-1 text-[10px] font-bold border border-amber-500/20 cursor-pointer"
+                                    >
+                                      <Flame className="w-3 h-3" />
+                                      <span>Warmup</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openExerciseModal(undefined, ex.id)}
+                                      className="h-7 w-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 text-[#8E8E93] hover:text-[#0A84FF] flex items-center justify-center border border-white/8 cursor-pointer"
+                                      title={t("replace_exercise") || "Sostituisci"}
+                                    >
+                                      <RefreshCw className="w-3 h-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-1 shrink-0">
-                                {usesWeightPlates(ex) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      triggerHaptic("light");
-                                      openPlateCalculator(ex);
-                                    }}
-                                    className="p-2 text-[#8E8E93] hover:text-white rounded-lg hover:bg-white/5 cursor-pointer"
-                                    title={t("plate_calculator") || "Plate Calculator"}
-                                  >
-                                    <Disc className="w-4 h-4 text-[#30D158]" />
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => setWarmupModalExercise(ex)}
-                                  className="p-2 text-amber-400 hover:text-amber-300 rounded-lg hover:bg-white/5 cursor-pointer"
-                                  title={t("warmup") || "Warmup"}
-                                >
-                                  <Flame className="w-4 h-4" />
-                                </button>
+                              {/* Exercise-specific Note preview/input */}
+                              <div className="pt-2 border-t border-white/6">
+                                <input
+                                  type="text"
+                                  value={ex.notes || ""}
+                                  onChange={(e) => updateExercise(ex.id, { notes: e.target.value })}
+                                  placeholder={`Note per ${labelLetter}...`}
+                                  className="w-full bg-white/4 border border-white/8 focus:border-[#30D158]/50 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-[#8E8E93]/50 outline-none transition-all"
+                                />
                               </div>
                             </div>
                           );
@@ -1837,31 +1898,77 @@ export function RoutineEditor({
                         })}
                       </div>
 
-                      {/* Card Footer Actions */}
-                      <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-white/8">
-                        <motion.button
-                          whileTap={{ scale: 0.9, rotate: -1.5 }}
-                          whileHover={{ scale: 1.04 }}
-                          transition={CARTOON_SPRINGS.bouncy}
-                          onClick={() => {
-                            group.forEach((ex) => addSet(ex.id));
-                          }}
-                          className="text-xs font-bold text-black bg-[#30D158] hover:brightness-110 flex items-center gap-1.5 px-4 py-2.5 rounded-full cursor-pointer shadow-sm"
-                        >
-                          <Plus className="w-4 h-4 stroke-[2.5]" />
-                          {t("add_superset_round") || "Aggiungi Giro (A1 + A2)"}
-                        </motion.button>
+                      {/* Superset Bento Controls: Round Rest Timer & Actions */}
+                      <div className="mt-4 pt-3 border-t border-white/8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-black/30 p-3 rounded-2xl border border-white/6">
+                        {/* Rest Timer Stepper */}
+                        <div className="flex items-center justify-between sm:justify-start gap-2.5">
+                          <div className="flex items-center gap-2 text-on-surface-variant">
+                            <Clock className="w-4 h-4 text-[#30D158]" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#8E8E93]">
+                              {t("exercise_rest") || "Recupero tra i giri"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <motion.button
+                              whileTap={{ scale: 0.85 }}
+                              onClick={() => {
+                                const currentRest = getExerciseRestPreset(group[0], exerciseRestPresets, restTimer);
+                                const next = Math.max(0, currentRest - 15);
+                                group.forEach((e) => {
+                                  updateExercise(e.id, { restTimer: next });
+                                  onSaveExerciseRestPreset?.(e.title, next);
+                                });
+                              }}
+                              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/80 cursor-pointer border border-white/8"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </motion.button>
+                            <span className="w-12 text-center text-[#30D158] font-black text-xs tabular-nums">
+                              {getExerciseRestPreset(group[0], exerciseRestPresets, restTimer)}s
+                            </span>
+                            <motion.button
+                              whileTap={{ scale: 0.85 }}
+                              onClick={() => {
+                                const currentRest = getExerciseRestPreset(group[0], exerciseRestPresets, restTimer);
+                                const next = currentRest + 15;
+                                group.forEach((e) => {
+                                  updateExercise(e.id, { restTimer: next });
+                                  onSaveExerciseRestPreset?.(e.title, next);
+                                });
+                              }}
+                              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/80 cursor-pointer border border-white/8"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </motion.button>
+                          </div>
+                        </div>
 
-                        {group.map((ex, exIdx) => (
-                          <button
-                            key={ex.id}
-                            type="button"
-                            onClick={() => addSet(ex.id)}
-                            className="text-xs font-semibold text-[#8E8E93] hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded-full cursor-pointer border border-white/5"
+                        {/* Add Round / Add Set Actions */}
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                          <motion.button
+                            whileTap={{ scale: 0.92, rotate: -1.5 }}
+                            whileHover={{ scale: 1.03 }}
+                            transition={CARTOON_SPRINGS.bouncy}
+                            onClick={() => {
+                              group.forEach((ex) => addSet(ex.id));
+                            }}
+                            className="text-xs font-bold text-black bg-[#30D158] hover:brightness-110 flex items-center gap-1.5 px-3.5 py-2 rounded-xl cursor-pointer shadow-sm"
                           >
-                            + {t("add_set") || "Serie"} A{exIdx + 1}
-                          </button>
-                        ))}
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                            {t("add_superset_round") || "Aggiungi Giro"}
+                          </motion.button>
+
+                          {group.map((ex, exIdx) => (
+                            <button
+                              key={ex.id}
+                              type="button"
+                              onClick={() => addSet(ex.id)}
+                              className="text-xs font-semibold text-[#8E8E93] hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-2 rounded-xl cursor-pointer border border-white/5"
+                            >
+                              + {t("add_set") || "Serie"} A{exIdx + 1}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2744,39 +2851,42 @@ export function RoutineEditor({
             className="fixed bottom-0 left-0 w-full z-[150] px-margin-mobile py-3 pointer-events-auto"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
           >
-            <div className="bg-[#18181b]/95 backdrop-blur-2xl rounded-3xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-[#30D158]/40 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_25px_rgba(48,209,88,0.18)]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 flex items-center justify-center relative shadow-sm">
-                  <Clock className="w-5 h-5 absolute text-[#30D158]" />
-                  <svg className="w-10 h-10 -rotate-90">
-                    <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="2.5" className="text-white/10" fill="none" />
+            <div className="bg-[#18181b]/95 backdrop-blur-2xl rounded-2xl px-3.5 py-2 sm:px-4 sm:py-2.5 flex flex-row items-center justify-between gap-2 border border-[#30D158]/40 shadow-[0_16px_40px_rgba(0,0,0,0.85),0_0_20px_rgba(48,209,88,0.18)]">
+              {/* Single-row Left: Compact Circular Ring + Countdown */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 flex items-center justify-center relative shrink-0 shadow-sm">
+                  <Clock className="w-4 h-4 absolute text-[#30D158]" />
+                  <svg className="w-8 h-8 -rotate-90">
+                    <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2" className="text-white/10" fill="none" />
                     <circle
-                      cx="20" cy="20" r="16"
-                      stroke="currentColor" strokeWidth="2.5"
+                      cx="16" cy="16" r="13"
+                      stroke="currentColor" strokeWidth="2"
                       className="text-[#30D158] transition-all duration-1000"
                       fill="none"
-                      strokeDasharray={100.53}
-                      strokeDashoffset={100.53 - (100.53 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
+                      strokeDasharray={81.68}
+                      strokeDashoffset={81.68 - (81.68 * (activeRestLeft || 0)) / (initialRestDuration || 90)}
                     />
                   </svg>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#30D158] leading-none">
                     {t("rest_timer") || "Recupero"}
                   </span>
-                  <span className="text-3xl font-black tracking-tight tabular-nums text-white leading-none font-mono">
+                  <span className="text-lg sm:text-xl font-black tracking-tight tabular-nums text-white leading-tight font-mono">
                     {formatTime(activeRestLeft)}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between sm:justify-end gap-2 font-bold text-sm">
+
+              {/* Single-row Right: Compact Controls */}
+              <div className="flex items-center gap-1.5 font-bold text-xs shrink-0">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => {
                     triggerHaptic("light");
                     startRestTimer(Math.max(0, activeRestLeft - 15));
                   }}
-                  className="h-10 px-3.5 bg-white/8 hover:bg-white/15 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer border border-white/10"
+                  className="h-8 px-2.5 bg-white/8 hover:bg-white/15 text-white/90 rounded-lg flex items-center justify-center transition-all text-[11px] font-bold cursor-pointer border border-white/10"
                 >
                   -15s
                 </motion.button>
@@ -2786,7 +2896,7 @@ export function RoutineEditor({
                     triggerHaptic("light");
                     startRestTimer(activeRestLeft + 30);
                   }}
-                  className="h-10 px-3.5 bg-white/8 hover:bg-white/15 text-white rounded-full flex items-center justify-center transition-all text-xs font-semibold cursor-pointer border border-white/10"
+                  className="h-8 px-2.5 bg-white/8 hover:bg-white/15 text-white/90 rounded-lg flex items-center justify-center transition-all text-[11px] font-bold cursor-pointer border border-white/10"
                 >
                   +30s
                 </motion.button>
@@ -2796,7 +2906,7 @@ export function RoutineEditor({
                     triggerHaptic("medium");
                     startRestTimer(0);
                   }}
-                  className="h-10 px-4 bg-[#30D158] text-black font-extrabold rounded-full flex items-center gap-1.5 transition-all text-xs cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.35)]"
+                  className="h-8 px-3 bg-[#30D158] text-black font-black rounded-lg flex items-center gap-1 transition-all text-[11px] cursor-pointer shadow-[0_2px_10px_rgba(48,209,88,0.35)]"
                 >
                   <span>Salta</span>
                 </motion.button>
@@ -2838,7 +2948,7 @@ export function RoutineEditor({
           const firstSetWeight = Number(warmupModalExercise.sets[0]?.weight);
           const workingWeight = Number.isFinite(firstSetWeight) && firstSetWeight > 0 ? firstSetWeight : 60;
           const barWeight = getEquipmentBarWeight(warmupModalExercise.equipment, warmupModalExercise.title, unit);
-          const previewSets = generateWarmupSets(workingWeight, barWeight, warmupModalExercise.equipment);
+          const previewSets = generateWarmupSets(workingWeight, barWeight, warmupModalExercise.equipment, undefined, warmupSetsCount);
 
           return (
             <motion.div
@@ -2870,20 +2980,40 @@ export function RoutineEditor({
                   </div>
                 </div>
 
-                <p className="text-xs text-[#8E8E93] leading-relaxed">
-                  {t("warmup_modal_desc") || "Genera 3 serie di riscaldamento progressive (40%, 60%, 80%) basate sul tuo carico target per preparare muscoli e articolazioni."}
-                </p>
+                {/* Warmup Sets Count Selector */}
+                <div className="flex items-center justify-between gap-2 bg-black/40 border border-white/8 rounded-2xl px-3.5 py-2.5">
+                  <span className="text-xs font-bold text-[#8E8E93]">Quante serie:</span>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4].map((count) => (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic("selection");
+                          setWarmupSetsCount(count);
+                        }}
+                        className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center ${
+                          warmupSetsCount === count
+                            ? "bg-amber-400 text-black shadow-md scale-105"
+                            : "bg-white/5 text-white/70 hover:bg-white/10"
+                        }`}
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="bg-black/40 border border-white/8 rounded-2xl p-3 space-y-2">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex justify-between">
                     <span>Target: {workingWeight} {unit}</span>
-                    <span>3 Serie Piramidali</span>
+                    <span>{warmupSetsCount} {warmupSetsCount === 1 ? "Serie" : "Serie Piramidali"}</span>
                   </div>
                   <div className="space-y-1.5 text-xs font-mono">
                     {previewSets.map((s, sIdx) => (
                       <div key={sIdx} className="flex justify-between items-center text-white/90 bg-white/5 px-2.5 py-1.5 rounded-xl">
-                        <span className="text-[#8E8E93] text-[11px] font-sans">Set {sIdx + 1}</span>
-                        <span className="font-bold">{s.weight} {unit} × {s.reps} reps</span>
+                        <span className="text-[#8E8E93] text-[11px] font-sans">Set {sIdx + 1} ({s.percent}%)</span>
+                        <span className="font-bold">{s.weight} {unit} ? {s.reps} reps</span>
                       </div>
                     ))}
                   </div>
@@ -2900,7 +3030,7 @@ export function RoutineEditor({
                   <button
                     type="button"
                     onClick={() => {
-                      handleGenerateWarmup(warmupModalExercise.id);
+                      handleGenerateWarmup(warmupModalExercise.id, warmupSetsCount);
                       setWarmupModalExercise(null);
                     }}
                     className="flex-1 min-h-[44px] py-3 bg-amber-500 text-black rounded-full font-bold text-xs hover:brightness-105 transition-all cursor-pointer active:scale-95 shadow-sm flex items-center justify-center"
@@ -2913,7 +3043,6 @@ export function RoutineEditor({
           );
         })()}
       </AnimatePresence>
-
       {/* Confirm Finish Workout Modal */}
       {isFinishConfirmOpen && (
         <ConfirmModal

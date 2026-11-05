@@ -928,7 +928,8 @@ export function generateWarmupSets(
   workingWeight: number,
   barWeightOrUnit: number | "KG" | "LBS" | string = 20,
   exerciseNameOrEquipment?: string,
-  equipmentParam?: string
+  equipmentParam?: string,
+  numSets?: number
 ): GeneratedWarmupSet[] {
   if (workingWeight <= 0) return [];
 
@@ -964,6 +965,26 @@ export function generateWarmupSets(
 
   const effectiveMin = Math.min(barWeight, workingWeight);
   const roundToStep = (val: number) => Math.max(effectiveMin, Math.round(val / 2.5) * 2.5);
+  const count = typeof numSets === "number" ? Math.max(1, Math.min(4, Math.floor(numSets))) : 4;
+
+  if (count === 1) {
+    return [
+      { weight: roundToStep(workingWeight * 0.6), reps: 6, percent: 60 },
+    ];
+  }
+  if (count === 2) {
+    return [
+      { weight: Math.max(effectiveMin, roundToStep(workingWeight * 0.5)), reps: 8, percent: 50 },
+      { weight: roundToStep(workingWeight * 0.75), reps: 4, percent: 75 },
+    ];
+  }
+  if (count === 3) {
+    return [
+      { weight: Math.max(effectiveMin, roundToStep(workingWeight * 0.4)), reps: 8, percent: 40 },
+      { weight: roundToStep(workingWeight * 0.65), reps: 5, percent: 65 },
+      { weight: roundToStep(workingWeight * 0.85), reps: 2, percent: 85 },
+    ];
+  }
 
   return [
     { weight: Math.max(effectiveMin, roundToStep(workingWeight * 0.2)), reps: 10, percent: 20 },
