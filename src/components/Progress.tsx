@@ -1429,8 +1429,10 @@ export function Progress({
                 const durationFormatted = getWorkoutLogDurationMinutes(log.duration);
 
                 return (
-                  <div
+                  <motion.div
                     key={logId}
+                    whileTap={{ scale: 0.995 }}
+                    transition={{ duration: 0.1 }}
                     className="apple-glass-card rounded-2xl overflow-hidden hover:border-white/20 transition-all cursor-pointer border border-white/8 shadow-sm"
                     onClick={() => {
                       triggerHaptic("light");
@@ -1472,45 +1474,66 @@ export function Progress({
                             <Trash2 className="w-4 h-4 text-[#FF453A]" />
                           </button>
                         )}
-                        <div className="p-1 text-[#8E8E93]">
-                          {isExpanded ? (
-                            <ChevronUp className="w-5 h-5 text-white" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5" />
-                          )}
-                        </div>
+                        <motion.div
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="p-1 text-[#8E8E93]"
+                        >
+                          <ChevronDown className="w-5 h-5 text-white" />
+                        </motion.div>
                       </div>
                     </div>
 
-                    {isExpanded && validExercises.length > 0 && (
-                      <div className="p-4 border-t border-white/5 bg-black/30 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                        {validExercises.map((ex: any, exIdx: number) => {
-                          const setsToRender = ex.completedSets.length > 0 ? ex.completedSets : (ex.sets || []);
-                          return (
-                            <div
-                              key={exIdx}
-                              className="bg-white/5 p-3 rounded-xl border border-white/6 text-xs"
-                            >
-                              <p className="font-bold text-white truncate mb-1.5">
-                                {t(ex.title)}
-                              </p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {setsToRender.map((set: any, setIdx: number) => (
-                                  <span
-                                    key={setIdx}
-                                    className="bg-black/60 text-[#30D158] font-semibold px-2 py-0.5 rounded-md text-[11px] tabular-nums border border-[#30D158]/20"
-                                  >
-                                    {set.weight !== undefined && set.weight !== "" ? `${set.weight}${unit}` : ""}
-                                    {set.reps !== undefined && set.reps !== "" ? ` × ${set.reps}` : ""}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                    <AnimatePresence initial={false}>
+                      {isExpanded && validExercises.length > 0 && (
+                        <motion.div
+                          key={`expanded-${logId}`}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{
+                            height: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
+                            opacity: { duration: 0.22, ease: "easeOut" },
+                          }}
+                          className="overflow-hidden border-t border-white/5 bg-black/30"
+                        >
+                          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            {validExercises.map((ex: any, exIdx: number) => {
+                              const setsToRender = ex.completedSets.length > 0 ? ex.completedSets : (ex.sets || []);
+                              return (
+                                <motion.div
+                                  key={exIdx}
+                                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  transition={{
+                                    duration: 0.22,
+                                    delay: Math.min(exIdx * 0.03, 0.2),
+                                    ease: [0.16, 1, 0.3, 1],
+                                  }}
+                                  className="bg-white/5 p-3 rounded-xl border border-white/6 text-xs hover:border-white/12 transition-colors"
+                                >
+                                  <p className="font-bold text-white truncate mb-1.5">
+                                    {t(ex.title)}
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {setsToRender.map((set: any, setIdx: number) => (
+                                      <span
+                                        key={setIdx}
+                                        className="bg-black/60 text-[#30D158] font-semibold px-2 py-0.5 rounded-md text-[11px] tabular-nums border border-[#30D158]/20"
+                                      >
+                                        {set.weight !== undefined && set.weight !== "" ? `${set.weight}${unit}` : ""}
+                                        {set.reps !== undefined && set.reps !== "" ? ` × ${set.reps}` : ""}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                 );
               })}
 

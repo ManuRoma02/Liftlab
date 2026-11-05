@@ -1112,7 +1112,13 @@ export const Dashboard = React.memo(
             <div className="flex flex-col gap-5 pb-4">
               <div className="flex flex-col gap-4">
                 {focusedActivity.exercises?.map((ex: any, exIdx: number) => (
-                  <div key={exIdx} className="apple-glass-card rounded-2xl p-4 flex flex-col gap-3">
+                  <motion.div
+                    key={exIdx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, delay: Math.min(exIdx * 0.04, 0.24) }}
+                    className="apple-glass-card rounded-2xl p-4 flex flex-col gap-3"
+                  >
                     <div className="flex justify-between items-center">
                       <h4 className="font-bold text-white flex items-center gap-2 text-sm sm:text-base">
                         <CheckCircle2 className="w-4 h-4 text-[#30D158]" />
@@ -1143,7 +1149,7 @@ export const Dashboard = React.memo(
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
