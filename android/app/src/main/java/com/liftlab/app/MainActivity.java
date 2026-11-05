@@ -12,7 +12,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        SplashScreen.installSplashScreen(this);
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+        splashScreen.setKeepOnScreenCondition(() -> false);
         registerPlugin(LiveWorkoutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
@@ -37,7 +38,7 @@ public class MainActivity extends BridgeActivity {
             android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         );
-        window.getDecorView().setBackgroundColor(Color.rgb(9, 10, 11));
+        window.getDecorView().setBackgroundColor(Color.rgb(9, 10, 14));
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.TRANSPARENT);
 
@@ -53,7 +54,7 @@ public class MainActivity extends BridgeActivity {
         controller.setAppearanceLightNavigationBars(false);
 
         if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().setBackgroundColor(Color.rgb(9, 10, 11));
+            getBridge().getWebView().setBackgroundColor(Color.rgb(9, 10, 14));
         }
     }
 }

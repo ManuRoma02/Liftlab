@@ -4,15 +4,15 @@ const config: CapacitorConfig = {
   appId: 'com.liftlab.app',
   appName: 'LiftLab',
   webDir: 'dist',
-  backgroundColor: '#090A0B',
+  backgroundColor: '#090A0E',
   android: {
-    backgroundColor: '#090A0B'
+    backgroundColor: '#090A0E'
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,
       launchAutoHide: true,
-      backgroundColor: '#090A0B',
+      backgroundColor: '#090A0E',
       androidSplashResourceName: 'splash',
       showSpinner: false,
       splashFullScreen: true,
