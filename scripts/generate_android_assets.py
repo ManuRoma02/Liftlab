@@ -45,17 +45,8 @@ def create_launcher_foreground(size):
     return img
 
 def create_splash_screen(width, height):
-    img = Image.new("RGBA", (width, height), SPLASH_BG)
-    glyph = Image.open(SOURCE_GLYPH).convert("RGBA")
-    
-    # Splash logo scale: ~22% of smaller dimension or max 240px
-    min_dim = min(width, height)
-    logo_size = max(48, min(int(min_dim * 0.28), 280))
-    glyph_resized = glyph.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
-    
-    offset = ((width - logo_size) // 2, (height - logo_size) // 2)
-    img.paste(glyph_resized, offset, glyph_resized)
-    return img
+    # Pure solid background matching #090A0E so zero static logo is shown on startup
+    return Image.new("RGBA", (width, height), (9, 10, 14, 255))
 
 def main():
     print("Regenerating all Android mipmap icons and splash screens...")

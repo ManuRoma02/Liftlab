@@ -50,7 +50,7 @@ import {
   startLiveWorkoutNotification,
   stopLiveWorkoutNotification,
 } from "../lib/liveWorkoutBridge";
-import type { RoutineData, ExerciseData, SetData, WeightLog, UserData } from "../types/workout";
+import type { RoutineData, ExerciseData, SetData, WeightLog, UserData, AppTheme } from "../types/workout";
 
 export { getLogDate };
 
@@ -296,6 +296,36 @@ export function useWorkoutData() {
     }
     return getSystemDefaultUnit(getSystemDefaultLanguage());
   });
+
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    const existing = localStorage.getItem("liftlab_guest_data");
+    if (existing) {
+      try {
+        const data = JSON.parse(existing);
+        if (data.theme === "nothing" || data.theme === "default") return data.theme;
+      } catch {}
+    }
+    const legacy = localStorage.getItem("liftlab_theme") as AppTheme | null;
+    if (legacy === "nothing" || legacy === "default") return legacy;
+    return "default";
+  });
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme);
+      if (theme === "nothing") {
+        document.documentElement.classList.add("theme-nothing");
+      } else {
+        document.documentElement.classList.remove("theme-nothing");
+      }
+    }
+  }, [theme]);
+
+  const setAppTheme = (newTheme: AppTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem("liftlab_theme", newTheme);
+    saveUserData({ theme: newTheme });
+  };
 
   const [isEmptyPromptOpen, setIsEmptyPromptOpen] = useState(false);
   const [isUpdateTemplatePromptOpen, setIsUpdateTemplatePromptOpen] = useState(false);
@@ -631,6 +661,7 @@ export function useWorkoutData() {
   useEffect(() => {
     if (userData) {
       if (userData.language) setLanguage(userData.language);
+      if (userData.theme === "nothing" || userData.theme === "default") setTheme(userData.theme);
       setUnit(userData.unit || "LBS");
       setRestTimer(userData.restTimer || 90);
       setShowRpe(userData.showRpe === true);
@@ -1490,6 +1521,9 @@ export function useWorkoutData() {
         writeJsonAtomic("liftlab_routine_edit_draft", updated);
         return updated;
       });
+      window.dispatchEvent(
+        new CustomEvent("liftlab:routine-add-exercise", { detail: newEx })
+      );
     } else if (prevTab === "live_editor") {
       const live = readJson<RoutineData | null>("liftlab_live_progress", null);
       if (live) {
@@ -1555,6 +1589,9 @@ export function useWorkoutData() {
     setWeightLogs,
     language,
     setLanguage,
+    theme,
+    setTheme,
+    setAppTheme,
     unit,
     setUnit,
     isEmptyPromptOpen,

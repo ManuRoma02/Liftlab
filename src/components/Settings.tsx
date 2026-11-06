@@ -27,6 +27,7 @@ import { Vibrate } from "lucide-react";
 import { safeGetItem } from "../lib/storage";
 import { motion, AnimatePresence } from "motion/react";
 import { CARTOON_SPRINGS } from "../lib/motion";
+import type { AppTheme } from "../types/workout";
 import { OtaNotesView } from "./common/OtaNotesView";
 import { LiftLabBrand, LiftLabMark } from "./common/LiftLabBrand";
 import {
@@ -52,12 +53,12 @@ function AppleSwitch({
   return (
     <div
       aria-hidden="true"
-      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative shrink-0 pointer-events-none select-none ${
-        checked ? "bg-[#30D158]" : "bg-[#3A3A3C]"
+      className={`nothing-switch-track w-12 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative shrink-0 pointer-events-none select-none ${
+        checked ? "bg-[#30D158] active" : "bg-[#3A3A3C]"
       }`}
     >
       <div
-        className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+        className={`nothing-switch-thumb w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
           checked ? "translate-x-5" : "translate-x-0"
         }`}
       />
@@ -71,6 +72,8 @@ export function Settings({
   setUnit,
   language,
   setLanguage,
+  theme = "default",
+  setTheme,
   onBack,
   restTimer,
   setRestTimer,
@@ -91,6 +94,8 @@ export function Settings({
   setUnit: any;
   language?: string;
   setLanguage?: (lang: string) => void;
+  theme?: AppTheme;
+  setTheme?: (theme: AppTheme) => void;
   onBack: () => void;
   restTimer: number;
   setRestTimer: (val: number) => void;
@@ -216,6 +221,99 @@ export function Settings({
           </div>
 
           <div className="bg-[#141417] border border-white/[0.08] rounded-2xl divide-y divide-white/[0.06] overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
+            {/* Preference Item: Appearance & Theme */}
+            {setTheme && (
+              <div className="flex flex-col gap-3.5 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900 border border-white/10 flex items-center justify-center text-white shrink-0">
+                      <Sparkles className="w-4 h-4 text-[#30D158]" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white">
+                          {t("appearance") || "Aspetto & Tema"}
+                        </span>
+                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-white/10 text-white/90 font-bold border border-white/10">
+                          {theme === "nothing" ? "NOTHING OS" : "CLASSIC"}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#8E8E93] truncate">
+                        {t("appearance_desc") || "Scegli l'esperienza visiva e la tipografia dell'app"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Theme Selector Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {/* Option 1: LiftLab Classic */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setTheme("default");
+                    }}
+                    className={`relative p-3.5 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
+                      theme !== "nothing"
+                        ? "bg-[#1f2026] border-[#30D158] shadow-[0_0_20px_rgba(48,209,88,0.18)]"
+                        : "bg-black/30 border-white/10 hover:border-white/20 opacity-70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 rounded-full bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.6)]" />
+                        <span className="text-xs font-bold text-white tracking-tight">LiftLab Classic</span>
+                      </div>
+                      <span className="text-[9.5px] uppercase font-mono px-2 py-0.5 rounded-full bg-white/10 text-[#8E8E93]">
+                        iOS Glass
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#8E8E93] leading-snug">
+                      {t("theme_classic_desc") || "Design iOS Glass con accenti verde smeraldo e curve morbide"}
+                    </p>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <span className="h-1.5 w-6 rounded-full bg-[#30D158]" />
+                      <span className="h-1.5 w-4 rounded-full bg-[#0A84FF]" />
+                      <span className="h-1.5 w-4 rounded-full bg-white/20" />
+                    </div>
+                  </button>
+
+                  {/* Option 2: Nothing OS */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setTheme("nothing");
+                    }}
+                    className={`relative p-3.5 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
+                      theme === "nothing"
+                        ? "bg-[#111111] border-[#D71921] shadow-[0_0_20px_rgba(215,25,33,0.22)]"
+                        : "bg-black/30 border-white/10 hover:border-white/20 opacity-70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 rounded-full bg-[#D71921] shadow-[0_0_8px_rgba(215,25,33,0.8)]" />
+                        <span className="text-xs font-bold text-white font-mono tracking-wider">[ NOTHING OS ]</span>
+                      </div>
+                      <span className="text-[9.5px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#D71921]/15 text-[#D71921] border border-[#D71921]/30 font-bold">
+                        (R) DOT-MATRIX
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#8E8E93] leading-snug font-sans">
+                      {t("theme_nothing_desc") || "Estetica industriale con tipografia Dot-Matrix (Doto) e accento Signal Red"}
+                    </p>
+                    <div className="flex items-center gap-1.5 pt-1 font-mono text-[10px] text-white/90">
+                      <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-[9px]">DOTO</span>
+                      <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-[9px]">SPACE MONO</span>
+                      <span className="w-2 h-2 rounded-full bg-[#D71921] ml-auto animate-pulse" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Preference Item: Language */}
             {setLanguage && (
               <div className="flex items-center justify-between gap-3 p-4">

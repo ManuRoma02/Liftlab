@@ -67,6 +67,8 @@ export type WeightLog = {
   weight: number;
 };
 
+export type AppTheme = "default" | "nothing";
+
 export type UserData = {
   displayName?: string;
   unit?: "kg" | "lbs" | "KG" | "LBS";
@@ -78,6 +80,7 @@ export type UserData = {
   oneRepMaxFormula?: "epley" | "brzycki";
   showRpe?: boolean;
   language?: string;
+  theme?: AppTheme;
 };
 
 export const EQUIPMENT = [

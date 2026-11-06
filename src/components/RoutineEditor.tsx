@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft,
   Clock,
@@ -66,7 +67,8 @@ import {
   isNativeAndroid,
 } from "../lib/liveWorkoutBridge";
 import type { RoutineData, ExerciseData, SetData } from "../types/workout";
-import { triggerHaptic } from "../lib/haptics";
+import { triggerHaptic, hapticPress } from "../lib/haptics";
+import { useAndroidSwipeBack } from "../lib/useAndroidSwipeBack";
 import { appleSpringDefault, appleSpringBouncy, CARTOON_SPRINGS, CARTOON_KEYFRAMES } from "../lib/motion";
 
 export function RoutineEditor({
@@ -663,10 +665,9 @@ export function RoutineEditor({
     };
   }, [mode, exerciseRestPresets, restTimer]);
 
-  // ── Listen for exercises added from ExerciseDetails in live workout mode ──
+  // ── Listen for exercises added from ExerciseDetails (both live and edit mode) ──
   useEffect(() => {
-    if (mode !== "live") return;
-    const handleLiveAdd = (e: Event) => {
+    const handleAdd = (e: Event) => {
       const customEvent = e as CustomEvent<ExerciseData>;
       if (!customEvent.detail) return;
       const added = customEvent.detail;
@@ -678,9 +679,23 @@ export function RoutineEditor({
         };
       });
     };
-    window.addEventListener("liftlab:live-add-exercise", handleLiveAdd);
-    return () => window.removeEventListener("liftlab:live-add-exercise", handleLiveAdd);
-  }, [mode]);
+    window.addEventListener("liftlab:live-add-exercise", handleAdd);
+    window.addEventListener("liftlab:routine-add-exercise", handleAdd);
+    return () => {
+      window.removeEventListener("liftlab:live-add-exercise", handleAdd);
+      window.removeEventListener("liftlab:routine-add-exercise", handleAdd);
+    };
+  }, []);
+
+  // Sync if parent passes updated exercises (e.g. from ExerciseDetails navigation)
+  useEffect(() => {
+    if (initialRoutine?.exercises && initialRoutine.exercises.length > (routine?.exercises?.length || 0)) {
+      setRoutine((curr) => ({
+        ...curr,
+        exercises: initialRoutine.exercises,
+      }));
+    }
+  }, [initialRoutine]);
 
   // ── Debounced auto-save & synchronous unmount flush ────────────────────────
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -954,6 +969,17 @@ export function RoutineEditor({
   useBackDismiss(isExerciseModalOpen, closeExerciseModal);
   useBackDismiss(isEquipmentFilterOpen, () => setIsEquipmentFilterOpen(false));
   useBackDismiss(isPlateCalcOpen, () => setIsPlateCalcOpen(false));
+
+  const {
+    dragX: exerciseModalDragX,
+    scrimOpacity: exerciseModalScrimOpacity,
+    swipeStyle: exerciseModalSwipeStyle,
+    swipeHandlers: exerciseModalSwipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: closeExerciseModal,
+    enabled: isExerciseModalOpen,
+    edgeOnly: false,
+  });
 
   const handleCustomExSave = (ex: any) => {
     try {
@@ -2626,14 +2652,16 @@ export function RoutineEditor({
           });
           })()}
 
-          {/* Add Exercise & Reorder Buttons */}
-          <div className="md:col-span-12 mt-stack-md flex flex-col sm:flex-row gap-3">
+          {/* Add Exercise Button */}
+          <div className="md:col-span-12 mt-stack-md flex flex-col gap-3">
             <motion.button
+              type="button"
               whileTap={{ scale: 0.96 }}
               whileHover={{ scale: 1.01 }}
               transition={CARTOON_SPRINGS.bouncy}
+              onPointerDown={hapticPress("light")}
               onClick={() => openExerciseModal()}
-              className="flex-1 border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
+              className="w-full border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
             >
               <PlusCircle
                 className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform"
@@ -2643,59 +2671,49 @@ export function RoutineEditor({
                 {t("add_exercise")}
               </span>
             </motion.button>
-
-            {(routine?.exercises?.length || 0) >= 2 && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                whileHover={{ scale: 1.01 }}
-                transition={CARTOON_SPRINGS.bouncy}
-                onClick={() => {
-                  triggerHaptic("light");
-                  setIsReorderModalOpen(true);
-                }}
-                className="sm:w-auto px-6 border-2 border-dashed border-[#30D158]/30 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-[#30D158] hover:border-[#30D158] hover:bg-[#30D158]/5 transition-all group cursor-pointer"
-              >
-                <ListOrdered
-                  className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform stroke-[2]"
-                />
-                <span className="font-bold text-[14px] uppercase tracking-widest text-center whitespace-nowrap">
-                  {t("reorder_exercises") || "Riordina"}
-                </span>
-              </motion.button>
-            )}
           </div>
         </div>
       </main>
 
-      {/* Exercise Selection Modal */}
-      <AnimatePresence>
-        {isExerciseModalOpen && (
-          <motion.div
-            key="exercise-modal-scrim"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
-            onClick={() => closeExerciseModal()}
-          >
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              style={{ willChange: "transform", transform: "translateZ(0)" }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-2xl max-h-[82vh] flex flex-col shadow-2xl will-change-transform transform-gpu overflow-hidden"
-            >
+      {/* Exercise Selection Modal with Portal & Android System Swipe-Back Dismiss */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {isExerciseModalOpen && (
+              <motion.div
+                key="exercise-modal-scrim"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                style={{ opacity: exerciseModalScrimOpacity }}
+                className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
+                onClick={() => closeExerciseModal()}
+              >
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  {...exerciseModalSwipeHandlers}
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    ...exerciseModalSwipeStyle,
+                    willChange: "transform",
+                    transform: exerciseModalDragX > 0 ? `translateX(${exerciseModalDragX}px)` : undefined,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-surface-container-high border border-surface-variant rounded-2xl w-full max-w-2xl max-h-[82vh] flex flex-col shadow-2xl will-change-transform transform-gpu overflow-hidden"
+                >
             <div className="p-4 border-b border-surface-variant space-y-4 bg-surface sticky top-0 rounded-t-xl z-10">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-primary font-[var(--font-headline-md)]">
                   {replacingExerciseId ? (t("replace_exercise") || "Sostituisci Esercizio") : t("select_exercise")}
                 </h2>
                 <button
+                  type="button"
+                  onPointerDown={hapticPress("light")}
                   onClick={() => closeExerciseModal()}
                   className="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-variant transition-colors cursor-pointer"
                 >
@@ -2832,8 +2850,10 @@ export function RoutineEditor({
             </div>
             <div className="p-4 overflow-y-auto flex flex-col gap-4">
               <button
+                type="button"
+                onPointerDown={hapticPress("light")}
                 onClick={() => setIsCustomExerciseOpen(true)}
-                className="w-full py-4 border-2 border-dashed border-primary-container text-primary-container rounded-lg flex items-center justify-center gap-2 hover:bg-primary-container/10 transition-colors font-bold uppercase tracking-widest mb-2"
+                className="w-full py-4 border-2 border-dashed border-primary-container text-primary-container rounded-lg flex items-center justify-center gap-2 hover:bg-primary-container/10 transition-colors font-bold uppercase tracking-widest mb-2 cursor-pointer"
               >
                 <Plus className="w-5 h-5" />
                 {t("add_custom_exercise") || "Add Custom Exercise"}
@@ -2843,8 +2863,10 @@ export function RoutineEditor({
                   .map((ex) => (
                     <div key={ex.id} className="relative group">
                       <button
+                        type="button"
+                        onPointerDown={hapticPress("light")}
                         onClick={() => addExercise(ex)}
-                        className="w-full flex items-center gap-4 p-3 rounded-lg border border-surface-variant hover:border-primary-container hover:bg-surface-container transition-all text-left"
+                        className="w-full flex items-center gap-4 p-3 rounded-lg border border-surface-variant hover:border-primary-container hover:bg-surface-container transition-all text-left cursor-pointer"
                       >
                         <ExerciseMedia
                           exercise={ex}
@@ -2860,11 +2882,13 @@ export function RoutineEditor({
                         </div>
                       </button>
                       <button
+                        type="button"
+                        onPointerDown={hapticPress("light")}
                         onClick={(e) => {
                           e.stopPropagation();
                           onOpenDetail?.(ex);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors z-10"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors z-10 cursor-pointer"
                       >
                         <HelpCircle className="w-5 h-5" />
                       </button>
@@ -2898,18 +2922,23 @@ export function RoutineEditor({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
+  )}
 
-      {isCustomExerciseOpen && (
-        <div className="fixed inset-0 z-[200] bg-background overflow-y-auto">
-          <AddExercise
-            t={t}
-            unit={unit}
-            onBack={() => setIsCustomExerciseOpen(false)}
-            onSave={handleCustomExSave}
-          />
-        </div>
-      )}
+      {isCustomExerciseOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] bg-background overflow-y-auto">
+            <AddExercise
+              t={t}
+              unit={unit}
+              onBack={() => setIsCustomExerciseOpen(false)}
+              onSave={handleCustomExSave}
+            />
+          </div>,
+          document.body
+        )}
 
       <PlateCalculatorModal
         isOpen={isPlateCalcOpen}
@@ -3035,7 +3064,9 @@ export function RoutineEditor({
       
 
       {/* Apple-style Warmup Confirmation Modal */}
-      <AnimatePresence>
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
         {warmupModalExercise && (() => {
           const firstSetWeight = Number(warmupModalExercise.sets[0]?.weight);
           const workingWeight = Number.isFinite(firstSetWeight) && firstSetWeight > 0 ? firstSetWeight : 60;
@@ -3136,7 +3167,9 @@ export function RoutineEditor({
             </motion.div>
           );
         })()}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
       {/* Confirm Finish Workout Modal */}
       {isFinishConfirmOpen && (
         <ConfirmModal

@@ -1,9 +1,11 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { Trash2, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "motion/react";
 import { triggerHaptic } from "../../lib/haptics";
 import { CARTOON_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export interface ConfirmModalProps {
   key?: React.Key;
@@ -38,26 +40,39 @@ export function ConfirmModal({
   useModalDismiss(true, onCancel);
   const finalConfirmLabel = confirmLabel || (destructive ? "Elimina" : "Salva");
 
-  return (
+  // Android system horizontal swipe-to-back gesture
+  const { dragX, scrimOpacity, swipeStyle, swipeHandlers } = useAndroidSwipeBack({
+    onDismiss: onCancel,
+    enabled: true,
+    edgeOnly: false,
+  });
+
+  const modalNode = (
     <motion.div
       key="confirm-modal-scrim"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      style={{ opacity: scrimOpacity }}
       transition={{ duration: 0.18 }}
-      className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
     >
         <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={title || (destructive ? "Confirm destructive action" : "Confirm action")}
           aria-describedby="confirm-modal-message"
+          {...swipeHandlers}
           initial={{ opacity: 0, scale: 0.92, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 12 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          style={{ willChange: "transform", transform: "translateZ(0)" }}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden will-change-transform transform-gpu"
+          style={{
+            ...swipeStyle,
+            willChange: "transform",
+            transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          }}
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden will-change-transform transform-gpu select-none"
         >
           {/* iOS Alert Icon */}
           <motion.div
@@ -121,6 +136,9 @@ export function ConfirmModal({
         </motion.div>
       </motion.div>
   );
+
+  if (typeof document === "undefined") return modalNode;
+  return createPortal(modalNode, document.body);
 }
 
 export { useModalDismiss, useBackDismiss } from "../../lib/modalStack";

@@ -5,6 +5,8 @@ import { ACHIEVEMENTS } from "../../lib/achievements";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { createPortal } from "react-dom";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export interface AchievementsModalProps {
   isOpen: boolean;
@@ -62,6 +64,18 @@ export function AchievementsModal({
 
   useModalDismiss(isOpen, onClose);
 
+  const {
+    dragX,
+    scrimOpacity,
+    swipeStyle,
+    swipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: isOpen,
+    edgeOnly: true,
+    edgeWidth: 50,
+  });
+
   const tr = (key: string, fallback: string) => {
     if (typeof t === "function") {
       const val = t(key);
@@ -97,7 +111,7 @@ export function AchievementsModal({
     { id: "platinum", label: "Platinum" },
   ];
 
-  return (
+  const modalElement = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -106,6 +120,7 @@ export function AchievementsModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
+          style={{ opacity: scrimOpacity }}
           className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-3 md:p-6"
           onClick={onClose}
         >
@@ -113,13 +128,18 @@ export function AchievementsModal({
             role="dialog"
             aria-modal="true"
             aria-label={tr("achievements", "Legacy Achievements")}
+            {...swipeHandlers}
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            style={{ willChange: "transform", transform: "translateZ(0)" }}
+            style={{
+              ...swipeStyle,
+              willChange: "transform",
+              transform: dragX > 0 ? `translateX(${dragX}px)` : "translateZ(0)",
+            }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[82vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col will-change-transform transform-gpu"
+            className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[82vh] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col will-change-transform transform-gpu select-none"
           >
           {/* Header */}
           <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c] shrink-0">
@@ -300,4 +320,6 @@ export function AchievementsModal({
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : modalElement;
 }

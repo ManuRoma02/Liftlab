@@ -10,6 +10,7 @@ import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { useModalDismiss } from "../../lib/modalStack";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export interface AppleBottomSheetProps {
   isOpen: boolean;
@@ -55,6 +56,13 @@ export function AppleBottomSheet({
   // Coordinated LIFO keyboard Escape and hardware back dismiss integration
   useModalDismiss(isOpen, onClose);
 
+  // Android system horizontal swipe-back gesture to reveal underlying view
+  const { dragX, scrimOpacity, swipeStyle, swipeHandlers } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: isOpen,
+    edgeOnly: false,
+  });
+
   const sheetContent = (
     <AnimatePresence>
       {isOpen && (
@@ -71,6 +79,7 @@ export function AppleBottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            style={{ opacity: scrimOpacity }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             onPointerDown={hapticPress("light")}
             onClick={onClose}
@@ -88,7 +97,6 @@ export function AppleBottomSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ willChange: "transform", transform: "translateZ(0)" }}
             drag="y"
             dragControls={dragControls}
             dragListener={false}
@@ -100,6 +108,12 @@ export function AppleBottomSheet({
                 triggerHaptic("light");
                 onClose();
               }
+            }}
+            {...swipeHandlers}
+            style={{
+              ...swipeStyle,
+              willChange: "transform",
+              transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
             }}
             className={`pointer-events-auto w-full ${maxWidth} ${maxHeight} flex flex-col overflow-hidden bg-[#24252c] border-t border-white/15 shadow-[0_-16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] rounded-t-[32px] md:rounded-3xl md:border md:border-white/15 md:shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] will-change-transform transform-gpu pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] md:pb-6 relative ${className}`}
           >

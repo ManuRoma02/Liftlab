@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { createPortal } from "react-dom";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export function ImportRoutineModal({
   onImport,
@@ -22,6 +24,18 @@ export function ImportRoutineModal({
 
   useModalDismiss(true, onClose);
 
+  const {
+    dragX,
+    scrimOpacity,
+    swipeStyle,
+    swipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: true,
+    edgeOnly: false,
+    threshold: 64,
+  });
+
   const handleImport = async () => {
     const trimmed = codeText.trim();
     if (!trimmed || isImporting) return;
@@ -39,12 +53,13 @@ export function ImportRoutineModal({
     }
   };
 
-  return (
+  const modalElement = (
     <motion.div
       key="import-routine-scrim"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      style={{ opacity: scrimOpacity }}
       className="fixed inset-0 bg-black/75  z-[500] flex items-center justify-center p-4"
       onClick={onClose}
     >
@@ -52,11 +67,17 @@ export function ImportRoutineModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-routine-title"
+        {...swipeHandlers}
         initial={{ opacity: 0, scale: 0.92, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 15 }}
         transition={APPLE_SPRINGS.criticallyDamped}
-        className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col p-6 gap-4"
+        style={{
+          ...swipeStyle,
+          willChange: "transform",
+          transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+        }}
+        className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col p-6 gap-4 select-none"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center border-b border-white/8 pb-3">
@@ -112,4 +133,6 @@ export function ImportRoutineModal({
       </motion.div>
     </motion.div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : modalElement;
 }

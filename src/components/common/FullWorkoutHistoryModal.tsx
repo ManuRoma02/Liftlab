@@ -6,6 +6,8 @@ import { getWorkoutLogDurationMinutes, getLogDate } from "../../lib/workoutUtils
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { createPortal } from "react-dom";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export interface FullWorkoutHistoryModalProps {
   isOpen: boolean;
@@ -29,6 +31,18 @@ export function FullWorkoutHistoryModal({
   const [pendingDeleteLogId, setPendingDeleteLogId] = useState<string | null>(null);
 
   useModalDismiss(isOpen, onClose);
+
+  const {
+    dragX,
+    scrimOpacity,
+    swipeStyle,
+    swipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: isOpen,
+    edgeOnly: true,
+    edgeWidth: 50,
+  });
 
   const tr = (key: string, fallback: string) => {
     if (typeof t === "function") {
@@ -69,7 +83,7 @@ export function FullWorkoutHistoryModal({
     }));
   };
 
-  return (
+  const modalElement = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -77,6 +91,7 @@ export function FullWorkoutHistoryModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          style={{ opacity: scrimOpacity }}
           className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4"
           onClick={onClose}
         >
@@ -84,12 +99,18 @@ export function FullWorkoutHistoryModal({
           role="dialog"
           aria-modal="true"
           aria-label={tr("full_workout_history", "Full Workout History")}
+          {...swipeHandlers}
           initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
+          style={{
+            ...swipeStyle,
+            willChange: "transform",
+            transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col max-h-[85vh] will-change-transform transform-gpu"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col max-h-[85vh] will-change-transform transform-gpu select-none"
         >
           {/* Header */}
           <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c] shrink-0">
@@ -316,4 +337,6 @@ export function FullWorkoutHistoryModal({
     )}
   </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : modalElement;
 }

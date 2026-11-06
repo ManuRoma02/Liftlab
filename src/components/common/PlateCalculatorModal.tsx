@@ -5,6 +5,8 @@ import { calculatePlatesPerSide } from "../../lib/workoutUtils";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { createPortal } from "react-dom";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export interface PlateCalculatorModalProps {
   isOpen: boolean;
@@ -64,6 +66,18 @@ export function PlateCalculatorModal({
 
   useModalDismiss(isOpen, onClose);
 
+  const {
+    dragX,
+    scrimOpacity,
+    swipeStyle,
+    swipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: isOpen,
+    edgeOnly: true,
+    edgeWidth: 50,
+  });
+
   const plateResult = calculatePlatesPerSide(targetWeight, barWeight, unit);
 
   // Expand plates array into individual plate values for side sleeve representation
@@ -81,7 +95,7 @@ export function PlateCalculatorModal({
 
   const barPresets = isLbs ? [45, 35, 25, 0] : [20, 15, 10, 0];
 
-  return (
+  const modalElement = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -89,6 +103,7 @@ export function PlateCalculatorModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          style={{ opacity: scrimOpacity }}
           className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4"
           onClick={onClose}
         >
@@ -96,12 +111,18 @@ export function PlateCalculatorModal({
           role="dialog"
           aria-modal="true"
           aria-label={t("plate_calculator") || "Plate Calculator"}
+          {...swipeHandlers}
           initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
+          style={{
+            ...swipeStyle,
+            willChange: "transform",
+            transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-lg overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-lg overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col select-none"
         >
           {/* Header */}
           <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#24252c]">
@@ -282,4 +303,6 @@ export function PlateCalculatorModal({
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : modalElement;
 }

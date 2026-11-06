@@ -4,9 +4,11 @@
  */
 
 import React, { useRef, useState, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Dumbbell, LayoutDashboard, Database, Scale, Save, LineChart as LucideLineChart, Sparkles, X } from "lucide-react";
 import { useWorkoutData } from "./hooks/useWorkoutData";
 import { subscribeOtaEvents, reloadOtaApp, type OtaManifest } from "./lib/otaUpdate";
+import { useAndroidSwipeBack } from "./lib/useAndroidSwipeBack";
 
 import { Dashboard } from "./components/Dashboard";
 import { Library } from "./components/Library";
@@ -133,6 +135,8 @@ export default function App() {
     handleDetailsAddExercise,
     createMissingImportedExercises,
     fillImportedRoutineWeights,
+    theme,
+    setAppTheme,
     restartTutorial,
     loadStarterRoutines,
   } = useWorkoutData();
@@ -146,6 +150,44 @@ export default function App() {
       ? prevTab
       : "dashboard";
   const lastSubviewRef = useRef<ReactNode>(null);
+
+  const subviewSwipe = useAndroidSwipeBack({
+    onDismiss: () => {
+      setActiveTab(prevTab);
+    },
+    enabled: isSubview,
+    threshold: 80,
+    edgeOnly: true,
+    edgeWidth: 54,
+  });
+
+  const weightSwipe = useAndroidSwipeBack({
+    onDismiss: () => setIsWeightModalOpen(false),
+    enabled: isWeightModalOpen,
+    edgeOnly: false,
+    threshold: 64,
+  });
+
+  const subviewBackProgress = typeof window !== "undefined" && window.innerWidth > 0
+    ? Math.min(1, subviewSwipe.dragX / (window.innerWidth * 0.75))
+    : 0;
+
+  const mainContentStyle: React.CSSProperties = isSubview
+    ? {
+        transform: `scale(${0.94 + subviewBackProgress * 0.06}) translateX(${-24 + subviewBackProgress * 24}px)`,
+        transformOrigin: "center center",
+        opacity: 0.7 + subviewBackProgress * 0.3,
+        filter: `brightness(${0.75 + subviewBackProgress * 0.25})`,
+        transition: subviewSwipe.isDragging ? "none" : "transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s, filter 0.24s",
+        willChange: "transform, opacity, filter",
+        pointerEvents: "none",
+        userSelect: "none",
+      }
+    : {
+        transform: "none",
+        opacity: 1,
+        transition: "transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s",
+      };
   const MAIN_NAV_TABS = ["dashboard", "library", "workout", "progress"] as const;
   const [tabDirection, setTabDirection] = useState<number>(0);
   const prevNavTabRef = useRef<string>(effectiveTab);
@@ -299,6 +341,8 @@ export default function App() {
           setUnit={handleToggleUnit}
           language={language}
           setLanguage={setAppLanguage}
+          theme={theme}
+          setTheme={setAppTheme}
           onBack={() => setActiveTab(prevTab)}
           restTimer={restTimer}
           setRestTimer={setAppRestTimer}
@@ -348,7 +392,7 @@ export default function App() {
         >
           Skip to main content
         </a>
-        <div id="main-content" tabIndex={-1}>
+        <div id="main-content" tabIndex={-1} style={mainContentStyle}>
         {/* Main Content Area */}
         <div className="w-full touch-pan-y" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
           <AnimatePresence initial={false} custom={tabDirection} mode="wait">
@@ -485,96 +529,106 @@ export default function App() {
         </div>
 
         {/* Weight Modal */}
-        <AnimatePresence>
-          {isWeightModalOpen && (
-            <motion.div
-              key="weight-modal-scrim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
-              onClick={() => setIsWeightModalOpen(false)}
-            >
-              <motion.div
-                key="weight-modal-dialog"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="weight-dialog-title"
-                initial={{ opacity: 0, scale: 0.94, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 12 }}
-                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                style={{ willChange: "transform", transform: "translateZ(0)" }}
-                className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] overflow-hidden relative will-change-transform transform-gpu"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-7 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center mb-5 border border-[#30D158]/25 text-[#30D158]">
-                    <Scale className="w-7 h-7" />
-                  </div>
+        {typeof document !== "undefined" &&
+          createPortal(
+            <AnimatePresence>
+              {isWeightModalOpen && (
+                <motion.div
+                  key="weight-modal-scrim"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  style={{ opacity: weightSwipe.scrimOpacity }}
+                  className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
+                  onClick={() => setIsWeightModalOpen(false)}
+                >
+                  <motion.div
+                    key="weight-modal-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="weight-dialog-title"
+                    {...weightSwipe.swipeHandlers}
+                    initial={{ opacity: 0, scale: 0.94, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: 12 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      ...weightSwipe.swipeStyle,
+                      willChange: "transform",
+                      transform: weightSwipe.dragX > 0 ? `translateX(${weightSwipe.dragX}px)` : "translateZ(0)",
+                    }}
+                    className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] overflow-hidden relative will-change-transform transform-gpu select-none"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-7 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center mb-5 border border-[#30D158]/25 text-[#30D158]">
+                        <Scale className="w-7 h-7" />
+                      </div>
 
-                  <h2 id="weight-dialog-title" className="text-xl font-bold text-white tracking-tight mb-1">
-                    {t("morning_weigh_in") || "Morning Weigh-In"}
-                  </h2>
-                  <p className="text-xs text-[#8E8E93] mb-6">
-                    {t("track") || "Consistency is key to tracking your progress."}
-                  </p>
+                      <h2 id="weight-dialog-title" className="text-xl font-bold text-white tracking-tight mb-1">
+                        {t("morning_weigh_in") || "Morning Weigh-In"}
+                      </h2>
+                      <p className="text-xs text-[#8E8E93] mb-6">
+                        {t("track") || "Consistency is key to tracking your progress."}
+                      </p>
 
-                  <div className="relative w-full mb-7">
-                    <input
-                      ref={weightInputRef}
-                      type="number"
-                      inputMode="decimal"
-                      min="1"
-                      max="1000"
-                      step="0.1"
-                      aria-label={`Body weight in ${unit}`}
-                      value={weightInput}
-                      onChange={(e) => setWeightInput(e.target.value)}
-                      className="w-full bg-transparent text-center text-6xl font-extrabold text-white tracking-tight tabular-nums focus:outline-none placeholder:text-neutral-700"
-                      placeholder="00.0"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          triggerHaptic("success");
-                          handleUpdateWeight();
-                        }
-                      }}
-                    />
-                    <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mt-2">
-                      {unit}
+                      <div className="relative w-full mb-7">
+                        <input
+                          ref={weightInputRef}
+                          type="number"
+                          inputMode="decimal"
+                          min="1"
+                          max="1000"
+                          step="0.1"
+                          aria-label={`Body weight in ${unit}`}
+                          value={weightInput}
+                          onChange={(e) => setWeightInput(e.target.value)}
+                          className="w-full bg-transparent text-center text-6xl font-extrabold text-white tracking-tight tabular-nums focus:outline-none placeholder:text-neutral-700"
+                          placeholder="00.0"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              triggerHaptic("success");
+                              handleUpdateWeight();
+                            }
+                          }}
+                        />
+                        <div className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mt-2">
+                          {unit}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 w-full">
+                        <button
+                          onClick={() => setIsWeightModalOpen(false)}
+                          className="min-h-[44px] py-3 px-5 rounded-full bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all font-semibold text-sm flex items-center justify-center cursor-pointer"
+                        >
+                          {t("cancel") || "Skip"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            triggerHaptic("success");
+                            handleUpdateWeight();
+                          }}
+                          disabled={!Number.isFinite(Number(weightInput)) || Number(weightInput) <= 0 || Number(weightInput) > 1000}
+                          className="min-h-[44px] py-3 px-5 bg-[#30D158] text-black rounded-full font-bold text-sm tracking-tight hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center cursor-pointer"
+                        >
+                          {t("save") || "Save"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-3 w-full">
-                    <button
-                      onClick={() => setIsWeightModalOpen(false)}
-                      className="min-h-[44px] py-3 px-5 rounded-full bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all font-semibold text-sm flex items-center justify-center cursor-pointer"
-                    >
-                      {t("cancel") || "Skip"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        triggerHaptic("success");
-                        handleUpdateWeight();
-                      }}
-                      disabled={!Number.isFinite(Number(weightInput)) || Number(weightInput) <= 0 || Number(weightInput) > 1000}
-                      className="min-h-[44px] py-3 px-5 bg-[#30D158] text-black rounded-full font-bold text-sm tracking-tight hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(48,209,88,0.3)] flex items-center justify-center cursor-pointer"
-                    >
-                      {t("save") || "Save"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-[#1c1d24] px-6 py-3 border-t border-white/8 flex justify-center">
-                  <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide">
-                    {currentWeight > 0 ? `Current: ${currentWeight} ${unit}` : "No weight logged yet"}
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
+                    <div className="bg-[#1c1d24] px-6 py-3 border-t border-white/8 flex justify-center">
+                      <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide">
+                        {currentWeight > 0 ? `Current: ${currentWeight} ${unit}` : "No weight logged yet"}
+                      </p>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
           )}
-        </AnimatePresence>
 
         {showTutorial && <OnboardingTutorial onFinish={finishTutorial} language={language} t={t} />}
 
@@ -588,7 +642,9 @@ export default function App() {
           >
             <div className="absolute top-6 hidden flex-col items-center gap-2 lg:flex" aria-hidden="true">
               <LiftLabMark sizeClass="w-11 h-11" withBackground={false} className="rounded-2xl shadow-md" />
-              <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#8E8E93]">LiftLab</span>
+              <span className={`text-[9px] font-bold uppercase tracking-[0.15em] ${theme === "nothing" ? "font-mono text-white/90" : "text-[#8E8E93]"}`}>
+                {theme === "nothing" ? "LIFT ● LAB" : "LiftLab"}
+              </span>
             </div>
 
             {[
@@ -611,17 +667,20 @@ export default function App() {
                 >
                   {isActive && (
                     <>
-                      {/* Active glowing capsule backdrop */}
+                      {/* Active capsule backdrop */}
                       <motion.div
                         layoutId="apple-nav-active-pill"
-                        className="absolute inset-1 rounded-2xl sm:rounded-full bg-[#30D158]/14 border border-[#30D158]/35 shadow-[0_0_12px_rgba(48,209,88,0.2)]"
+                        className={
+                          theme === "nothing"
+                            ? "absolute inset-1 rounded-full bg-white/[0.08] border border-white/20 shadow-none"
+                            : "absolute inset-1 rounded-2xl sm:rounded-full bg-[#30D158]/14 border border-[#30D158]/35 shadow-[0_0_12px_rgba(48,209,88,0.2)]"
+                        }
                         transition={{
                           type: "spring",
                           stiffness: 450,
                           damping: 32,
                         }}
                       />
-                      
                     </>
                   )}
                   <motion.div
@@ -629,24 +688,31 @@ export default function App() {
                     className="relative z-10 flex flex-col items-center justify-center pointer-events-none"
                   >
                     <motion.div
-                      animate={isActive ? { scale: 1.06 } : { scale: 1 }}
+                      animate={isActive ? { scale: 1.05 } : { scale: 1 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
                     >
                       <Icon
                         className={`w-5 h-5 transition-colors duration-200 ${
-                          isActive ? "text-[#30D158]" : "text-[#8E8E93] group-hover:text-white"
+                          theme === "nothing"
+                            ? isActive ? "text-white" : "text-[#777777]"
+                            : isActive ? "text-[#30D158]" : "text-[#8E8E93] group-hover:text-white"
                         }`}
-                        fill={isActive ? "currentColor" : "none"}
-                        strokeWidth={isActive ? 1.5 : 2}
+                        fill={theme === "nothing" ? "none" : (isActive ? "currentColor" : "none")}
+                        strokeWidth={1.5}
                       />
                     </motion.div>
                     <span
-                      className={`text-[10px] sm:text-[10.5px] mt-1 tracking-tight transition-colors duration-150 ${
-                        isActive ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"
+                      className={`text-[10px] sm:text-[10.5px] mt-1 transition-colors duration-150 ${
+                        theme === "nothing"
+                          ? `font-mono uppercase tracking-[0.08em] ${isActive ? "font-bold text-white" : "text-[#777777]"}`
+                          : `tracking-tight ${isActive ? "font-bold text-[#30D158]" : "font-medium text-[#8E8E93]"}`
                       }`}
                     >
                       {tab.label}
                     </span>
+                    {theme === "nothing" && isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D71921] mt-0.5 shadow-[0_0_6px_rgba(215,25,33,0.8)]" />
+                    )}
                   </motion.div>
                 </button>
               );
@@ -654,7 +720,7 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Full-Screen Sliding Subviews with Native iOS/Android Push & Pop Physics */}
+        {/* Full-Screen Sliding Subviews with Native Android Predictive Back & Window Reveal */}
         <AnimatePresence>
           {isSubview && (
             <motion.div
@@ -672,10 +738,15 @@ export default function App() {
               }}
               className="fixed inset-0 z-[120] bg-background overflow-y-auto"
               style={{
-                willChange: "transform, opacity",
+                willChange: "transform, opacity, border-radius",
                 WebkitOverflowScrolling: "touch",
                 pointerEvents: isSubview ? "auto" : "none",
+                transform: subviewSwipe.dragX > 0 ? `translateX(${subviewSwipe.dragX}px)` : undefined,
+                boxShadow: subviewSwipe.dragX > 0 ? "-18px 0 45px rgba(0, 0, 0, 0.75)" : undefined,
+                borderRadius: subviewSwipe.dragX > 0 ? "24px 0 0 24px" : "0px",
+                transition: subviewSwipe.isDragging ? "none" : "transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.2s",
               }}
+              {...subviewSwipe.swipeHandlers}
             >
               {currentSubview || lastSubviewRef.current}
             </motion.div>

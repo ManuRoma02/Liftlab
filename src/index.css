@@ -3,6 +3,9 @@
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", system-ui, sans-serif;
   --font-mono: "SF Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
+  --font-doto: "Doto", monospace;
+  --font-space-grotesk: "Space Grotesk", system-ui, sans-serif;
+  --font-space-mono: "Space Mono", monospace;
 }
 
 @layer base {
@@ -452,4 +455,190 @@ input::selection, textarea::selection {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==========================================================================
+   NOTHING OS DESIGN SYSTEM (nothing-design-skill v3.0.0)
+   - Strict OLED Black Canvas (#000000)
+   - 3-Layer Visual Hierarchy (Doto display > Space Grotesk > Space Mono labels)
+   - Signature Signal Red Accent (#D71921) as an event interrupt
+   - Flat surfaces (#111111), 1px borders (#262626 / #333333), 0 shadows
+   - Mechanical toggles, segmented LED progress bars, technical brackets
+   ========================================================================== */
+
+@utility font-doto {
+  font-family: var(--font-doto);
+}
+
+@utility font-space-grotesk {
+  font-family: var(--font-space-grotesk);
+}
+
+@utility font-space-mono {
+  font-family: var(--font-space-mono);
+}
+
+[data-theme="nothing"],
+.theme-nothing {
+  --color-background: #000000;
+  --color-surface: #111111;
+  --color-surface-container: #111111;
+  --color-surface-container-low: #080808;
+  --color-surface-container-high: #161616;
+  --color-surface-container-highest: #222222;
+  --color-surface-variant: #1a1a1a;
+  --color-outline: #262626;
+  --color-outline-variant: #333333;
+  --color-primary-container: #D71921;
+  --color-on-primary-container: #ffffff;
+  --color-primary-fixed: #D71921;
+  --color-primary-fixed-dim: #D71921;
+  --color-inverse-primary: #D71921;
+  --color-on-background: #E8E8E8;
+  --color-on-surface: #E8E8E8;
+  --color-on-surface-variant: #999999;
+  --color-tertiary-container: rgba(215, 25, 33, 0.15);
+  --color-on-tertiary-container: #D71921;
+
+  --font-headline-md: "Space Grotesk", system-ui, sans-serif;
+  --font-headline-lg: "Space Grotesk", system-ui, sans-serif;
+  --font-display-lg: "Doto", monospace;
+  --font-display-lg-mobile: "Doto", monospace;
+  --font-stats-xl: "Doto", monospace;
+  --font-label-bold: "Space Mono", monospace;
+  --font-body-lg: "Space Grotesk", system-ui, sans-serif;
+  --font-body-md: "Space Grotesk", system-ui, sans-serif;
+}
+
+[data-theme="nothing"] body,
+[data-theme="nothing"] .app-shell {
+  background-color: #000000 !important;
+  background-image: radial-gradient(circle, #262626 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif !important;
+  color: #E8E8E8 !important;
+}
+
+/* Headings in Nothing mode: Space Grotesk with tight tracking */
+[data-theme="nothing"] h1,
+[data-theme="nothing"] h2,
+[data-theme="nothing"] h3,
+[data-theme="nothing"] h4 {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Numeric Hero / Stats in Nothing mode */
+[data-theme="nothing"] .hero-metric,
+[data-theme="nothing"] .nothing-doto,
+[data-theme="nothing"] .tabular-nums {
+  font-family: var(--font-doto), monospace !important;
+}
+
+/* Labels, Badges, and Meta tags: Space Mono ALL CAPS */
+[data-theme="nothing"] .uppercase,
+[data-theme="nothing"] [class*="tracking-wider"],
+[data-theme="nothing"] [class*="tracking-widest"] {
+  font-family: var(--font-space-mono), monospace !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* Nothing Card Aesthetics: Flat #111111, 1px solid #262626 border, 16px radius, NO shadows */
+[data-theme="nothing"] [class*="bg-[#141417]"],
+[data-theme="nothing"] [class*="bg-[#1c1c1e]"],
+[data-theme="nothing"] [class*="bg-[#24252c]"],
+[data-theme="nothing"] [class*="bg-[#18191e]"],
+[data-theme="nothing"] [class*="bg-[#121214]"],
+[data-theme="nothing"] [class*="bg-[#1c1d24]"] {
+  background-color: #111111 !important;
+  border-color: #262626 !important;
+  box-shadow: none !important;
+}
+
+[data-theme="nothing"] [class*="rounded-3xl"] {
+  border-radius: 16px !important;
+}
+[data-theme="nothing"] [class*="rounded-2xl"]:not(button):not(.pill-badge) {
+  border-radius: 12px !important;
+}
+
+/* Color Accent Overrides: Transform green accent into Nothing Signal Red (#D71921) */
+[data-theme="nothing"] [class*="text-[#30D158]"],
+[data-theme="nothing"] [class*="text-[#30d158]"] {
+  color: #D71921 !important;
+}
+[data-theme="nothing"] [class*="bg-[#30D158]"],
+[data-theme="nothing"] [class*="bg-[#30d158]"] {
+  background-color: #D71921 !important;
+  color: #ffffff !important;
+}
+[data-theme="nothing"] [class*="border-[#30D158]"],
+[data-theme="nothing"] [class*="border-[#30d158]"] {
+  border-color: #D71921 !important;
+}
+[data-theme="nothing"] [class*="bg-[#30D158]/"],
+[data-theme="nothing"] [class*="bg-[#30d158]/"] {
+  background-color: rgba(215, 25, 33, 0.14) !important;
+}
+[data-theme="nothing"] [class*="border-[#30D158]/"],
+[data-theme="nothing"] [class*="border-[#30d158]/"] {
+  border-color: rgba(215, 25, 33, 0.35) !important;
+}
+
+/* Selection and focus */
+[data-theme="nothing"] ::selection {
+  background: rgba(215, 25, 33, 0.35) !important;
+  color: #ffffff !important;
+}
+[data-theme="nothing"] :where(button, [role="button"], a, select):focus-visible {
+  outline: 2px solid #D71921 !important;
+  outline-offset: 2px !important;
+}
+
+/* Nothing OS Floating Navigation Dock */
+[data-theme="nothing"] .apple-floating-dock {
+  background: #111111 !important;
+  border: 1px solid #262626 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 9999px !important;
+}
+
+/* Nothing OS Switch Toggle Styling */
+[data-theme="nothing"] .nothing-switch-track {
+  background-color: #262626 !important;
+  border: 1px solid #333333 !important;
+}
+[data-theme="nothing"] .nothing-switch-track.active {
+  background-color: #FFFFFF !important;
+}
+[data-theme="nothing"] .nothing-switch-thumb {
+  background-color: #666666 !important;
+}
+[data-theme="nothing"] .nothing-switch-track.active .nothing-switch-thumb {
+  background-color: #000000 !important;
+}
+
+/* Nothing OS Glass Cards & Hero Overrides */
+[data-theme="nothing"] .apple-glass-card {
+  background: #111111 !important;
+  border: 1px solid #262626 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 16px !important;
+}
+
+[data-theme="nothing"] .apple-glass-card [class*="radial-gradient"],
+[data-theme="nothing"] section [class*="radial-gradient"] {
+  display: none !important;
+}
+
+/* Nothing OS Modals & Sheets */
+[data-theme="nothing"] [role="dialog"] {
+  background-color: #111111 !important;
+  border: 1px solid #333333 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 0 1px #222222, 0 24px 60px rgba(0, 0, 0, 0.95) !important;
 }

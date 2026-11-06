@@ -4,16 +4,31 @@ import { motion } from "motion/react";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
 import { APPLE_SPRINGS } from "../../lib/motion";
 import { useModalDismiss } from "../../lib/modalStack";
+import { createPortal } from "react-dom";
+import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
 export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
   useModalDismiss(true, onClose);
 
-  return (
+  const {
+    dragX,
+    scrimOpacity,
+    swipeStyle,
+    swipeHandlers,
+  } = useAndroidSwipeBack({
+    onDismiss: onClose,
+    enabled: true,
+    edgeOnly: true,
+    edgeWidth: 50,
+  });
+
+  const modalElement = (
     <motion.div
       key="privacy-policy-scrim"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      style={{ opacity: scrimOpacity }}
       className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 "
       onPointerDown={hapticPress("light")}
       onClick={onClose}
@@ -22,12 +37,18 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
           role="dialog"
           aria-modal="true"
           aria-label="Privacy Policy"
+          {...swipeHandlers}
           initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={APPLE_SPRINGS.criticallyDamped}
+          style={{
+            ...swipeStyle,
+            willChange: "transform",
+            transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]"
+          className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-2xl max-h-[85vh] relative flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] select-none"
         >
           <div className="flex justify-between items-center p-6 md:p-7 border-b border-white/8 shrink-0">
             <div>
@@ -92,4 +113,6 @@ export function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
         </motion.div>
       </motion.div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : modalElement;
 }
