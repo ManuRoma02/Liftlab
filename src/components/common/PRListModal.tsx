@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Trophy, X, Search, Dumbbell } from "lucide-react";
 import { motion } from "motion/react";
 import { ExerciseFilterBar } from "./ExerciseFilterBar";
+import { ExerciseMedia } from "./ExerciseMedia";
 import { isTimedExercise } from "../../lib/workoutUtils";
 import type { ExerciseData } from "../../types/workout";
 import { triggerHaptic, hapticPress } from "../../lib/haptics";
@@ -192,17 +193,12 @@ export function PRListModal({
                     className="bg-black/40 border border-white/6 rounded-2xl p-3.5 flex flex-col gap-2.5"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/5 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
-                        {ex.image || ex.gifUrl ? (
-                          <img
-                            src={ex.image || ex.gifUrl}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <Dumbbell className="w-4 h-4 text-[#FF9F0A]" />
-                        )}
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                        <ExerciseMedia
+                          exercise={ex}
+                          className="w-full h-full"
+                          imageClassName="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-white font-bold text-sm truncate">

@@ -441,6 +441,7 @@ public class LiveWorkoutService extends Service {
             editor.putLong(LiveWorkoutPlugin.KEY_REST_END_AT, 0);
         }
         editor.apply();
+        LiftLabWidgetProvider.updateAllWidgets(this);
     }
 
     private boolean restoreState() {
@@ -474,6 +475,7 @@ public class LiveWorkoutService extends Service {
 
     private void clearPersistedState() {
         getSharedPreferences(LiveWorkoutPlugin.PREFS_NAME, MODE_PRIVATE).edit().clear().apply();
+        LiftLabWidgetProvider.updateAllWidgets(this);
     }
 
     private void createNotificationChannel() {

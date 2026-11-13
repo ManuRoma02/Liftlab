@@ -11,21 +11,22 @@ import { subscribeOtaEvents, reloadOtaApp, type OtaManifest } from "./lib/otaUpd
 import { useAndroidSwipeBack } from "./lib/useAndroidSwipeBack";
 
 import { Dashboard } from "./components/Dashboard";
-import { Library } from "./components/Library";
 import { Workout } from "./components/Workout";
-import { Progress } from "./components/Progress";
-import { Settings } from "./components/Settings";
-import { OnboardingTutorial } from "./components/OnboardingTutorial";
-import { RoutineEditor } from "./components/RoutineEditor";
-import { WorkoutSummaryView } from "./components/WorkoutSummaryView";
 import { ConfirmModal } from "./components/common/ConfirmModal";
 import { CookieBanner } from "./components/common/CookieBanner";
-import { PrivacyPolicyModal } from "./components/common/PrivacyPolicyModal";
-import { TOSModal } from "./components/common/TOSModal";
-import { ShareRoutineModal } from "./components/common/ShareRoutineModal";
-import { ImportRoutineModal } from "./components/common/ImportRoutineModal";
-import { ExerciseDetails } from "./components/common/ExerciseDetails";
-import { AddExercise } from "./components/common/AddExercise";
+
+const Library = React.lazy(() => import("./components/Library").then(m => ({ default: m.Library })));
+const Progress = React.lazy(() => import("./components/Progress").then(m => ({ default: m.Progress })));
+const Settings = React.lazy(() => import("./components/Settings").then(m => ({ default: m.Settings })));
+const OnboardingTutorial = React.lazy(() => import("./components/OnboardingTutorial").then(m => ({ default: m.OnboardingTutorial })));
+const RoutineEditor = React.lazy(() => import("./components/RoutineEditor").then(m => ({ default: m.RoutineEditor })));
+const WorkoutSummaryView = React.lazy(() => import("./components/WorkoutSummaryView").then(m => ({ default: m.WorkoutSummaryView })));
+const PrivacyPolicyModal = React.lazy(() => import("./components/common/PrivacyPolicyModal").then(m => ({ default: m.PrivacyPolicyModal })));
+const TOSModal = React.lazy(() => import("./components/common/TOSModal").then(m => ({ default: m.TOSModal })));
+const ShareRoutineModal = React.lazy(() => import("./components/common/ShareRoutineModal").then(m => ({ default: m.ShareRoutineModal })));
+const ImportRoutineModal = React.lazy(() => import("./components/common/ImportRoutineModal").then(m => ({ default: m.ImportRoutineModal })));
+const ExerciseDetails = React.lazy(() => import("./components/common/ExerciseDetails").then(m => ({ default: m.ExerciseDetails })));
+const AddExercise = React.lazy(() => import("./components/common/AddExercise").then(m => ({ default: m.AddExercise })));
 
 import { parseLiftLabRoutineText } from "./lib/routineImport";
 import { removeJsonAtomic } from "./lib/storage";
@@ -433,21 +434,21 @@ export default function App() {
               />
             )}
             {effectiveTab === "library" && (
-              <Library
-                t={t}
-
-                unit={unit}
-                exercises={exercises}
-                isCatalogLoading={isExerciseCatalogLoading}
-                onAddExercise={() => navigateTo("add_exercise")}
-                onOpenDetail={handleOpenExerciseDetails}
-                onOpenSettings={() => navigateTo("settings")}
-              />
+              <React.Suspense fallback={null}>
+                <Library
+                  t={t}
+                  unit={unit}
+                  exercises={exercises}
+                  isCatalogLoading={isExerciseCatalogLoading}
+                  onAddExercise={() => navigateTo("add_exercise")}
+                  onOpenDetail={handleOpenExerciseDetails}
+                  onOpenSettings={() => navigateTo("settings")}
+                />
+              </React.Suspense>
             )}
             {effectiveTab === "workout" && (
               <Workout
                 t={t}
-
                 unit={unit}
                 routines={routines}
                 workoutLogs={workoutLogs}
@@ -466,63 +467,66 @@ export default function App() {
               />
             )}
             {effectiveTab === "progress" && (
-              <Progress
-                t={t}
-
-                unit={unit}
-                exercises={exercises}
-                workoutLogs={workoutLogs}
-                weightLogs={weightLogs}
-                navigateTo={navigateTo}
-                onUpdateWeight={() => {
-                  setWeightInput(currentWeight > 0 ? currentWeight.toString() : "");
-                  setIsWeightModalOpen(true);
-                }}
-                userData={userData}
-                onDeleteWorkoutLog={handleDeleteWorkoutLog}
-                oneRepMaxFormula={oneRepMaxFormula}
-              />
+              <React.Suspense fallback={null}>
+                <Progress
+                  t={t}
+                  unit={unit}
+                  exercises={exercises}
+                  workoutLogs={workoutLogs}
+                  weightLogs={weightLogs}
+                  navigateTo={navigateTo}
+                  onUpdateWeight={() => {
+                    setWeightInput(currentWeight > 0 ? currentWeight.toString() : "");
+                    setIsWeightModalOpen(true);
+                  }}
+                  userData={userData}
+                  onDeleteWorkoutLog={handleDeleteWorkoutLog}
+                  oneRepMaxFormula={oneRepMaxFormula}
+                />
+              </React.Suspense>
             )}
           </motion.div>
         </AnimatePresence>
 
-        {sharingRoutine && (
-          <ShareRoutineModal
-            routine={sharingRoutine}
-            onClose={() => setSharingRoutine(null)}
-            t={t}
-          />
-        )}
-        {isImportCodeOpen && (
-          <ImportRoutineModal
-            exercises={exercises}
-            onClose={() => setIsImportCodeOpen(false)}
-            t={t}
-            onImport={async (text) => {
-              const parsedRoutines = parseLiftLabRoutineText(text, exercises) as RoutineData[];
-              if (parsedRoutines.length === 0) {
-                throw new Error(t("no_routines_found") || "Nessuna routine trovata nel codice.");
-              }
-              let totalCustomCreated = 0;
-              const importedNames: string[] = [];
-              for (const parsedRoutine of parsedRoutines) {
-                const customCreated = await createMissingImportedExercises(parsedRoutine);
-                totalCustomCreated += customCreated;
-                const importedRoutine = fillImportedRoutineWeights(parsedRoutine);
-                await handleSaveRoutine(importedRoutine, false);
-                setActiveRoutineId(importedRoutine.id);
-                importedNames.push(importedRoutine.name);
-              }
-              const namesStr = importedNames.map((n) => `"${n}"`).join(", ");
-              showToast(
-                totalCustomCreated > 0
-                  ? `${t("routine_imported") || "Scheda importata"}: ${namesStr} (+${totalCustomCreated})`
-                  : `${t("routine_imported") || "Scheda importata"}: ${namesStr}`,
-                "success",
-              );
-            }}
-          />
-        )}
+        <React.Suspense fallback={null}>
+          {sharingRoutine && (
+            <ShareRoutineModal
+              routine={sharingRoutine}
+              onClose={() => setSharingRoutine(null)}
+              t={t}
+            />
+          )}
+          {isImportCodeOpen && (
+            <ImportRoutineModal
+              exercises={exercises}
+              onClose={() => setIsImportCodeOpen(false)}
+              t={t}
+              onImport={async (text) => {
+                const parsedRoutines = parseLiftLabRoutineText(text, exercises) as RoutineData[];
+                if (parsedRoutines.length === 0) {
+                  throw new Error(t("no_routines_found") || "Nessuna routine trovata nel codice.");
+                }
+                let totalCustomCreated = 0;
+                const importedNames: string[] = [];
+                for (const parsedRoutine of parsedRoutines) {
+                  const customCreated = await createMissingImportedExercises(parsedRoutine);
+                  totalCustomCreated += customCreated;
+                  const importedRoutine = fillImportedRoutineWeights(parsedRoutine);
+                  await handleSaveRoutine(importedRoutine, false);
+                  setActiveRoutineId(importedRoutine.id);
+                  importedNames.push(importedRoutine.name);
+                }
+                const namesStr = importedNames.map((n) => `"${n}"`).join(", ");
+                showToast(
+                  totalCustomCreated > 0
+                    ? `${t("routine_imported") || "Scheda importata"}: ${namesStr} (+${totalCustomCreated})`
+                    : `${t("routine_imported") || "Scheda importata"}: ${namesStr}`,
+                  "success",
+                );
+              }}
+            />
+          )}
+        </React.Suspense>
 
 
         </div>
@@ -560,6 +564,9 @@ export default function App() {
                     }}
                     className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] overflow-hidden relative will-change-transform transform-gpu select-none"
                     onClick={(e) => e.stopPropagation()}
+                    data-mcp-action="log-weight"
+                    data-mcp-description="Record daily morning body weight in kg or lbs"
+                    data-mcp-params='{"required": ["weight"], "optional": ["unit"]}'
                   >
                     <div className="p-7 flex flex-col items-center text-center">
                       <div className="w-14 h-14 bg-[#30D158]/15 rounded-full flex items-center justify-center mb-5 border border-[#30D158]/25 text-[#30D158]">
@@ -582,6 +589,8 @@ export default function App() {
                           max="1000"
                           step="0.1"
                           aria-label={`Body weight in ${unit}`}
+                          data-mcp-param="weight"
+                          data-mcp-description="Body weight numeric value"
                           value={weightInput}
                           onChange={(e) => setWeightInput(e.target.value)}
                           className="w-full bg-transparent text-center text-6xl font-extrabold text-white tracking-tight tabular-nums focus:outline-none placeholder:text-neutral-700"
@@ -630,7 +639,11 @@ export default function App() {
             document.body
           )}
 
-        {showTutorial && <OnboardingTutorial onFinish={finishTutorial} language={language} t={t} />}
+        {showTutorial && (
+          <React.Suspense fallback={null}>
+            <OnboardingTutorial onFinish={finishTutorial} language={language} t={t} />
+          </React.Suspense>
+        )}
 
         {/* Apple-Style Floating Navigation Dock */}
         <div
@@ -748,7 +761,9 @@ export default function App() {
               }}
               {...subviewSwipe.swipeHandlers}
             >
-              {currentSubview || lastSubviewRef.current}
+              <React.Suspense fallback={null}>
+                {currentSubview || lastSubviewRef.current}
+              </React.Suspense>
             </motion.div>
           )}
         </AnimatePresence>
@@ -767,17 +782,19 @@ export default function App() {
           />
         )}
 
-        <AnimatePresence>
-          {showPrivacyPolicy && (
-            <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
-          )}
-        </AnimatePresence>
+        <React.Suspense fallback={null}>
+          <AnimatePresence>
+            {showPrivacyPolicy && (
+              <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+            )}
+          </AnimatePresence>
 
-        <AnimatePresence>
-          {showTOS && (
-            <TOSModal onClose={() => setShowTOS(false)} />
-          )}
-        </AnimatePresence>
+          <AnimatePresence>
+            {showTOS && (
+              <TOSModal onClose={() => setShowTOS(false)} />
+            )}
+          </AnimatePresence>
+        </React.Suspense>
 
         <AnimatePresence>
           {isDeleteAccountConfirmOpen && (
@@ -927,35 +944,37 @@ export default function App() {
       <div style={{ display: activeTab === "live_editor" ? "block" : "none" }}>
         {isLiveWorkoutActive && (
           <div key={`live_${liveWorkoutKey}`}>
-            <RoutineEditor
-              mode="live"
-              unit={unit}
-              t={t}
-              exercises={exercises}
-              initialRoutine={
-                transientLiveRoutine && activeRoutineId === transientLiveRoutine.id
-                  ? transientLiveRoutine
-                  : activeRoutineId
-                    ? routines.find((x) => x.id === activeRoutineId)
-                    : undefined
-              }
-              routineId={activeRoutineId || undefined}
-              onBack={() => setActiveTab("workout")}
-              onDiscard={() => {
-                void handleDiscardLiveWorkout();
-              }}
-              onSave={(updated) => handleSaveRoutine(updated, true)}
-              onAddCustomExercise={handleAddExercise}
-              restTimer={restTimer}
-              setRestTimer={setAppRestTimer}
-              onOpenDetail={handleOpenExerciseDetails}
-              userName={userName}
-              workoutLogs={workoutLogs}
-              savedExerciseNotes={savedExerciseNotes}
-              exerciseRestPresets={exerciseRestPresets}
-              onSaveExerciseRestPreset={handleSaveExerciseRestPreset}
-              showRpe={showRpe}
-            />
+            <React.Suspense fallback={null}>
+              <RoutineEditor
+                mode="live"
+                unit={unit}
+                t={t}
+                exercises={exercises}
+                initialRoutine={
+                  transientLiveRoutine && activeRoutineId === transientLiveRoutine.id
+                    ? transientLiveRoutine
+                    : activeRoutineId
+                      ? routines.find((x) => x.id === activeRoutineId)
+                      : undefined
+                }
+                routineId={activeRoutineId || undefined}
+                onBack={() => setActiveTab("workout")}
+                onDiscard={() => {
+                  void handleDiscardLiveWorkout();
+                }}
+                onSave={(updated) => handleSaveRoutine(updated, true)}
+                onAddCustomExercise={handleAddExercise}
+                restTimer={restTimer}
+                setRestTimer={setAppRestTimer}
+                onOpenDetail={handleOpenExerciseDetails}
+                userName={userName}
+                workoutLogs={workoutLogs}
+                savedExerciseNotes={savedExerciseNotes}
+                exerciseRestPresets={exerciseRestPresets}
+                onSaveExerciseRestPreset={handleSaveExerciseRestPreset}
+                showRpe={showRpe}
+              />
+            </React.Suspense>
           </div>
         )}
       </div>

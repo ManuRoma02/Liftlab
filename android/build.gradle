@@ -21,6 +21,7 @@ allprojects {
         google()
         mavenCentral()
     }
+    layout.buildDirectory.set(file("C:/Users/manue/.gradle-builds/liftlab/${project.name}"))
 }
 
 task clean(type: Delete) {

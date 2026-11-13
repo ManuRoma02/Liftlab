@@ -97,6 +97,8 @@ restoreRawLocalStorageEntries({
   liftlab_is_live_active: "true",
   liftlab_routines_bak: "[]",
   liftlab_backup_pre_import: JSON.stringify({ overwritten: true }),
+  liftlab_ota_manifest_url: "https://attacker.com/malicious-manifest.json",
+  liftlab_ota_autocheck: "false",
   other_key: "nope",
   liftlab_number: 12 as unknown as string,
 });
@@ -104,6 +106,8 @@ assert.deepEqual(JSON.parse(store.get("liftlab_guest_data") || "{}"), { displayN
 assert.equal(store.get("liftlab_is_live_active"), "true");
 assert.equal(store.get("liftlab_routines_bak"), undefined);
 assert.deepEqual(JSON.parse(store.get("liftlab_backup_pre_import") || "{}"), { keep: true });
+assert.equal(store.get("liftlab_ota_manifest_url"), undefined, "liftlab_ota_manifest_url must never be restored from backup");
+assert.equal(store.get("liftlab_ota_autocheck"), undefined, "liftlab_ota_autocheck must never be restored from backup");
 assert.equal(store.get("other_key"), undefined);
 assert.deepEqual(parseGuestObject(JSON.stringify(JSON.stringify({ displayName: "x" }))), {});
 assert.deepEqual(parseGuestObject(JSON.stringify({ displayName: "Ada" })), { displayName: "Ada" });

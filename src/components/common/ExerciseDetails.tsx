@@ -8,6 +8,7 @@ import {
   Trophy,
   ClipboardList,
   Dumbbell,
+  RotateCcw,
 } from "lucide-react";
 import { ExerciseMuscleVisual } from "./ExerciseMuscleVisual";
 import { ExerciseMedia } from "./ExerciseMedia";
@@ -35,38 +36,52 @@ export function ExerciseDetails({
   onSelectVariation?: (ex: ExerciseData) => void;
   onAddExercise?: (ex: ExerciseData) => void;
 }) {
-  const allCandidates = React.useMemo(() => {
-    const list: string[] = [];
-    if (ex.gifUrl) list.push(...getExerciseMediaCandidates(ex.gifUrl));
-    if (ex.image) list.push(...getExerciseMediaCandidates(ex.image));
-    return [...new Set(list)];
-  }, [ex.gifUrl, ex.image]);
+  // Static poster candidates (JPG loads instantly, ~20KB)
+  const posterCandidates = React.useMemo(() => {
+    return ex.image ? getExerciseMediaCandidates(ex.image) : [];
+  }, [ex.image]);
 
-  const [candidateIndex, setCandidateIndex] = useState(0);
-  const [imgLoading, setImgLoading] = useState(true);
-  const [imgFailed, setImgFailed] = useState(false);
+  // Animated demo candidates (GIF)
+  const gifCandidates = React.useMemo(() => {
+    return ex.gifUrl ? getExerciseMediaCandidates(ex.gifUrl) : [];
+  }, [ex.gifUrl]);
 
-  const [visualMode, setVisualMode] = useState<"demo" | "anatomy">(
-    allCandidates.length > 0 ? "demo" : "anatomy"
-  );
+  const [posterIndex, setPosterIndex] = useState(0);
+  const [posterLoaded, setPosterLoaded] = useState(false);
+
+  const [gifIndex, setGifIndex] = useState(0);
+  const [gifLoaded, setGifLoaded] = useState(false);
+  const [gifFailed, setGifFailed] = useState(false);
+  const gifTimerRef = React.useRef<any>(null);
+
+  const [visualMode, setVisualMode] = useState<"demo" | "anatomy">("demo");
 
   React.useEffect(() => {
-    setCandidateIndex(0);
-    setImgLoading(true);
-    setImgFailed(false);
+    setPosterIndex(0);
+    setPosterLoaded(false);
+    setGifIndex(0);
+    setGifLoaded(false);
+    setGifFailed(false);
   }, [ex.id, ex.gifUrl, ex.image]);
 
-  const activeImgUrl = allCandidates[candidateIndex] || null;
+  const currentPosterUrl = posterCandidates[posterIndex] || null;
+  const currentGifUrl = gifCandidates[gifIndex] || null;
 
-  const handleImgError = () => {
-    if (candidateIndex + 1 < allCandidates.length) {
-      setCandidateIndex((prev) => prev + 1);
-      setImgLoading(true);
-    } else {
-      setImgFailed(true);
-      setImgLoading(false);
-    }
-  };
+  // Auto-advance GIF candidate mirror after 5.5s if network stalls
+  React.useEffect(() => {
+    if (!currentGifUrl || gifLoaded || gifFailed) return;
+    gifTimerRef.current = setTimeout(() => {
+      if (gifIndex + 1 < gifCandidates.length) {
+        setGifIndex((prev) => prev + 1);
+      } else {
+        setGifFailed(true);
+      }
+    }, 5500);
+
+    return () => {
+      if (gifTimerRef.current) clearTimeout(gifTimerRef.current);
+    };
+  }, [currentGifUrl, gifIndex, gifCandidates.length, gifLoaded, gifFailed]);
 
   const variations = exercises
     .filter(
@@ -201,26 +216,83 @@ export function ExerciseDetails({
             </div>
 
             <div className="flex-1 flex items-center justify-center p-3 bg-black/30 relative min-h-[220px]">
-              {visualMode === "demo" && activeImgUrl && !imgFailed ? (
+              {visualMode === "demo" && (currentPosterUrl || currentGifUrl) && (!gifFailed || posterLoaded) ? (
                 <div className="relative w-full h-full flex items-center justify-center min-h-[190px]">
-                  {imgLoading && (
+                  {/* Dumbbell placeholder until poster or GIF arrives */}
+                  {!posterLoaded && !gifLoaded && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 rounded-2xl animate-pulse">
                       <Dumbbell className="w-8 h-8 text-[#30D158]/50 animate-bounce" />
                       <span className="text-[11px] font-semibold text-[#8E8E93]">
-                        {t("loading_demo") || "Caricamento demo..."}
+                        {t("loading_demo") || "Caricamento..."}
                       </span>
                     </div>
                   )}
-                  <img
-                    src={activeImgUrl}
-                    alt={ex.title}
-                    loading="eager"
-                    onLoad={() => setImgLoading(false)}
-                    onError={handleImgError}
-                    className={`max-h-[220px] w-auto max-w-full object-contain rounded-2xl shadow-sm transition-opacity duration-300 ${
-                      imgLoading ? "opacity-0" : "opacity-100"
-                    }`}
-                  />
+
+                  {/* 1. Static Poster Image (loads in <100ms) */}
+                  {currentPosterUrl && (
+                    <img
+                      src={currentPosterUrl}
+                      alt={ex.title}
+                      loading="eager"
+                      onLoad={() => setPosterLoaded(true)}
+                      onError={() => {
+                        if (posterIndex + 1 < posterCandidates.length) {
+                          setPosterIndex((prev) => prev + 1);
+                        }
+                      }}
+                      className={`max-h-[220px] w-auto max-w-full object-contain rounded-2xl shadow-sm transition-opacity duration-300 ${
+                        gifLoaded ? "opacity-0 absolute pointer-events-none" : (posterLoaded ? "opacity-100" : "opacity-0")
+                      }`}
+                    />
+                  )}
+
+                  {/* 2. Looping Animated GIF (fades in as soon as ready) */}
+                  {currentGifUrl && !gifFailed && (
+                    <img
+                      src={currentGifUrl}
+                      alt={ex.title}
+                      loading="eager"
+                      onLoad={() => {
+                        if (gifTimerRef.current) clearTimeout(gifTimerRef.current);
+                        setGifLoaded(true);
+                      }}
+                      onError={() => {
+                        if (gifTimerRef.current) clearTimeout(gifTimerRef.current);
+                        if (gifIndex + 1 < gifCandidates.length) {
+                          setGifIndex((prev) => prev + 1);
+                        } else {
+                          setGifFailed(true);
+                        }
+                      }}
+                      className={`max-h-[220px] w-auto max-w-full object-contain rounded-2xl shadow-sm transition-opacity duration-300 ${
+                        gifLoaded ? "opacity-100" : "opacity-0 absolute pointer-events-none"
+                      }`}
+                    />
+                  )}
+
+                  {/* Subtle GIF loading pill */}
+                  {!gifLoaded && !gifFailed && currentGifUrl && (
+                    <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-mono text-[#8E8E93] border border-white/10 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-ping" />
+                      <span>GIF</span>
+                    </div>
+                  )}
+
+                  {/* Retry GIF if all CDN mirrors failed */}
+                  {gifFailed && currentPosterUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGifFailed(false);
+                        setGifIndex(0);
+                      }}
+                      className="absolute bottom-2 right-2 bg-black/80 hover:bg-black px-2.5 py-1 rounded-full text-[10px] font-mono text-white/90 border border-white/20 flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Ricarica GIF animata"
+                    >
+                      <RotateCcw className="w-2.5 h-2.5" />
+                      <span>GIF</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 <ExerciseMuscleVisual exercise={ex} className="w-full h-full min-h-[190px]" />

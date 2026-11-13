@@ -1,8 +1,8 @@
 {
-  "version": "1.0.36",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.36.zip",
-  "checksum": "669517373f2945077196eaeddd13989020002560454fa171ab7750c2432c1c92",
-  "releaseDate": "2026-11-06T11:22:22.005Z",
-  "notes": "Aggiornamento: Nuovo tema Nothing OS, animazione Android swipe-to-back nativa, fix aggiungi esercizio e rimozione doppio splash screen.",
-  "bundleSizeMb": "7.14"
+  "version": "1.0.37",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.37.zip",
+  "checksum": "55ded7a08bee8316d371041dbbf62c02a02bdbb1cce124f98af4cd7e0449efa2",
+  "releaseDate": "2026-11-12T19:28:09.310Z",
+  "notes": "• **Aggiornamento v1.0.37**: ottimizzazioni prestazioni e correzioni stabilità.",
+  "bundleSizeMb": "8.87"
 }

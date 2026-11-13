@@ -1081,6 +1081,7 @@ export function getExerciseMediaCandidates(url?: string): string[] {
   if (datasetMatch) {
     const subPath = datasetMatch[1];
     candidates.push(`https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/${subPath}`);
+    candidates.push(`https://gcore.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/${subPath}`);
     candidates.push(`https://fastly.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/${subPath}`);
     candidates.push(`https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/${subPath}`);
   } else {

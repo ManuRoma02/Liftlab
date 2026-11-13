@@ -94,6 +94,7 @@ export function Progress({
   const [strengthLiftExId, setStrengthLiftExId] = useState<string>("e_sq"); // Squat
   const [bestLiftExId, setBestLiftExId] = useState<string>("e_dl"); // Deadlift
   const [isLiftPickerOpen, setIsLiftPickerOpen] = useState(false);
+  const [pickerLimit, setPickerLimit] = useState(50);
   const [pickerTarget, setPickerTarget] = useState<"best" | "strength" | `record-${number}`>("best");
   const [liftSearch, setLiftSearch] = useState("");
   const [liftCategory, setLiftCategory] = useState("All");
@@ -1658,7 +1659,7 @@ export function Progress({
 
             <div className="p-3.5 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-2">
-                {filteredPickerExercises.map((ex) => {
+                {filteredPickerExercises.slice(0, pickerLimit).map((ex) => {
                   const isSelected =
                     (pickerTarget === "best"
                       ? bestLiftExId
@@ -1719,6 +1720,18 @@ export function Progress({
                   );
                 })}
               </div>
+              {filteredPickerExercises.length > pickerLimit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setPickerLimit((prev) => prev + 50);
+                  }}
+                  className="w-full py-2.5 mb-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-bold text-white uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  {t("load_more") || "Carica altri"} ({filteredPickerExercises.length - pickerLimit})
+                </button>
+              )}
               {filteredPickerExercises.length === 0 && (
                 <div className="py-16 text-center flex flex-col items-center gap-3">
                   <Search className="w-10 h-10 text-[#8E8E93] opacity-30" />

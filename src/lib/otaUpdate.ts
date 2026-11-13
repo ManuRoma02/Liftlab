@@ -393,16 +393,16 @@ export async function downloadAndApplyOta(
     return { success: false, error: "Not on native platform" };
   }
 
-  if (!manifest.checksum) {
-    const err = "Checksum SHA-256 mancante: aggiornamento rifiutato per sicurezza.";
+  if (!manifest.checksum || !/^[a-fA-F0-9]{64}$/.test(manifest.checksum.trim())) {
+    const err = "Checksum SHA-256 mancante o non valido: aggiornamento rifiutato per sicurezza.";
     if (!options.silent) {
       showToast(err, "error");
     }
     return { success: false, error: err };
   }
 
-  if (!manifest.url || !isValidManifestUrl(manifest.url)) {
-    const err = "URL del bundle OTA non valido o non protetto da HTTPS.";
+  if (!manifest.url || !isValidManifestUrl(manifest.url) || !manifest.url.split("?")[0].toLowerCase().endsWith(".zip")) {
+    const err = "URL del bundle OTA non valido o non protetto da HTTPS (richiesto archivio .zip).";
     if (!options.silent) {
       showToast(err, "error");
     }

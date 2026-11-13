@@ -215,15 +215,21 @@ export function filterLiftLabStorage(storage?: Storage): Record<string, string> 
 const EXCLUDED_RESTORE_SUFFIXES = ["_bak", "_tmp"];
 const SAFE_LIFTLAB_KEY_REGEX = /^liftlab_[a-zA-Z0-9_]+$/;
 
+export const DEFAULT_SECURITY_EXCLUDED_KEYS = [
+  "liftlab_backup_pre_import",
+  "liftlab_ota_manifest_url",
+  "liftlab_ota_autocheck",
+];
+
 export function restoreRawLocalStorageEntries(
   entries: Record<string, unknown>,
   storage?: Storage,
-  extraExcludeKeys: string[] = ["liftlab_backup_pre_import"],
+  extraExcludeKeys: string[] = [],
 ): void {
   if (!entries || typeof entries !== "object") return;
   try {
     const s = getSafeStorage(storage);
-    const excluded = new Set(extraExcludeKeys);
+    const excluded = new Set([...DEFAULT_SECURITY_EXCLUDED_KEYS, ...extraExcludeKeys]);
     Object.entries(entries).forEach(([key, value]) => {
       if (!key.startsWith(LIFTLAB_PREFIX) || !SAFE_LIFTLAB_KEY_REGEX.test(key)) return;
       if (key.includes("__proto__") || key.includes("prototype") || key.includes("constructor")) return;

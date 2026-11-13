@@ -480,6 +480,13 @@ input::selection, textarea::selection {
 
 [data-theme="nothing"],
 .theme-nothing {
+  /* System font token remapping - forces all Tailwind font-sans & font-mono to Nothing typography */
+  --font-sans: "Space Grotesk", system-ui, -apple-system, sans-serif !important;
+  --font-mono: "Space Mono", monospace !important;
+  --font-doto: "Doto", monospace !important;
+  --font-space-grotesk: "Space Grotesk", system-ui, sans-serif !important;
+  --font-space-mono: "Space Mono", monospace !important;
+
   --color-background: #000000;
   --color-surface: #111111;
   --color-surface-container: #111111;
@@ -510,7 +517,10 @@ input::selection, textarea::selection {
   --font-body-md: "Space Grotesk", system-ui, sans-serif;
 }
 
+/* Universal font and background application under Nothing theme */
+[data-theme="nothing"],
 [data-theme="nothing"] body,
+[data-theme="nothing"] #root,
 [data-theme="nothing"] .app-shell {
   background-color: #000000 !important;
   background-image: radial-gradient(circle, #262626 1px, transparent 1px) !important;
@@ -519,26 +529,58 @@ input::selection, textarea::selection {
   color: #E8E8E8 !important;
 }
 
-/* Headings in Nothing mode: Space Grotesk with tight tracking */
+[data-theme="nothing"] div,
+[data-theme="nothing"] p,
+[data-theme="nothing"] span,
+[data-theme="nothing"] button,
+[data-theme="nothing"] input,
+[data-theme="nothing"] select,
+[data-theme="nothing"] textarea,
+[data-theme="nothing"] label,
+[data-theme="nothing"] .font-sans {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif !important;
+}
+
+/* Page Titles and Primary Headings: iconic Nothing Doto Dot-Matrix */
 [data-theme="nothing"] h1,
+.theme-nothing h1,
+[data-theme="nothing"] .page-title,
+.theme-nothing .page-title,
+[data-theme="nothing"] [class*="text-3xl font-black"],
+[data-theme="nothing"] [class*="text-4xl font-black"],
+[data-theme="nothing"] [class*="text-5xl font-black"] {
+  font-family: var(--font-doto), monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Section Subheadings: Space Grotesk with tight tracking */
 [data-theme="nothing"] h2,
+.theme-nothing h2,
 [data-theme="nothing"] h3,
-[data-theme="nothing"] h4 {
+.theme-nothing h3,
+[data-theme="nothing"] h4,
+.theme-nothing h4 {
   font-family: var(--font-space-grotesk), system-ui, sans-serif !important;
   letter-spacing: -0.02em !important;
 }
 
-/* Numeric Hero / Stats in Nothing mode */
+/* Numeric Hero / Stats / Timers: Dot-Matrix */
 [data-theme="nothing"] .hero-metric,
 [data-theme="nothing"] .nothing-doto,
-[data-theme="nothing"] .tabular-nums {
+[data-theme="nothing"] .tabular-nums,
+[data-theme="nothing"] [class*="text-4xl sm:text-5xl"] {
   font-family: var(--font-doto), monospace !important;
 }
 
-/* Labels, Badges, and Meta tags: Space Mono ALL CAPS */
+/* Labels, Badges, and Meta tags: Space Mono ALL CAPS ("instrument panel") */
 [data-theme="nothing"] .uppercase,
 [data-theme="nothing"] [class*="tracking-wider"],
-[data-theme="nothing"] [class*="tracking-widest"] {
+[data-theme="nothing"] [class*="tracking-widest"],
+[data-theme="nothing"] .font-mono,
+[data-theme="nothing"] code,
+[data-theme="nothing"] .text-xs.font-semibold.uppercase,
+[data-theme="nothing"] .text-\[10px\].font-bold.uppercase {
   font-family: var(--font-space-mono), monospace !important;
   letter-spacing: 0.08em !important;
 }
@@ -549,12 +591,46 @@ input::selection, textarea::selection {
 [data-theme="nothing"] [class*="bg-[#24252c]"],
 [data-theme="nothing"] [class*="bg-[#18191e]"],
 [data-theme="nothing"] [class*="bg-[#121214]"],
-[data-theme="nothing"] [class*="bg-[#1c1d24]"] {
+[data-theme="nothing"] [class*="bg-[#1c1d24]"],
+[data-theme="nothing"] [class*="bg-[#19191c]"],
+[data-theme="nothing"] [class*="bg-[#15161a]"],
+[data-theme="nothing"] [class*="bg-[#1e1f26]"],
+[data-theme="nothing"] .apple-glass-card {
+  background: #111111 !important;
   background-color: #111111 !important;
+  border: 1px solid #262626 !important;
   border-color: #262626 !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
+/* Settings and component icon badges: turn iOS rainbow boxes into sleek technical dark wireframe frames */
+[data-theme="nothing"] [class*="rounded-lg bg-["],
+[data-theme="nothing"] [class*="rounded-lg bg-[#"],
+[data-theme="nothing"] [class*="rounded-lg bg-gradient"] {
+  background: #181818 !important;
+  background-color: #181818 !important;
+  border: 1px solid #333333 !important;
+  color: #E8E8E8 !important;
+  box-shadow: none !important;
+}
+[data-theme="nothing"] [class*="rounded-lg bg-"] svg,
+[data-theme="nothing"] [class*="rounded-lg bg-[#"] svg {
+  color: #E8E8E8 !important;
+}
+
+/* Zero out all shadows & gradient glows across Nothing mode */
+[data-theme="nothing"] [class*="shadow-"],
+[data-theme="nothing"] [class*="shadow\["] {
+  box-shadow: none !important;
+}
+[data-theme="nothing"] [class*="radial-gradient"],
+[data-theme="nothing"] section [class*="radial-gradient"] {
+  display: none !important;
+}
+
+/* Border radius discipline: max 16px on cards, 8px on technical items */
 [data-theme="nothing"] [class*="rounded-3xl"] {
   border-radius: 16px !important;
 }
@@ -562,18 +638,21 @@ input::selection, textarea::selection {
   border-radius: 12px !important;
 }
 
-/* Color Accent Overrides: Transform green accent into Nothing Signal Red (#D71921) */
+/* Color Accent Overrides: Transform Apple green (#30D158 / #34C759) into Nothing Signal Red (#D71921) */
 [data-theme="nothing"] [class*="text-[#30D158]"],
-[data-theme="nothing"] [class*="text-[#30d158]"] {
+[data-theme="nothing"] [class*="text-[#30d158]"],
+[data-theme="nothing"] [class*="text-[#34C759]"] {
   color: #D71921 !important;
 }
 [data-theme="nothing"] [class*="bg-[#30D158]"],
-[data-theme="nothing"] [class*="bg-[#30d158]"] {
+[data-theme="nothing"] [class*="bg-[#30d158]"],
+[data-theme="nothing"] [class*="bg-[#34C759]"] {
   background-color: #D71921 !important;
   color: #ffffff !important;
 }
 [data-theme="nothing"] [class*="border-[#30D158]"],
-[data-theme="nothing"] [class*="border-[#30d158]"] {
+[data-theme="nothing"] [class*="border-[#30d158]"],
+[data-theme="nothing"] [class*="border-[#34C759]"] {
   border-color: #D71921 !important;
 }
 [data-theme="nothing"] [class*="bg-[#30D158]/"],
@@ -618,21 +697,6 @@ input::selection, textarea::selection {
 }
 [data-theme="nothing"] .nothing-switch-track.active .nothing-switch-thumb {
   background-color: #000000 !important;
-}
-
-/* Nothing OS Glass Cards & Hero Overrides */
-[data-theme="nothing"] .apple-glass-card {
-  background: #111111 !important;
-  border: 1px solid #262626 !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-radius: 16px !important;
-}
-
-[data-theme="nothing"] .apple-glass-card [class*="radial-gradient"],
-[data-theme="nothing"] section [class*="radial-gradient"] {
-  display: none !important;
 }
 
 /* Nothing OS Modals & Sheets */

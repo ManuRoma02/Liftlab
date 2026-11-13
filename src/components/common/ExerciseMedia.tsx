@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dumbbell } from "lucide-react";
 import type { ExerciseData } from "../../types/workout";
 import { getExerciseMediaCandidates } from "../../lib/workoutUtils";
@@ -19,6 +19,7 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   preferGif = false,
   alt,
 }) => {
+  // If preferGif is true, we want gifUrl first, but we still prepare static image candidates for instant poster
   const primarySource = preferGif
     ? exercise.gifUrl || exercise.image
     : exercise.image || exercise.gifUrl;
@@ -36,6 +37,7 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const timerRef = useRef<any>(null);
 
   useEffect(() => {
     setCandidateIndex(0);
@@ -44,6 +46,22 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   }, [exercise.id, primarySource]);
 
   const currentUrl = candidates[candidateIndex];
+
+  // Auto-advance to next CDN mirror after 4.5 seconds if network hangs
+  useEffect(() => {
+    if (!currentUrl || isLoaded || hasError) return;
+    timerRef.current = setTimeout(() => {
+      if (candidateIndex + 1 < candidates.length) {
+        setCandidateIndex((prev) => prev + 1);
+      } else {
+        setHasError(true);
+      }
+    }, 4500);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [currentUrl, candidateIndex, candidates.length, isLoaded, hasError]);
 
   if (!currentUrl || hasError) {
     return <ExerciseMuscleVisual exercise={exercise} className={className} />;
@@ -60,8 +78,12 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
         src={currentUrl}
         alt={alt || exercise.title}
         loading="lazy"
-        onLoad={() => setIsLoaded(true)}
+        onLoad={() => {
+          if (timerRef.current) clearTimeout(timerRef.current);
+          setIsLoaded(true);
+        }}
         onError={() => {
+          if (timerRef.current) clearTimeout(timerRef.current);
           if (candidateIndex + 1 < candidates.length) {
             setCandidateIndex((prev) => prev + 1);
           } else {

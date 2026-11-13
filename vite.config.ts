@@ -18,9 +18,11 @@ export default defineConfig({
       },
       includeAssets: ['logo.svg', 'apple-touch-icon.png', 'favicon.ico', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'LiftLab',
+        name: 'LiftLab - Gym Workout Tracker',
         short_name: 'LiftLab',
-        description: 'Offline workout tracker',
+        description: 'Offline gym workout tracker, exercise logger, and rest timer',
+        categories: ['fitness', 'health', 'sports'],
+        orientation: 'portrait',
         theme_color: '#090a0b',
         background_color: '#090a0b',
         display: 'standalone',
@@ -54,7 +56,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: true,
+    allowedHosts: ['localhost', '127.0.0.1'],
     hmr: process.env.DISABLE_HMR !== 'true',
     watch: process.env.DISABLE_HMR === 'true' ? null : {},
   },
@@ -64,6 +66,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          capacitor: ['@capacitor/core', '@capacitor/app', '@capacitor/haptics'],
           charts: ['recharts'],
           motion: ['motion'],
           icons: ['lucide-react'],

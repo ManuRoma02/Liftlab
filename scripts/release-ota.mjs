@@ -204,35 +204,59 @@ console.log(`✓ Generated update-manifest.json`);
 // 8. Sync native Capacitor assets so local debug APK also has latest code
 console.log(`\n🔄 Syncing web assets with Capacitor Android...`);
 try {
-  execSync("npx cap sync android", { stdio: "inherit", cwd: rootDir });
+  if (process.platform === "win32") {
+    try {
+      execSync(`robocopy "${path.join(rootDir, "dist")}" "${path.join(rootDir, "android", "app", "src", "main", "assets", "public")}" /E /PURGE /NFL /NDL /NJH /NJS`, { stdio: "ignore" });
+    } catch (rErr) {
+      // robocopy returns non-zero on successful file copies
+    }
+  } else {
+    execSync("npx cap sync android", { stdio: "inherit", cwd: rootDir });
+  }
   console.log(`✓ Capacitor Android synced.`);
 } catch (e) {
   console.warn("⚠️ Capacitor sync skipped or encountered warning.");
 }
 
-// 9. Optional Telegram Alert
+// 9. Optional Telegram Alert & Document Upload
 if (sendTelegram || (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID && args.includes("--send"))) {
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
   if (BOT_TOKEN && CHAT_ID) {
     try {
-      console.log(`\n📲 Sending OTA announcement to Telegram...`);
+      console.log(`\n📲 Sending OTA announcement and bundle to Telegram...`);
       const caption = `🚀 *Nuovo Aggiornamento OTA Disponibile!*\n\n` +
         `📦 *Versione:* \`v${nextVersion}\`\n` +
         `⚖️ *Dimensione:* \`${sizeMb} MB\`\n` +
         `🔑 *SHA256:* \`${sha256.slice(0, 16)}...\`\n\n` +
         `✨ Apri l'app LiftLab o vai in *Impostazioni ➜ Aggiornamenti In-App* per applicarlo senza reinstallare l'APK!`;
 
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      const fileBlob = new Blob([fileBuffer], { type: "application/zip" });
+      const formData = new FormData();
+      formData.append("chat_id", CHAT_ID);
+      formData.append("caption", caption);
+      formData.append("parse_mode", "Markdown");
+      formData.append("document", fileBlob, zipFileName);
+
+      const docRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: caption,
-          parse_mode: "Markdown",
-        }),
+        body: formData,
       });
-      console.log(`✓ Telegram notification sent!`);
+      const docData = await docRes.json();
+      if (docData.ok) {
+        console.log(`✓ OTA bundle ${zipFileName} sent to Telegram!`);
+      } else {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: caption,
+            parse_mode: "Markdown",
+          }),
+        });
+        console.log(`✓ Telegram notification sent (fallback message).`);
+      }
     } catch (tgErr) {
       console.warn("Could not notify Telegram:", tgErr);
     }

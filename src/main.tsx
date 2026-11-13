@@ -5,6 +5,7 @@ import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 import { Capacitor } from '@capacitor/core';
 import { initOta } from './lib/otaUpdate';
+import { initWebMcp } from './lib/webmcp';
 
 // In native Capacitor (Android/iOS), assets are already bundled locally in the APK.
 // Unregister any stale ServiceWorker and clear CacheStorage so WebView always renders latest code.
@@ -33,5 +34,6 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Initialize OTA live updates only after React mounts successfully (safeguards rollback watchdog)
+// Initialize OTA live updates and WebMCP agent action discovery
 initOta();
+initWebMcp();

@@ -79,6 +79,9 @@ export function ImportRoutineModal({
         }}
         className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col p-6 gap-4 select-none"
         onClick={(event) => event.stopPropagation()}
+        data-mcp-action="import-routine"
+        data-mcp-description="Import workout routine from JSON or text format"
+        data-mcp-params='{"required": ["routine_code"]}'
       >
         <div className="flex justify-between items-center border-b border-white/8 pb-3">
           <h3 id="import-routine-title" className="font-bold text-base text-white tracking-tight">
@@ -104,6 +107,8 @@ export function ImportRoutineModal({
           onChange={(e) => setCodeText(e.target.value)}
           placeholder='{"schema": "liftlab.routine.v1", ...}'
           aria-label="Routine code or JSON"
+          data-mcp-param="routine_code"
+          data-mcp-description="LiftLab routine JSON format or encoded routine string"
           aria-describedby={error ? "import-routine-error" : undefined}
           className="w-full h-32 p-3.5 bg-black/40 border border-white/10 rounded-2xl text-xs font-mono text-white focus:border-[#30D158] outline-none resize-none transition-all placeholder:text-[#8E8E93]/60"
         />

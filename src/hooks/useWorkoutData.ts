@@ -37,6 +37,7 @@ import {
 } from "../lib/routineImport";
 import {
   filterLiftLabStorage,
+  DEFAULT_SECURITY_EXCLUDED_KEYS,
   parseGuestObject,
   readJson,
   readJsonArray,
@@ -144,50 +145,12 @@ export function useWorkoutData() {
   };
   const [exerciseCatalog, setExerciseCatalog] = useState<ExerciseData[]>(BASIC_EXERCISES);
   const [isExerciseCatalogLoading, setIsExerciseCatalogLoading] = useState(true);
-  const [shouldLoadExerciseCatalog, setShouldLoadExerciseCatalog] = useState(false);
   const [exercises, setExercises] = useState<ExerciseData[]>(() =>
     mergeExerciseCatalog(BASIC_EXERCISES, readCustomExercises()),
   );
 
+  // Eagerly load full 1,324 exercise catalog on mount without delays or tab gating
   useEffect(() => {
-    const catalogTabs = new Set([
-      "library",
-      "workout",
-      "progress",
-      "routine_editor",
-      "live_editor",
-      "exercise_details",
-      "add_exercise",
-    ]);
-    if (catalogTabs.has(activeTab)) {
-      setShouldLoadExerciseCatalog(true);
-      return;
-    }
-
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    if (idleWindow.requestIdleCallback) {
-      let idleHandle: number | undefined;
-      const delayHandle = window.setTimeout(() => {
-        idleHandle = idleWindow.requestIdleCallback?.(
-          () => setShouldLoadExerciseCatalog(true),
-          { timeout: 3500 },
-        );
-      }, 1600);
-      return () => {
-        window.clearTimeout(delayHandle);
-        if (idleHandle !== undefined) idleWindow.cancelIdleCallback?.(idleHandle);
-      };
-    }
-
-    const handle = window.setTimeout(() => setShouldLoadExerciseCatalog(true), 3200);
-    return () => window.clearTimeout(handle);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (!shouldLoadExerciseCatalog) return;
     let cancelled = false;
     loadExerciseCatalog()
       .then((catalog) => {
@@ -207,7 +170,7 @@ export function useWorkoutData() {
     return () => {
       cancelled = true;
     };
-  }, [shouldLoadExerciseCatalog]);
+  }, []);
 
   const [routines, setRoutines] = useState<RoutineData[]>(() => {
     const raw = localStorage.getItem("liftlab_routines");
@@ -430,7 +393,7 @@ export function useWorkoutData() {
       customExercises: exercises.filter((e) => e.id.startsWith("e_custom_")),
       localStorageKeys: Object.fromEntries(
         Object.keys(localStorage)
-          .filter((key) => key.startsWith("liftlab_"))
+          .filter((key) => key.startsWith("liftlab_") && !DEFAULT_SECURITY_EXCLUDED_KEYS.includes(key))
           .map((key) => [key, localStorage.getItem(key)]),
       ),
     };

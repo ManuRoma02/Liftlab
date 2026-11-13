@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "site": "https://liftlab.app",
+  "name": "LiftLab",
+  "description": "Offline-first gym workout tracker, exercise logger, and rest timer",
+  "actions": [
+    {
+      "id": "log-weight",
+      "name": "Log Body Weight",
+      "description": "Record daily morning body weight in kg or lbs for fitness tracking",
+      "method": "both",
+      "availability": "always",
+      "parameters": {
+        "type": "object",
+        "required": ["weight"],
+        "properties": {
+          "weight": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Body weight numeric value"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["kg", "lbs"],
+            "default": "kg",
+            "description": "Unit of measurement"
+          }
+        }
+      }
+    },
+    {
+      "id": "import-routine",
+      "name": "Import Routine",
+      "description": "Import a workout routine or workout plan from JSON code or shared text",
+      "method": "both",
+      "availability": "always",
+      "parameters": {
+        "type": "object",
+        "required": ["routine_code"],
+        "properties": {
+          "routine_code": {
+            "type": "string",
+            "description": "LiftLab routine JSON format or encoded routine string"
+          }
+        }
+      }
+    },
+    {
+      "id": "search-exercises",
+      "name": "Search Exercise Catalog",
+      "description": "Query exercise catalog by name, muscle group, or equipment",
+      "method": "imperative",
+      "availability": "always",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search keyword (e.g. bench press, squat, curl)"
+          },
+          "muscle": {
+            "type": "string",
+            "description": "Target muscle filter (e.g. chest, back, legs, shoulders, arms, core)"
+          }
+        }
+      }
+    },
+    {
+      "id": "get-routines",
+      "name": "Get Workout Routines",
+      "description": "Fetch user saved workout routine templates and exercises",
+      "method": "imperative",
+      "availability": "always",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "id": "get-workout-history",
+      "name": "Get Workout History",
+      "description": "Fetch logged workout sessions, dates, and total training volume",
+      "method": "imperative",
+      "availability": "always",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "default": 10,
+            "description": "Number of recent sessions to retrieve"
+          }
+        }
+      }
+    }
+  ]
+}

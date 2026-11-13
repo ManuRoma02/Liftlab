@@ -201,10 +201,34 @@ export const mergeExerciseCatalog = (
   return Array.from(map.values());
 };
 
-export async function loadExerciseCatalog(): Promise<ExerciseData[]> {
-  const { precompiledExercises } = await import('./precompiledExercises');
-  return mergeExerciseCatalog(
-    BASIC_EXERCISES,
-    precompiledExercises as ExerciseData[],
-  );
+let cachedCatalogPromise: Promise<ExerciseData[]> | null = null;
+
+export function loadExerciseCatalog(): Promise<ExerciseData[]> {
+  if (!cachedCatalogPromise) {
+    cachedCatalogPromise = import('./precompiledExercises')
+      .then(({ precompiledExercises }) => {
+        return mergeExerciseCatalog(
+          BASIC_EXERCISES,
+          precompiledExercises as ExerciseData[],
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to load precompiled exercises:', err);
+        cachedCatalogPromise = null;
+        return BASIC_EXERCISES;
+      });
+  }
+  return cachedCatalogPromise;
+}
+
+// Preload during idle time to keep initial app boot and first paint instant
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) {
+    (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => void }).requestIdleCallback(
+      () => void loadExerciseCatalog(),
+      { timeout: 3000 },
+    );
+  } else {
+    setTimeout(() => void loadExerciseCatalog(), 1500);
+  }
 }

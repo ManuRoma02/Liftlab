@@ -848,6 +848,7 @@ export function RoutineEditor({
   const [isCustomExerciseOpen, setIsCustomExerciseOpen] = useState(false);
   const [exerciseSearch, setExerciseSearch] = useState("");
   const [debouncedExerciseSearch, setDebouncedExerciseSearch] = useState("");
+  const [exerciseModalLimit, setExerciseModalLimit] = useState(50);
   const [filterMuscle, setFilterMuscle] = useState<string>("All");
   const [filterEquipment, setFilterEquipment] = useState<string>("All");
   const [isEquipmentFilterOpen, setIsEquipmentFilterOpen] = useState(false);
@@ -935,6 +936,7 @@ export function RoutineEditor({
   const openExerciseModal = (supersetId?: string, replaceId?: string) => {
     setExerciseSearch("");
     setDebouncedExerciseSearch("");
+    setExerciseModalLimit(50);
     if (replaceId) {
       setReplacingExerciseId(replaceId);
       const oldEx = routine.exercises.find((e) => e.id === replaceId);
@@ -959,6 +961,7 @@ export function RoutineEditor({
     setMakingSupersetForId(null);
     setExerciseSearch("");
     setDebouncedExerciseSearch("");
+    setExerciseModalLimit(50);
     setFilterMuscle("All");
     setFilterEquipment("All");
   };
@@ -2860,6 +2863,7 @@ export function RoutineEditor({
               </button>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {modalExerciseResults
+                  .slice(0, exerciseModalLimit)
                   .map((ex) => (
                     <div key={ex.id} className="relative group">
                       <button
@@ -2895,6 +2899,16 @@ export function RoutineEditor({
                     </div>
                   ))}
               </div>
+              {modalExerciseResults.length > exerciseModalLimit && (
+                <button
+                  type="button"
+                  onPointerDown={hapticPress("light")}
+                  onClick={() => setExerciseModalLimit((prev) => prev + 50)}
+                  className="w-full py-3 bg-surface-container border border-surface-variant hover:border-primary-container rounded-xl text-xs font-bold text-primary uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {t("load_more") || "Carica altri"} ({modalExerciseResults.length - exerciseModalLimit})
+                </button>
+              )}
               {modalExerciseResults.length === 0 && (
                 <div className="py-12 text-center flex flex-col items-center gap-2">
                   <Search className="w-8 h-8 text-on-surface-variant opacity-30" />

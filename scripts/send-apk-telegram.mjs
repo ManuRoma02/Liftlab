@@ -37,7 +37,9 @@ if (!BOT_TOKEN || !CHAT_ID) {
   process.exit(1);
 }
 
-const apkPath = path.join(rootDir, "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
+const defaultApkPath = path.join(rootDir, "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
+const externalApkPath = path.join(process.env.USERPROFILE || "", ".gradle-builds", "liftlab", "app", "outputs", "apk", "debug", "app-debug.apk");
+const apkPath = fs.existsSync(defaultApkPath) ? defaultApkPath : (fs.existsSync(externalApkPath) ? externalApkPath : defaultApkPath);
 
 // Read version and notes dynamically
 let version = "1.0.6";

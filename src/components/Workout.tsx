@@ -26,7 +26,8 @@ import {
 import { TabHero } from "./common/TabHero";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { AppleBottomSheet } from "./common/AppleBottomSheet";
-import { ShareRoutineModal } from "./common/ShareRoutineModal";
+
+const ShareRoutineModal = React.lazy(() => import("./common/ShareRoutineModal").then(m => ({ default: m.ShareRoutineModal })));
 import { shareRoutinesNative } from "../lib/routineSharing";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import { getLogDate } from "../lib/workoutUtils";
@@ -730,11 +731,13 @@ export function Workout({
 
       {/* Multi-routine Share Modal */}
       {sharingRoutinesList && (
-        <ShareRoutineModal
-          routines={sharingRoutinesList}
-          onClose={() => setSharingRoutinesList(null)}
-          t={t}
-        />
+        <React.Suspense fallback={null}>
+          <ShareRoutineModal
+            routines={sharingRoutinesList}
+            onClose={() => setSharingRoutinesList(null)}
+            t={t}
+          />
+        </React.Suspense>
       )}
 
       {/* Floating Multi-Selection Action Bar (Top Header) */}
