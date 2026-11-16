@@ -5,7 +5,25 @@
 
 import { readJson, writeJsonAtomic, readJsonArray } from "./storage";
 import { loadExerciseCatalog } from "../data/exercises";
-import type { RoutineData, WorkoutLogData } from "../types/workout";
+import { findRoutineCatalogMatch, parseLiftLabRoutineText } from "./routineImport";
+import { convertWeight, roundToGymWeight } from "./workoutUtils";
+import type { ExerciseData, RoutineData, WorkoutLog } from "../types/workout";
+
+export const WEIGHT_LOGGED_EVENT = "liftlab:weight-logged";
+export const ROUTINES_IMPORTED_EVENT = "liftlab:routines-imported";
+
+function canonicalUnit(value: unknown): "KG" | "LBS" | null {
+  if (typeof value !== "string") return null;
+  const unit = value.trim().toUpperCase();
+  if (unit === "KG" || unit === "KGS") return "KG";
+  if (unit === "LB" || unit === "LBS") return "LBS";
+  return null;
+}
+
+function notifyApp(name: string, detail: unknown) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
 
 // WebMCP (Web Model Context Protocol) Navigator Extension Interface
 interface McpActionParameterSchema {
@@ -69,39 +87,42 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
       if (!Number.isFinite(val) || val <= 0 || val > 1000) {
         return { success: false, error: "Invalid weight value" };
       }
-      const rawUser = readJson<Record<string, unknown>>("liftlab_user_data", {});
-      const activeUnit = (params.unit as string) || (rawUser.unit as string) || "kg";
-      const today = new Date().toISOString().split("T")[0];
+      const requestedUnit = canonicalUnit(params.unit);
+      if (params.unit != null && params.unit !== "" && !requestedUnit) {
+        return { success: false, error: "Invalid unit" };
+      }
 
-      const weightLogs = readJsonArray<{ id: string; date: string; weight: number; unit?: string }>("liftlab_weight_logs");
-      const existingIdx = weightLogs.findIndex((l) => l.date === today);
-      const newEntry = {
-        id: existingIdx >= 0 ? weightLogs[existingIdx].id : `weight_${Date.now()}`,
-        date: today,
-        weight: val,
-        unit: activeUnit,
+      const guest = readJson<Record<string, unknown>>("liftlab_guest_data", {});
+      const storedUnit = canonicalUnit(guest.unit) || "KG";
+      const sourceUnit = requestedUnit || storedUnit;
+      const converted = convertWeight(val, sourceUnit, storedUnit);
+      const weight = Number(roundToGymWeight(typeof converted === "number" ? converted : val, 2));
+      if (!Number.isFinite(weight) || weight <= 0) {
+        return { success: false, error: "Invalid weight value" };
+      }
+
+      const weightLogs = readJsonArray<{ date: string; weight: number }>("liftlab_weight_logs");
+      const entry = { date: new Date().toISOString(), weight };
+      const nextLogs = [...weightLogs, entry];
+      const nextGuest = {
+        ...guest,
+        currentWeight: weight,
+        weightLogs: nextLogs,
+        unit: guest.unit ?? storedUnit,
+        updatedAt: new Date().toISOString(),
       };
 
-      if (existingIdx >= 0) {
-        weightLogs[existingIdx] = newEntry;
-      } else {
-        weightLogs.unshift(newEntry);
-      }
+      writeJsonAtomic("liftlab_weight_logs", nextLogs);
+      writeJsonAtomic("liftlab_guest_data", nextGuest);
+      notifyApp(WEIGHT_LOGGED_EVENT, { weight, weightLogs: nextLogs, userData: nextGuest });
 
-      writeJsonAtomic("liftlab_weight_logs", weightLogs);
-      writeJsonAtomic("liftlab_user_data", { ...rawUser, currentWeight: val, unit: activeUnit });
-
-      // Notify reactive UI if running live in browser tab
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("storage"));
-      }
-
+      const unitLabel = storedUnit.toLowerCase();
       return {
         success: true,
-        message: `Body weight of ${val} ${activeUnit} recorded for ${today}.`,
-        date: today,
-        weight: val,
-        unit: activeUnit,
+        message: `Body weight of ${weight} ${unitLabel} recorded.`,
+        date: entry.date,
+        weight,
+        unit: unitLabel,
       };
     },
   };
@@ -130,8 +151,12 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
       const muscle = typeof params.muscle === "string" ? params.muscle.toLowerCase().trim() : "";
 
       const filtered = catalog.filter((ex) => {
-        const matchesQ = !q || ex.title.toLowerCase().includes(q) || (ex.target && ex.target.toLowerCase().includes(q));
-        const matchesMuscle = !muscle || (ex.target && ex.target.toLowerCase().includes(muscle));
+        const muscleNames = [ex.targetMuscle, ex.category, ...(ex.muscleFocus || [])]
+          .filter((name): name is string => typeof name === "string" && name.length > 0)
+          .join(" ")
+          .toLowerCase();
+        const matchesQ = !q || ex.title.toLowerCase().includes(q) || muscleNames.includes(q);
+        const matchesMuscle = !muscle || muscleNames.includes(muscle);
         return matchesQ && matchesMuscle;
       });
 
@@ -141,7 +166,7 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
         exercises: filtered.slice(0, 15).map((ex) => ({
           id: ex.id || ex.title,
           title: ex.title,
-          target: ex.target,
+          target: ex.targetMuscle,
           equipment: ex.equipment,
           secondaryMuscles: ex.secondaryMuscles,
         })),
@@ -167,7 +192,6 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
           id: r.id,
           name: r.name,
           exerciseCount: r.exercises ? r.exercises.length : 0,
-          updatedAt: r.updatedAt,
         })),
       };
     },
@@ -189,7 +213,7 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
     },
     handler: async (params) => {
       const limit = typeof params.limit === "number" && params.limit > 0 ? params.limit : 10;
-      const logs = readJsonArray<WorkoutLogData>("liftlab_workout_logs");
+      const logs = readJsonArray<WorkoutLog>("liftlab_workout_logs");
       return {
         success: true,
         totalWorkouts: logs.length,
@@ -204,6 +228,76 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
     },
   };
 
+  // 5. Import Routine Action
+  const importRoutineAction: McpActionDefinition = {
+    id: "import-routine",
+    name: "Import Routine",
+    description: "Import a workout routine or workout plan from JSON code or shared text",
+    parameters: {
+      type: "object",
+      required: ["routine_code"],
+      properties: {
+        routine_code: {
+          type: "string",
+          description: "LiftLab routine JSON format or encoded routine string",
+        },
+      },
+    },
+    handler: async (params) => {
+      const code = typeof params.routine_code === "string" ? params.routine_code.trim() : "";
+      if (!code) return { success: false, error: "routine_code is required" };
+
+      try {
+        const catalog = await loadExerciseCatalog();
+        const customExercises = readJsonArray<ExerciseData>("liftlab_custom_exercises");
+        const known = [...catalog, ...customExercises];
+        const parsed = parseLiftLabRoutineText(code, known) as RoutineData[];
+        if (parsed.length === 0) return { success: false, error: "No routines found" };
+
+        const created: ExerciseData[] = [];
+        for (const routine of parsed) {
+          for (const exercise of routine.exercises || []) {
+            if (findRoutineCatalogMatch(exercise.title, [...known, ...created])) continue;
+            created.push({
+              id: `e_custom_import_${Date.now()}_${created.length}`,
+              title: exercise.title,
+              category: exercise.category || "Custom",
+              type: "Custom",
+              equipment: exercise.type || "Custom",
+              notes: exercise.notes || "Created automatically from routine import.",
+              sets: [],
+              muscleFocus: [exercise.category || "Custom"],
+              image:
+                exercise.image ||
+                "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=200&h=200",
+            });
+          }
+        }
+
+        if (created.length) {
+          writeJsonAtomic("liftlab_custom_exercises", [...customExercises, ...created]);
+        }
+
+        let routines = readJsonArray<RoutineData>("liftlab_routines");
+        for (const routine of parsed) {
+          routines = [routine, ...routines];
+        }
+        writeJsonAtomic("liftlab_routines", routines);
+        notifyApp(ROUTINES_IMPORTED_EVENT, { routines, customExercises: created });
+
+        return {
+          success: true,
+          count: parsed.length,
+          names: parsed.map((routine) => routine.name),
+          customExercisesCreated: created.length,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Import failed";
+        return { success: false, error: message };
+      }
+    },
+  };
+
   // Register with browser agent if WebMCP API is exposed
   if (mcp && typeof mcp.register === "function") {
     try {
@@ -211,6 +305,7 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
       mcp.register(searchExercisesAction);
       mcp.register(getRoutinesAction);
       mcp.register(getWorkoutHistoryAction);
+      mcp.register(importRoutineAction);
     } catch (e) {
       console.warn("WebMCP action registration notice:", e);
     }
@@ -221,6 +316,7 @@ export function initWebMcp(): Record<string, McpActionDefinition> {
     "search-exercises": searchExercisesAction,
     "get-routines": getRoutinesAction,
     "get-workout-history": getWorkoutHistoryAction,
+    "import-routine": importRoutineAction,
   };
 
   win.__liftlab_mcp__ = registry;

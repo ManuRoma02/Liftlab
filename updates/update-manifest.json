@@ -1,8 +1,8 @@
 {
-  "version": "1.0.37",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.37.zip",
-  "checksum": "55ded7a08bee8316d371041dbbf62c02a02bdbb1cce124f98af4cd7e0449efa2",
-  "releaseDate": "2026-11-12T19:28:09.310Z",
-  "notes": "• **Aggiornamento v1.0.37**: ottimizzazioni prestazioni e correzioni stabilità.",
-  "bundleSizeMb": "8.87"
+  "version": "1.0.38",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.38.zip",
+  "checksum": "1fb8d98841a9c01f8e776ba7ba394ebe66cf0098dbeda26ce88419daa409a077",
+  "releaseDate": "2026-11-16T22:09:37.849Z",
+  "notes": "• **Peso**: il log dall'agente salva il profilo reale, con data completa e conversione kg/lb.\n• **Import scheda**: l'azione agente importa la scheda e gli esercizi mancanti.\n• **Demo esercizi**: il cambio CDN non segna più l'immagine come caricata.\n• **Android**: rimossi i permessi exact alarm non usati dal timer nativo.",
+  "bundleSizeMb": "9.09"
 }

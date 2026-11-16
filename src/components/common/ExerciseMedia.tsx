@@ -37,7 +37,8 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const expectedUrlRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     setCandidateIndex(0);
@@ -46,12 +47,18 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
   }, [exercise.id, primarySource]);
 
   const currentUrl = candidates[candidateIndex];
+  expectedUrlRef.current = currentUrl;
+
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [currentUrl]);
 
   // Auto-advance to next CDN mirror after 4.5 seconds if network hangs
   useEffect(() => {
     if (!currentUrl || isLoaded || hasError) return;
     timerRef.current = setTimeout(() => {
       if (candidateIndex + 1 < candidates.length) {
+        setIsLoaded(false);
         setCandidateIndex((prev) => prev + 1);
       } else {
         setHasError(true);
@@ -75,16 +82,19 @@ export const ExerciseMedia: React.FC<ExerciseMediaProps> = ({
         </div>
       )}
       <img
+        key={currentUrl}
         src={currentUrl}
         alt={alt || exercise.title}
         loading="lazy"
-        onLoad={() => {
+        onLoad={(event) => {
+          if (event.currentTarget.getAttribute("src") !== expectedUrlRef.current) return;
           if (timerRef.current) clearTimeout(timerRef.current);
           setIsLoaded(true);
         }}
         onError={() => {
           if (timerRef.current) clearTimeout(timerRef.current);
           if (candidateIndex + 1 < candidates.length) {
+            setIsLoaded(false);
             setCandidateIndex((prev) => prev + 1);
           } else {
             setHasError(true);

@@ -51,6 +51,7 @@ import {
   startLiveWorkoutNotification,
   stopLiveWorkoutNotification,
 } from "../lib/liveWorkoutBridge";
+import { ROUTINES_IMPORTED_EVENT, WEIGHT_LOGGED_EVENT } from "../lib/webmcp";
 import type { RoutineData, ExerciseData, SetData, WeightLog, UserData, AppTheme } from "../types/workout";
 
 export { getLogDate };
@@ -712,8 +713,43 @@ export function useWorkoutData() {
     const handleStorageError = () => {
       showToast(t("storage_quota_warning") || "Spazio quasi esaurito. Esporta un backup dei dati.", "error");
     };
+    const handleWeightLogged = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        weight?: number;
+        weightLogs?: { date: string; weight: number }[];
+        userData?: Record<string, unknown>;
+      }>).detail;
+      if (!detail?.userData) return;
+      setUserData(detail.userData);
+      if (typeof detail.weight === "number" && detail.weight > 0) {
+        setCurrentWeight(detail.weight);
+      }
+      if (Array.isArray(detail.weightLogs)) {
+        setWeightLogs(detail.weightLogs);
+      }
+    };
+    const handleRoutinesImported = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        routines?: RoutineData[];
+        customExercises?: ExerciseData[];
+      }>).detail;
+      if (Array.isArray(detail?.routines)) setRoutines(detail.routines);
+      if (detail?.customExercises?.length) {
+        setExercises((prev) => {
+          const ids = new Set(prev.map((exercise) => exercise.id));
+          const additions = detail.customExercises!.filter((exercise) => !ids.has(exercise.id));
+          return additions.length ? [...prev, ...additions] : prev;
+        });
+      }
+    };
     window.addEventListener("liftlab:storage-error", handleStorageError);
-    return () => window.removeEventListener("liftlab:storage-error", handleStorageError);
+    window.addEventListener(WEIGHT_LOGGED_EVENT, handleWeightLogged);
+    window.addEventListener(ROUTINES_IMPORTED_EVENT, handleRoutinesImported);
+    return () => {
+      window.removeEventListener("liftlab:storage-error", handleStorageError);
+      window.removeEventListener(WEIGHT_LOGGED_EVENT, handleWeightLogged);
+      window.removeEventListener(ROUTINES_IMPORTED_EVENT, handleRoutinesImported);
+    };
   }, []);
 
   const t = (key: string) =>

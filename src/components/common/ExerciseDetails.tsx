@@ -66,12 +66,25 @@ export function ExerciseDetails({
 
   const currentPosterUrl = posterCandidates[posterIndex] || null;
   const currentGifUrl = gifCandidates[gifIndex] || null;
+  const posterUrlRef = React.useRef<string | null>(currentPosterUrl);
+  const gifUrlRef = React.useRef<string | null>(currentGifUrl);
+  posterUrlRef.current = currentPosterUrl;
+  gifUrlRef.current = currentGifUrl;
+
+  React.useEffect(() => {
+    setPosterLoaded(false);
+  }, [currentPosterUrl]);
+
+  React.useEffect(() => {
+    setGifLoaded(false);
+  }, [currentGifUrl]);
 
   // Auto-advance GIF candidate mirror after 5.5s if network stalls
   React.useEffect(() => {
     if (!currentGifUrl || gifLoaded || gifFailed) return;
     gifTimerRef.current = setTimeout(() => {
       if (gifIndex + 1 < gifCandidates.length) {
+        setGifLoaded(false);
         setGifIndex((prev) => prev + 1);
       } else {
         setGifFailed(true);
@@ -231,12 +244,17 @@ export function ExerciseDetails({
                   {/* 1. Static Poster Image (loads in <100ms) */}
                   {currentPosterUrl && (
                     <img
+                      key={currentPosterUrl}
                       src={currentPosterUrl}
                       alt={ex.title}
                       loading="eager"
-                      onLoad={() => setPosterLoaded(true)}
+                      onLoad={(event) => {
+                        if (event.currentTarget.getAttribute("src") !== posterUrlRef.current) return;
+                        setPosterLoaded(true);
+                      }}
                       onError={() => {
                         if (posterIndex + 1 < posterCandidates.length) {
+                          setPosterLoaded(false);
                           setPosterIndex((prev) => prev + 1);
                         }
                       }}
@@ -249,16 +267,19 @@ export function ExerciseDetails({
                   {/* 2. Looping Animated GIF (fades in as soon as ready) */}
                   {currentGifUrl && !gifFailed && (
                     <img
+                      key={currentGifUrl}
                       src={currentGifUrl}
                       alt={ex.title}
                       loading="eager"
-                      onLoad={() => {
+                      onLoad={(event) => {
+                        if (event.currentTarget.getAttribute("src") !== gifUrlRef.current) return;
                         if (gifTimerRef.current) clearTimeout(gifTimerRef.current);
                         setGifLoaded(true);
                       }}
                       onError={() => {
                         if (gifTimerRef.current) clearTimeout(gifTimerRef.current);
                         if (gifIndex + 1 < gifCandidates.length) {
+                          setGifLoaded(false);
                           setGifIndex((prev) => prev + 1);
                         } else {
                           setGifFailed(true);
