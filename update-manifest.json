@@ -1,8 +1,8 @@
 {
-  "version": "1.0.38",
-  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.38.zip",
-  "checksum": "1fb8d98841a9c01f8e776ba7ba394ebe66cf0098dbeda26ce88419daa409a077",
-  "releaseDate": "2026-11-16T22:09:37.849Z",
-  "notes": "• **Peso**: il log dall'agente salva il profilo reale, con data completa e conversione kg/lb.\n• **Import scheda**: l'azione agente importa la scheda e gli esercizi mancanti.\n• **Demo esercizi**: il cambio CDN non segna più l'immagine come caricata.\n• **Android**: rimossi i permessi exact alarm non usati dal timer nativo.",
-  "bundleSizeMb": "9.09"
+  "version": "1.0.39",
+  "url": "https://raw.githubusercontent.com/ManuRoma02/Liftlab/main/updates/liftlab-v1.0.39.zip",
+  "checksum": "58b710222e98bfeeda4b30077495e40ad5ecfcafa068e71bc8a92b65bc4fbfa5",
+  "releaseDate": "2026-11-17T19:19:24.733Z",
+  "notes": "Splash solo con la doppia L. Press a 160ms senza rotazione ne rimbalzo. Completare una serie non balla piu. Reduced motion lascia solo l'opacita.",
+  "bundleSizeMb": "9.35"
 }

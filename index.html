@@ -55,14 +55,6 @@
         z-index: 99999;
         user-select: none;
       }
-      .liftlab-splash-glow {
-        position: absolute;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(48, 209, 88, 0.28) 0%, rgba(48, 209, 88, 0.06) 50%, rgba(48, 209, 88, 0) 75%);
-        pointer-events: none;
-        animation: splashGlowPulse 2.4s ease-in-out infinite alternate;
-      }
       .liftlab-splash-badge {
         position: relative;
         width: 88px;
@@ -70,38 +62,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        filter: drop-shadow(0 0 28px rgba(48, 209, 88, 0.45));
-        animation: splashBadgePulse 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
       }
       .liftlab-splash-badge svg {
         width: 100%;
         height: 100%;
         display: block;
       }
-      .liftlab-splash-title {
-        margin-top: 20px;
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        color: #ffffff;
-        display: flex;
-        align-items: baseline;
-        gap: 5px;
-      }
-      @keyframes splashGlowPulse {
-        0% { transform: scale(0.9); opacity: 0.4; }
-        100% { transform: scale(1.2); opacity: 0.8; }
-      }
-      @keyframes splashBadgePulse {
-        0% { transform: scale(0.96); }
-        100% { transform: scale(1.04); }
-      }
     </style>
   </head>
   <body>
     <div id="root">
       <div class="liftlab-splash-wrap">
-        <div class="liftlab-splash-glow"></div>
         <div class="liftlab-splash-badge">
           <svg viewBox="136 136 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -125,9 +96,6 @@
             <path d="M 154 136 C 144 136 136 144 136 154 L 136 164 L 224 164 L 224 154 C 224 144 216 136 206 136 Z" fill="url(#spl-crest)" opacity="0.4" />
             <path d="M 276 136 C 269 136 264 141 264 148 L 264 232 C 264 241 271 248 280 248 L 364 248 C 371 248 376 243 376 236 L 376 216 C 376 209 371 204 364 204 L 316 204 C 312 204 308 200 308 196 L 308 148 C 308 141 303 136 296 136 Z" fill="url(#spl-white)" />
           </svg>
-        </div>
-        <div class="liftlab-splash-title">
-          <span>LIFT</span><span style="color: #30D158;">LAB</span>
         </div>
       </div>
     </div>

@@ -211,4 +211,28 @@ export const directionalTabVariants = {
 
 export const cartoonTabVariants = directionalTabVariants;
 
+/** Press feedback. 160ms strong ease-out. Scale target is 0.97. */
+export const pressTransition = {
+  duration: 0.16,
+  ease: [0.23, 1, 0.32, 1] as const,
+};
+
+/** Reduced motion: opacity only, no travel. */
+export const reducedFade = {
+  duration: 0.2,
+  ease: [0.23, 1, 0.32, 1] as const,
+};
+
+export const reducedTabVariants = {
+  initial: { opacity: 0.88 },
+  animate: {
+    opacity: 1,
+    transition: reducedFade,
+  },
+  exit: {
+    opacity: 0.88,
+    transition: reducedFade,
+  },
+};
+
 

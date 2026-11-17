@@ -11,6 +11,7 @@ import {
   appleSpringSnappy,
   CARTOON_SPRINGS,
   CARTOON_KEYFRAMES,
+  pressTransition,
 } from "./motion";
 import {
   triggerHaptic,
@@ -90,6 +91,8 @@ assert.equal(CARTOON_KEYFRAMES.pop.duration, 0.42);
 assert.equal(CARTOON_KEYFRAMES.elastic.duration, 0.46);
 assert.equal(CARTOON_KEYFRAMES.wobble.duration, 0.48);
 assert.equal(CARTOON_KEYFRAMES.ripple.duration, 0.48);
+assert.equal(pressTransition.duration, 0.16);
+assert.deepEqual(pressTransition.ease, [0.23, 1, 0.32, 1]);
 
 console.log("✓ CARTOON_SPRINGS & CARTOON_KEYFRAMES verified successfully");
 

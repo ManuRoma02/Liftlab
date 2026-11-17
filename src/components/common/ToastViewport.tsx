@@ -3,11 +3,13 @@ import { Check, AlertTriangle, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { TOAST_EVENT, type ToastDetail } from "../../lib/toast";
 import { triggerHaptic } from "../../lib/haptics";
-import { CARTOON_SPRINGS } from "../../lib/motion";
+import { APPLE_SPRINGS } from "../../lib/motion";
+import { useLiftMotion } from "../../lib/useLiftMotion";
 
 type ToastItem = ToastDetail & { id: number };
 
 export function ToastViewport() {
+  const { reduce, reducedFade } = useLiftMotion();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const nextId = useRef(0);
 
@@ -41,10 +43,10 @@ export function ToastViewport() {
             <motion.div
               key={toast.id}
               role={isError ? "alert" : "status"}
-              initial={{ opacity: 0, y: -20, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -16, scale: 0.92, transition: { duration: 0.18 } }}
-              transition={CARTOON_SPRINGS.pop}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+              animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={reduce ? { opacity: 0, transition: reducedFade } : { opacity: 0, y: -8, scale: 0.96, transition: { duration: 0.18 } }}
+              transition={reduce ? reducedFade : APPLE_SPRINGS.snappy}
               onClick={() => {
                 triggerHaptic("light");
                 setToasts((current) => current.filter((item) => item.id !== toast.id));

@@ -69,7 +69,8 @@ import {
 import type { RoutineData, ExerciseData, SetData } from "../types/workout";
 import { triggerHaptic, hapticPress } from "../lib/haptics";
 import { useAndroidSwipeBack } from "../lib/useAndroidSwipeBack";
-import { appleSpringDefault, appleSpringBouncy, CARTOON_SPRINGS, CARTOON_KEYFRAMES } from "../lib/motion";
+import { appleSpringDefault } from "../lib/motion";
+import { useLiftMotion } from "../lib/useLiftMotion";
 
 export function RoutineEditor({
   t,
@@ -114,6 +115,7 @@ export function RoutineEditor({
   showRpe?: boolean;
   onDraftChange?: (draft: RoutineData) => void;
 }) {
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
   const LIVE_PROGRESS_KEY = "liftlab_live_progress";
   const LIVE_ELAPSED_KEY  = "liftlab_live_elapsed";
   const LIVE_REST_TIMER_KEY = "liftlab_live_rest_timer";
@@ -1458,9 +1460,8 @@ export function RoutineEditor({
             data-testid={mode === "live" ? "finish-workout-btn" : "save-routine-btn"}
             onClick={handleRoutineSave}
             disabled={isSaving}
-            whileTap={{ scale: 0.91, rotate: -1.5 }}
-            whileHover={{ scale: 1.03 }}
-            transition={CARTOON_SPRINGS.bouncy}
+            whileTap={reduce ? undefined : { scale: 0.97 }}
+            transition={reduce ? reducedFade : pressTransition}
             className={`premium-cta font-black rounded-full uppercase hover:brightness-110 transition-all tracking-wider ${mode === "live" ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-sm"} ${isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             {isSaving ? (
@@ -1917,7 +1918,8 @@ export function RoutineEditor({
                                         <motion.button
                                           type="button"
                                           onClick={() => toggleSetCompletion(ex.id, set.id, set.completed)}
-                                          whileTap={{ scale: 0.82, rotate: -3 }}
+                                          whileTap={reduce ? undefined : { scale: 0.97 }}
+                                          transition={reduce ? reducedFade : pressTransition}
                                           className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 cursor-pointer select-none transition-all ${
                                             set.completed
                                               ? "bg-[#30D158] text-black font-extrabold shadow-sm"
@@ -2011,7 +2013,8 @@ export function RoutineEditor({
                           </div>
                           <div className="flex items-center gap-1.5">
                             <motion.button
-                              whileTap={{ scale: 0.85 }}
+                              whileTap={reduce ? undefined : { scale: 0.97 }}
+                              transition={reduce ? reducedFade : pressTransition}
                               onClick={() => {
                                 const currentRest = getExerciseRestPreset(group[0], exerciseRestPresets, restTimer);
                                 const next = Math.max(0, currentRest - 15);
@@ -2028,7 +2031,8 @@ export function RoutineEditor({
                               {getExerciseRestPreset(group[0], exerciseRestPresets, restTimer)}s
                             </span>
                             <motion.button
-                              whileTap={{ scale: 0.85 }}
+                              whileTap={reduce ? undefined : { scale: 0.97 }}
+                              transition={reduce ? reducedFade : pressTransition}
                               onClick={() => {
                                 const currentRest = getExerciseRestPreset(group[0], exerciseRestPresets, restTimer);
                                 const next = currentRest + 15;
@@ -2047,9 +2051,8 @@ export function RoutineEditor({
                         {/* Add Round / Add Set Actions */}
                         <div className="flex items-center gap-2 flex-wrap justify-end">
                           <motion.button
-                            whileTap={{ scale: 0.92, rotate: -1.5 }}
-                            whileHover={{ scale: 1.03 }}
-                            transition={CARTOON_SPRINGS.bouncy}
+                            whileTap={reduce ? undefined : { scale: 0.97 }}
+                            transition={reduce ? reducedFade : pressTransition}
                             onClick={() => {
                               group.forEach((ex) => addSet(ex.id));
                             }}
@@ -2314,17 +2317,7 @@ export function RoutineEditor({
                                 >
                                   <div className="col-span-2 flex flex-col items-center justify-center relative">
                                     {isAttachedChild ? (
-                                      <motion.div
-                                        initial={false}
-                                        animate={{
-                                          scale: set.completed ? [1, 1.2, 0.94, 1.05, 1] : 1,
-                                          rotate: set.completed ? [0, -5, 5, 0] : 0,
-                                        }}
-                                        transition={
-                                          set.completed
-                                            ? { ...CARTOON_KEYFRAMES.elastic, delay: 0.08 }
-                                            : appleSpringDefault
-                                        }
+                                      <div
                                         className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl flex flex-col items-center justify-center relative transition-all duration-150 select-none ${
                                           set.completed
                                             ? "bg-[#30D158]/20 border border-[#30D158]/50 text-[#30D158] shadow-[0_0_12px_rgba(48,209,88,0.25)]"
@@ -2340,18 +2333,13 @@ export function RoutineEditor({
                                         <span className="text-[7.5px] font-black uppercase tracking-wider leading-none mt-0.5">
                                           DROP
                                         </span>
-                                      </motion.div>
+                                      </div>
                                     ) : mode === "live" ? (
                                       <motion.button
                                         type="button"
                                         onClick={() => toggleSetCompletion(ex.id, set.id, set.completed)}
-                                        whileTap={{ scale: 0.8, rotate: -3 }}
-                                        initial={false}
-                                        animate={{
-                                          scale: set.completed ? [1, 1.26, 0.92, 1.06, 1] : 1,
-                                          rotate: set.completed ? [0, -7, 7, -2, 0] : 0,
-                                        }}
-                                        transition={set.completed ? CARTOON_KEYFRAMES.elastic : appleSpringDefault}
+                                        whileTap={reduce ? undefined : { scale: 0.97 }}
+                                        transition={reduce ? reducedFade : pressTransition}
                                         className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-2xl flex items-center justify-center relative overflow-hidden shadow-sm cursor-pointer select-none ${
                                           set.completed
                                             ? "bg-[#30D158] text-black font-extrabold shadow-[0_2px_14px_rgba(48,209,88,0.45)]"
@@ -2359,25 +2347,8 @@ export function RoutineEditor({
                                         }`}
                                         aria-label={`Toggle set ${displaySetNumber} completion`}
                                       >
-                                        {set.completed && (
-                                          <motion.span
-                                            key={`ripple-${set.id}`}
-                                            initial={{ scale: 0.7, opacity: 0.85 }}
-                                            animate={{ scale: 1.9, opacity: 0 }}
-                                            transition={CARTOON_KEYFRAMES.ripple}
-                                            className="absolute inset-0 rounded-2xl border-2 border-white pointer-events-none"
-                                          />
-                                        )}
                                         {set.completed ? (
-                                          <motion.span
-                                            key="completed"
-                                            initial={{ scale: 0.5, opacity: 0, rotate: -25 }}
-                                            animate={{ scale: [0.5, 1.32, 0.94, 1], opacity: 1, rotate: [-20, 8, -4, 0] }}
-                                            transition={CARTOON_KEYFRAMES.pop}
-                                            className="flex items-center justify-center"
-                                          >
-                                            <Check className="w-5 h-5 relative z-10 text-black stroke-[2.8]" />
-                                          </motion.span>
+                                          <Check className="w-5 h-5 relative z-10 text-black stroke-[2.8]" />
                                         ) : (
                                           <span className="text-sm font-extrabold text-white/90 tabular-nums">
                                             {displaySetNumber}
@@ -2436,9 +2407,8 @@ export function RoutineEditor({
                                         <div className="flex flex-col items-center gap-0.5">
                                           <motion.button
                                             type="button"
-                                            whileTap={{ scale: 0.86, rotate: -2 }}
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={CARTOON_SPRINGS.bouncy}
+                                            whileTap={reduce ? undefined : { scale: 0.97 }}
+                                            transition={reduce ? reducedFade : pressTransition}
                                             onClick={() => {
                                               updateSet(ex.id, set.id, {
                                                 weight: set.weight !== "" ? set.weight : prevW,
@@ -2586,9 +2556,8 @@ export function RoutineEditor({
                         </div>
                         <div className="flex items-center gap-2">
                           <motion.button
-                            whileTap={{ scale: 0.8, rotate: -4 }}
-                            whileHover={{ scale: 1.1 }}
-                            transition={CARTOON_SPRINGS.bouncy}
+                            whileTap={reduce ? undefined : { scale: 0.97 }}
+                            transition={reduce ? reducedFade : pressTransition}
                             onClick={() => {
                               const next = Math.max(0, getExerciseRestPreset(ex, exerciseRestPresets, restTimer) - 15);
                               updateExercise(ex.id, { restTimer: next });
@@ -2602,9 +2571,8 @@ export function RoutineEditor({
                             {getExerciseRestPreset(ex, exerciseRestPresets, restTimer)}s
                           </span>
                           <motion.button
-                            whileTap={{ scale: 0.8, rotate: 4 }}
-                            whileHover={{ scale: 1.1 }}
-                            transition={CARTOON_SPRINGS.bouncy}
+                            whileTap={reduce ? undefined : { scale: 0.97 }}
+                            transition={reduce ? reducedFade : pressTransition}
                             onClick={() => {
                               const next = getExerciseRestPreset(ex, exerciseRestPresets, restTimer) + 15;
                               updateExercise(ex.id, { restTimer: next });
@@ -2620,27 +2588,24 @@ export function RoutineEditor({
                       {/* Actions */}
                       <div className="mt-stack-md flex gap-stack-sm items-center flex-wrap">
                         <motion.button
-                          whileTap={{ scale: 0.88, rotate: -1.5 }}
-                          whileHover={{ scale: 1.05 }}
-                          transition={CARTOON_SPRINGS.bouncy}
+                          whileTap={reduce ? undefined : { scale: 0.97 }}
+                          transition={reduce ? reducedFade : pressTransition}
                           onClick={() => addSet(ex.id)}
                           className="text-sm font-bold text-on-surface-variant hover:text-primary-fixed flex items-center gap-1 transition-colors bg-white/5 px-3 py-2 rounded-full hover:bg-white/10 cursor-pointer"
                         >
                           <Plus className="w-4 h-4" /> {t("add_set")}
                         </motion.button>
                         <motion.button
-                          whileTap={{ scale: 0.88, rotate: -1.5 }}
-                          whileHover={{ scale: 1.05 }}
-                          transition={CARTOON_SPRINGS.bouncy}
+                          whileTap={reduce ? undefined : { scale: 0.97 }}
+                          transition={reduce ? reducedFade : pressTransition}
                           onClick={() => setWarmupModalExercise(ex)}
                           className="text-sm font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-full hover:bg-amber-500/20 cursor-pointer"
                         >
                           <Flame className="w-4 h-4 text-amber-400" /> {t("warmup") || "Warmup"}
                         </motion.button>
                         <motion.button
-                          whileTap={{ scale: 0.88, rotate: -1.5 }}
-                          whileHover={{ scale: 1.05 }}
-                          transition={CARTOON_SPRINGS.bouncy}
+                          whileTap={reduce ? undefined : { scale: 0.97 }}
+                          transition={reduce ? reducedFade : pressTransition}
                           onClick={() => addSet(ex.id, "dropset")}
                           className="text-sm font-bold text-on-surface-variant hover:text-primary-fixed flex items-center gap-1 transition-colors bg-white/5 px-3 py-2 rounded-full hover:bg-white/10 cursor-pointer"
                         >
@@ -2659,9 +2624,8 @@ export function RoutineEditor({
           <div className="md:col-span-12 mt-stack-md flex flex-col gap-3">
             <motion.button
               type="button"
-              whileTap={{ scale: 0.96 }}
-              whileHover={{ scale: 1.01 }}
-              transition={CARTOON_SPRINGS.bouncy}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
+              transition={reduce ? reducedFade : pressTransition}
               onPointerDown={hapticPress("light")}
               onClick={() => openExerciseModal()}
               className="w-full border-2 border-dashed border-white/10 rounded-2xl p-stack-lg flex flex-col items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary-container hover:bg-white/5 transition-all group cursor-pointer"
@@ -3016,7 +2980,8 @@ export function RoutineEditor({
               {/* Single-row Right: Compact Controls */}
               <div className="flex items-center gap-1.5 font-bold text-xs shrink-0">
                 <motion.button
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reduce ? undefined : { scale: 0.97 }}
+                  transition={reduce ? reducedFade : pressTransition}
                   onClick={() => {
                     triggerHaptic("light");
                     startRestTimer(Math.max(0, activeRestLeft - 15));
@@ -3026,7 +2991,8 @@ export function RoutineEditor({
                   -15s
                 </motion.button>
                 <motion.button
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reduce ? undefined : { scale: 0.97 }}
+                  transition={reduce ? reducedFade : pressTransition}
                   onClick={() => {
                     triggerHaptic("light");
                     startRestTimer(activeRestLeft + 30);
@@ -3036,7 +3002,8 @@ export function RoutineEditor({
                   +30s
                 </motion.button>
                 <motion.button
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reduce ? undefined : { scale: 0.97 }}
+                  transition={reduce ? reducedFade : pressTransition}
                   onClick={() => {
                     triggerHaptic("medium");
                     startRestTimer(0);

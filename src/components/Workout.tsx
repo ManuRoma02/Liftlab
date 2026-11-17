@@ -34,7 +34,8 @@ import { getLogDate } from "../lib/workoutUtils";
 import type { RoutineData } from "../types/workout";
 import { motion, AnimatePresence } from "motion/react";
 import { triggerHaptic } from "../lib/haptics";
-import { CARTOON_SPRINGS, CARTOON_KEYFRAMES, appleSpringDefault } from "../lib/motion";
+import { appleSpringDefault } from "../lib/motion";
+import { useLiftMotion } from "../lib/useLiftMotion";
 
 function formatRelativeDays(timestamp: number, t: (k: string) => string): string {
   const now = Date.now();
@@ -84,6 +85,7 @@ export function Workout({
   onOpenImportCode: () => void;
   onLoadStarterRoutines?: () => void;
 }) {
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
     const [sortBy, setSortBy] = useState<RoutineSortOption>(() => {
     try {
       return (localStorage.getItem("liftlab_routines_sort") as RoutineSortOption) || "today";
@@ -577,9 +579,9 @@ export function Workout({
                   ) : (
                     <div className="relative flex items-center gap-0.5 shrink-0">
                       <motion.button
-                        whileTap={{ scale: 0.72, rotate: 20 }}
-                        animate={routine.favorite ? { scale: [0.8, 1.35, 0.95, 1], rotate: [0, -12, 12, 0] } : { scale: 1, rotate: 0 }}
-                        transition={routine.favorite ? CARTOON_KEYFRAMES.wobble : appleSpringDefault}
+                        whileTap={reduce ? undefined : { scale: 0.97 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={reduce ? reducedFade : pressTransition}
                         onClick={(e) => {
                           e.stopPropagation();
                           triggerHaptic("light");
@@ -605,7 +607,7 @@ export function Workout({
                         aria-label={`Actions for ${routine.name || "routine"}`}
                         aria-expanded={activeMenuId === routine.id}
                         aria-haspopup="menu"
-                        className="min-w-[44px] min-h-[44px] text-[#8E8E93] hover:text-white transition-colors relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-90"
+                        className="min-w-[44px] min-h-[44px] text-[#8E8E93] hover:text-white relative z-10 cursor-pointer flex items-center justify-center rounded-full hover:bg-white/5 active:scale-[0.97] transition-[transform,color,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -676,9 +678,8 @@ export function Workout({
               ) : (
                 <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5">
                   <motion.button
-                    whileTap={{ scale: 0.88, rotate: -2 }}
-                    whileHover={{ scale: 1.03 }}
-                    transition={CARTOON_SPRINGS.bouncy}
+                    whileTap={reduce ? undefined : { scale: 0.97 }}
+                    transition={reduce ? reducedFade : pressTransition}
                     onClick={(e) => {
                       e.stopPropagation();
                       triggerHaptic("light");
@@ -691,9 +692,8 @@ export function Workout({
                     <span>{t("edit") || "Modifica"}</span>
                   </motion.button>
                   <motion.button
-                    whileTap={{ scale: 0.88, rotate: -2 }}
-                    whileHover={{ scale: 1.04 }}
-                    transition={CARTOON_SPRINGS.bouncy}
+                    whileTap={reduce ? undefined : { scale: 0.97 }}
+                    transition={reduce ? reducedFade : pressTransition}
                     onClick={(e) => {
                       e.stopPropagation();
                       triggerHaptic("medium");
@@ -787,7 +787,8 @@ export function Workout({
               {/* Right: Actions */}
               <div className="flex items-center gap-2">
                 <motion.button
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={reduce ? undefined : { scale: 0.97 }}
+                  transition={reduce ? reducedFade : pressTransition}
                   disabled={selectedRoutineIds.size === 0}
                   onClick={() => setIsBulkDeleteConfirmOpen(true)}
                   className="h-10 px-3 sm:px-3.5 rounded-full bg-[#FF453A]/15 hover:bg-[#FF453A]/25 border border-[#FF453A]/30 text-[#FF453A] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -797,7 +798,8 @@ export function Workout({
                 </motion.button>
 
                 <motion.button
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={reduce ? undefined : { scale: 0.97 }}
+                  transition={reduce ? reducedFade : pressTransition}
                   disabled={selectedRoutineIds.size === 0}
                   onClick={handleShareSelected}
                   className="h-10 px-4 sm:px-5 rounded-full bg-[#30D158] hover:brightness-105 active:scale-95 text-black font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.35)] disabled:opacity-40 disabled:cursor-not-allowed"

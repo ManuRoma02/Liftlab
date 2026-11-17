@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
-import { CARTOON_SPRINGS } from "../lib/motion";
+
+const homePress = { duration: 0.12, ease: "easeOut" as const };
 
 import { LiftLabBrand, LiftLabMark } from "./common/LiftLabBrand";
 import { triggerHaptic } from "../lib/haptics";
@@ -542,16 +543,15 @@ export const Dashboard = React.memo(
                 return (
                   <motion.button
                     key={idx}
-                    whileTap={{ scale: 0.86, rotate: -2 }}
-                    whileHover={{ scale: 1.04 }}
-                    transition={CARTOON_SPRINGS.bouncy}
+                    whileTap={{ scale: 0.98 }}
+                    transition={homePress}
                     onClick={() => {
                       triggerHaptic("light");
                       setSelectedDayIndex(idx);
                     }}
                     className={`flex flex-col items-center gap-1.5 transition-all duration-200 flex-1 py-2.5 rounded-2xl relative cursor-pointer ${
                       isSelected
-                        ? "bg-[#30D158] text-black shadow-[0_4px_16px_rgba(48,209,88,0.35)] scale-105 z-10 font-bold"
+                        ? "bg-[#30D158] text-black shadow-[0_4px_16px_rgba(48,209,88,0.35)] z-10 font-bold"
                         : isToday
                           ? "bg-[#30D158]/15 border border-[#30D158]/35 text-[#30D158]"
                           : "hover:bg-white/5 border border-transparent text-[#8E8E93]"
@@ -674,14 +674,13 @@ export const Dashboard = React.memo(
             <div className="relative z-10 bg-gradient-to-br from-[#1b1c23] via-[#15161b] to-[#111215] border border-white/[0.09] rounded-2xl p-4 sm:p-5 flex flex-col gap-3 group">
               <div className="flex justify-between items-start gap-2">
                 <span className="w-fit border border-[#30D158]/35 text-[#30D158] text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#30D158]/10 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
                   {t("next_workout") || "Scheda di Oggi"}
                 </span>
 
                 <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  whileHover={{ scale: 1.03 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.98 }}
+                  transition={homePress}
                   onClick={() => {
                     triggerHaptic("medium");
                     onStartLiveWorkout(nextRoutine.id);
@@ -754,9 +753,8 @@ export const Dashboard = React.memo(
               </div>
               <div className="flex items-center gap-2.5 pt-1">
                 <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  whileHover={{ scale: 1.02 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.98 }}
+                  transition={homePress}
                   onClick={() => {
                     triggerHaptic("medium");
                     onStartLiveWorkout("empty");
@@ -767,9 +765,8 @@ export const Dashboard = React.memo(
                   <span>{t("start_empty") || "Allenamento Libero"}</span>
                 </motion.button>
                 <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  whileHover={{ scale: 1.02 }}
-                  transition={CARTOON_SPRINGS.bouncy}
+                  whileTap={{ scale: 0.98 }}
+                  transition={homePress}
                   onClick={() => {
                     triggerHaptic("light");
                     navigateTo("workout");
@@ -791,9 +788,8 @@ export const Dashboard = React.memo(
             {/* Cell 1: Storico */}
             <motion.button
               type="button"
-              whileTap={{ scale: 0.96 }}
-              whileHover={{ scale: 1.015 }}
-              transition={CARTOON_SPRINGS.bouncy}
+              whileTap={{ scale: 0.98 }}
+              transition={homePress}
               onClick={() => {
                 triggerHaptic("light");
                 setIsStreakModalOpen(true);
@@ -837,9 +833,8 @@ export const Dashboard = React.memo(
             {/* Cell 2: Obiettivo Settimanale */}
             <motion.button
               type="button"
-              whileTap={{ scale: 0.96 }}
-              whileHover={{ scale: 1.015 }}
-              transition={CARTOON_SPRINGS.bouncy}
+              whileTap={{ scale: 0.98 }}
+              transition={homePress}
               onClick={() => {
                 triggerHaptic("light");
                 setEditableGoal(weeklyGoal);
@@ -868,7 +863,7 @@ export const Dashboard = React.memo(
                       stroke="#30D158" strokeWidth="6" strokeLinecap="round"
                       strokeDasharray={circumference}
                       strokeDashoffset={circumference * (1 - goalProgress)}
-                      style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                      style={{ transition: "stroke-dashoffset 0.2s ease" }}
                       opacity={goalProgress === 0 ? 0.25 : 1}
                     />
                   </svg>

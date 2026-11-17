@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Trash2, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "motion/react";
 import { triggerHaptic } from "../../lib/haptics";
-import { CARTOON_SPRINGS } from "../../lib/motion";
+import { useLiftMotion } from "../../lib/useLiftMotion";
 import { useModalDismiss } from "../../lib/modalStack";
 import { useAndroidSwipeBack } from "../../lib/useAndroidSwipeBack";
 
@@ -37,6 +37,7 @@ export function ConfirmModal({
     ? AlertTriangle
     : CheckCircle2;
 
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
   useModalDismiss(true, onCancel);
   const finalConfirmLabel = confirmLabel || (destructive ? "Elimina" : "Salva");
 
@@ -63,10 +64,10 @@ export function ConfirmModal({
           aria-label={title || (destructive ? "Confirm destructive action" : "Confirm action")}
           aria-describedby="confirm-modal-message"
           {...swipeHandlers}
-          initial={{ opacity: 0, scale: 0.92, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 12 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 12 }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 12 }}
+          transition={reduce ? reducedFade : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           style={{
             ...swipeStyle,
             willChange: "transform",
@@ -75,12 +76,7 @@ export function ConfirmModal({
           className="bg-[#24252c] border border-white/16 rounded-3xl w-full max-w-sm p-6 shadow-[0_24px_60px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.14)] flex flex-col items-center text-center gap-4 relative overflow-hidden will-change-transform transform-gpu select-none"
         >
           {/* iOS Alert Icon */}
-          <motion.div
-            animate={{
-              scale: [0.75, 1.2, 0.95, 1],
-              rotate: destructive ? [0, -10, 10, -3, 0] : [0, 8, -8, 2, 0],
-            }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
+          <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
               destructive
                 ? "bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/25"
@@ -88,7 +84,7 @@ export function ConfirmModal({
             }`}
           >
             <Icon className="w-7 h-7" strokeWidth={2.2} />
-          </motion.div>
+          </div>
 
           <div className="flex flex-col gap-1 w-full">
             {title && (
@@ -106,8 +102,8 @@ export function ConfirmModal({
             <motion.button
               type="button"
               autoFocus
-              whileTap={{ scale: 0.9, rotate: -2 }}
-              transition={{ type: "spring", ...CARTOON_SPRINGS.bouncy }}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
+              transition={reduce ? reducedFade : pressTransition}
               onClick={() => {
                 triggerHaptic("light");
                 onCancel();
@@ -118,8 +114,8 @@ export function ConfirmModal({
             </motion.button>
             <motion.button
               type="button"
-              whileTap={{ scale: 0.9, rotate: destructive ? 2 : -2 }}
-              transition={{ type: "spring", ...CARTOON_SPRINGS.bouncy }}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
+              transition={reduce ? reducedFade : pressTransition}
               onClick={() => {
                 triggerHaptic(destructive ? "warning" : "success");
                 onConfirm();

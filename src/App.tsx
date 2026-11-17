@@ -38,9 +38,11 @@ import { LiftLabMark } from "./components/common/LiftLabBrand";
 import { AnimatePresence, motion } from "motion/react";
 import { triggerHaptic, hapticPress } from "./lib/haptics";
 import { useModalDismiss } from "./lib/modalStack";
-import { appleSpringDefault, appleSpringSheet, APPLE_SPRINGS, CARTOON_SPRINGS, cartoonTabVariants } from "./lib/motion";
+import { appleSpringDefault, appleSpringSheet, APPLE_SPRINGS, cartoonTabVariants, reducedTabVariants } from "./lib/motion";
+import { useLiftMotion } from "./lib/useLiftMotion";
 
 export default function App() {
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
   const {
     userData,
     sharingRoutine,
@@ -400,7 +402,7 @@ export default function App() {
             <motion.div
               key={effectiveTab}
               custom={tabDirection}
-              variants={cartoonTabVariants}
+              variants={reduce ? reducedTabVariants : cartoonTabVariants}
               initial="initial"
               animate="animate"
               exit="exit"
@@ -697,12 +699,13 @@ export default function App() {
                     </>
                   )}
                   <motion.div
-                    whileTap={{ scale: 0.94 }}
+                    whileTap={reduce ? undefined : { scale: 0.98 }}
+                    transition={reduce ? reducedFade : pressTransition}
                     className="relative z-10 flex flex-col items-center justify-center pointer-events-none"
                   >
                     <motion.div
-                      animate={isActive ? { scale: 1.05 } : { scale: 1 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      animate={{ scale: 1 }}
+                      transition={reduce ? reducedFade : pressTransition}
                     >
                       <Icon
                         className={`w-5 h-5 transition-colors duration-200 ${
@@ -897,10 +900,10 @@ export default function App() {
             key="ota-ready-banner"
             role="status"
             aria-live="polite"
-            initial={{ y: -60, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -60, opacity: 0, scale: 0.95 }}
-            transition={CARTOON_SPRINGS.bouncy}
+            initial={reduce ? { opacity: 0 } : { y: -12, opacity: 0, scale: 0.96 }}
+            animate={reduce ? { opacity: 1 } : { y: 0, opacity: 1, scale: 1 }}
+            exit={reduce ? { opacity: 0 } : { y: -12, opacity: 0, scale: 0.96 }}
+            transition={reduce ? reducedFade : APPLE_SPRINGS.criticallyDamped}
             className="fixed top-2 inset-x-3 sm:inset-x-auto sm:right-4 sm:max-w-md z-[500] p-3.5 bg-[#24252c]/95 backdrop-blur-2xl border border-[#30D158]/50 shadow-[0_16px_48px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] rounded-2xl flex items-center justify-between gap-3 text-white"
             style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
           >
@@ -923,7 +926,8 @@ export default function App() {
             <div className="flex items-center gap-2 shrink-0">
               <motion.button
                 type="button"
-                whileTap={{ scale: 0.92 }}
+                whileTap={reduce ? undefined : { scale: 0.97 }}
+                transition={reduce ? reducedFade : pressTransition}
                 onClick={handleApplyOtaNow}
                 className="px-3.5 py-1.5 bg-[#30D158] text-black text-xs font-black rounded-xl cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.3)] active:scale-95"
               >
@@ -985,12 +989,11 @@ export default function App() {
         {isLiveWorkoutActive && activeTab !== "live_editor" && (
           <motion.button
             key="live-session-pill"
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.9, rotate: -2 }}
-            transition={CARTOON_SPRINGS.bouncy}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
+            whileTap={reduce ? undefined : { scale: 0.97 }}
+            transition={reduce ? reducedFade : APPLE_SPRINGS.snappy}
             onClick={() => {
               triggerHaptic("medium");
               setActiveTab("live_editor");
@@ -999,7 +1002,6 @@ export default function App() {
             className="fixed bottom-20 right-4 z-[100] bg-[#24252c]/95 backdrop-blur-2xl border border-[#30D158]/50 text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-[0_12px_36px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center gap-2.5 transition-all cursor-pointer group lg:bottom-6 lg:right-6"
           >
             <div className="relative flex items-center justify-center">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] animate-ping absolute opacity-75"></span>
               <span className="w-2.5 h-2.5 rounded-full bg-[#30D158]"></span>
             </div>
             <div className="flex flex-col text-left">

@@ -7,7 +7,7 @@ import { ExerciseMedia } from "./common/ExerciseMedia";
 import { getExerciseSearchScore } from "../lib/searchUtils";
 import type { ExerciseData } from "../types/workout";
 import { triggerHaptic } from "../lib/haptics";
-import { appleSpringDefault, CARTOON_SPRINGS } from "../lib/motion";
+import { useLiftMotion } from "../lib/useLiftMotion";
 
 export function Library({
   t,
@@ -28,6 +28,7 @@ export function Library({
   isCatalogLoading?: boolean;
   isOpen?: boolean;
 }) {
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [filter, setFilter] = useState("All");
@@ -254,9 +255,8 @@ export function Library({
 
             <motion.button
               data-testid="library-add-exercise-btn"
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-              transition={CARTOON_SPRINGS.bouncy}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
+              transition={reduce ? reducedFade : pressTransition}
               onClick={() => {
                 triggerHaptic("light");
                 onAddExercise();
@@ -358,9 +358,8 @@ export function Library({
           <motion.button
             type="button"
             key={ex.id}
-            whileTap={{ scale: 0.97 }}
-            whileHover={{ scale: 1.01 }}
-            transition={CARTOON_SPRINGS.bouncy}
+            whileTap={reduce ? undefined : { scale: 0.97 }}
+            transition={reduce ? reducedFade : pressTransition}
             onClick={() => {
               triggerHaptic("light");
               onOpenDetail(ex);

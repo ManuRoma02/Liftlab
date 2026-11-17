@@ -26,7 +26,8 @@ import { triggerHaptic, isHapticsEnabled, setHapticsEnabled } from "../lib/hapti
 import { Vibrate } from "lucide-react";
 import { safeGetItem } from "../lib/storage";
 import { motion, AnimatePresence } from "motion/react";
-import { CARTOON_SPRINGS } from "../lib/motion";
+import { APPLE_SPRINGS } from "../lib/motion";
+import { useLiftMotion } from "../lib/useLiftMotion";
 import type { AppTheme } from "../types/workout";
 import { OtaNotesView } from "./common/OtaNotesView";
 import { LiftLabBrand, LiftLabMark } from "./common/LiftLabBrand";
@@ -111,6 +112,7 @@ export function Settings({
   onDeleteAccount?: () => void;
   onReplayTutorial?: () => void;
 }) {
+  const { reduce, pressTransition, reducedFade } = useLiftMotion();
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   // OTA Updates state
@@ -779,9 +781,8 @@ export function Settings({
             <div className="p-4 flex flex-col gap-3">
               <motion.button
                 type="button"
-                whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.01 }}
-                transition={CARTOON_SPRINGS.bouncy}
+                whileTap={reduce ? undefined : { scale: 0.97 }}
+                transition={reduce ? reducedFade : pressTransition}
                 disabled={isCheckingOta || isDownloadingOta}
                 onClick={handleCheckOta}
                 className="w-full bg-white/10 hover:bg-white/15 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 disabled:opacity-50"
@@ -798,10 +799,10 @@ export function Settings({
               <AnimatePresence>
                 {otaUpdate && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={CARTOON_SPRINGS.bouncy}
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                    animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                    transition={reduce ? reducedFade : APPLE_SPRINGS.snappy}
                     className="p-3.5 bg-[#30D158]/10 border border-[#30D158]/30 rounded-xl flex flex-col gap-2.5"
                   >
                     <div className="flex items-center justify-between">
@@ -853,9 +854,8 @@ export function Settings({
                       ) : (
                         <motion.button
                           type="button"
-                          whileTap={{ scale: 0.95 }}
-                          whileHover={{ scale: 1.01 }}
-                          transition={CARTOON_SPRINGS.bouncy}
+                          whileTap={reduce ? undefined : { scale: 0.97 }}
+                          transition={reduce ? reducedFade : pressTransition}
                           onClick={handleDownloadOta}
                           className="bg-[#30D158] text-black font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(48,209,88,0.3)]"
                         >
@@ -866,9 +866,8 @@ export function Settings({
                     ) : (
                       <motion.button
                         type="button"
-                        whileTap={{ scale: 0.95 }}
-                        whileHover={{ scale: 1.01 }}
-                        transition={CARTOON_SPRINGS.bouncy}
+                        whileTap={reduce ? undefined : { scale: 0.97 }}
+                        transition={reduce ? reducedFade : pressTransition}
                         onClick={handleRestartApp}
                         className="bg-[#0A84FF] text-white font-extrabold text-xs py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(10,132,255,0.3)]"
                       >
